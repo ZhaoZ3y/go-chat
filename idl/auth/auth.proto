@@ -1,0 +1,68 @@
+syntax = "proto3";
+package auth;
+
+option go_package = "./auth";
+
+message AccessToken {
+  // token
+  string access_token = 1;
+  // 过期时间
+  int64 expires_at = 2;
+  // 刷新 token
+  string refresh_token = 3;
+}
+
+// 登录接口请求参数
+message AuthLoginRequest {
+  // 登录账号
+  string username = 1;
+  // 登录密码
+  string password = 2;
+}
+
+// 登录接口响应参数
+message AuthLoginResponse {
+  AccessToken auth = 1;
+}
+
+// 注销登录接口请求参数
+message AuthLogoutRequest{}
+
+// 注销登录接口返回参数
+message AuthLogoutResponse{}
+
+// 刷新Token接口请求参数
+message AuthRefreshRequest{}
+
+// 刷新Token接口返回参数
+message AuthRefreshResponse{
+  AccessToken auth = 1;
+}
+
+// 注册接口请求参数
+message AuthRegisterRequest {
+  // 注册账号
+  string username = 1;
+  // 注册密码
+  string password = 2;
+  // 昵称
+  string nickname = 3;
+  // 性别
+  int32 gender = 4; // [0:未知;1:男;2:女;]
+  // 生日
+  string birthday = 5; // 格式: YYYY-MM-DD
+}
+
+// 注册接口响应参数
+message AuthRegisterResponse {}
+
+service AuthService {
+  // 登录
+  rpc Login(AuthLoginRequest) returns (AuthLoginResponse);
+  // 注销登录
+  rpc Logout(AuthLogoutRequest) returns (AuthLogoutResponse);
+  // 刷新Token
+  rpc Refresh(AuthRefreshRequest) returns (AuthRefreshResponse);
+  // 注册
+  rpc Register(AuthRegisterRequest) returns (AuthRegisterResponse);
+}
