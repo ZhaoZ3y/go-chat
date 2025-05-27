@@ -1,3 +1,0 @@
-goctl rpc protoc ./idl/auth/auth.proto --go_out=./apps/auth/rpc --go-grpc_out=./apps/auth/rpc --zrpc_out=./apps/auth --client=true
-goctl rpc protoc ./idl/contact/contact.proto --go_out=./apps/contact/rpc --go-grpc_out=./apps/contact/rpc --zrpc_out=./apps/contact --client=true
-goctl rpc protoc ./idl/file/file.proto --go_out=./apps/file/rpc --go-grpc_out=./apps/file/rpc --zrpc_out=./apps/file --client=true

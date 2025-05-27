@@ -1,0 +1,89 @@
+// rpc/user/user.proto
+syntax = "proto3";
+
+package user;
+option go_package = "./user";
+
+service User {
+  rpc Register(RegisterReq) returns (RegisterResp);
+  rpc Login(LoginReq) returns (LoginResp);
+  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp);
+  rpc UpdateUserInfo(UpdateUserInfoReq) returns (UpdateUserInfoResp);
+  rpc SearchUser(SearchUserReq) returns (SearchUserResp);
+  rpc GetUsersByIds(GetUsersByIdsReq) returns (GetUsersByIdsResp);
+}
+
+message RegisterReq {
+  string username = 1;
+  string password = 2;
+  string email = 3;
+  string nickname = 4;
+}
+
+message RegisterResp {
+  int64 id = 1;
+  string username = 2;
+  string nickname = 3;
+  string avatar = 4;
+  string email = 5;
+  int64 create_at = 6;
+}
+
+message LoginReq {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResp {
+  int64 id = 1;
+  string username = 2;
+  string nickname = 3;
+  string avatar = 4;
+  string email = 5;
+  int32 status = 6;
+  int64 create_at = 7;
+}
+
+message GetUserInfoReq {
+  int64 user_id = 1;
+}
+
+message GetUserInfoResp {
+  int64 id = 1;
+  string username = 2;
+  string nickname = 3;
+  string avatar = 4;
+  string email = 5;
+  int32 status = 6;
+  int64 create_at = 7;
+  int64 update_at = 8;
+}
+
+message UpdateUserInfoReq {
+  int64 user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  string email = 4;
+}
+
+message UpdateUserInfoResp {
+}
+
+message SearchUserReq {
+  string keyword = 1;
+  int64 page = 2;
+  int64 size = 3;
+}
+
+message SearchUserResp {
+  repeated GetUserInfoResp users = 1;
+  int64 total = 2;
+}
+
+message GetUsersByIdsReq {
+  repeated int64 user_ids = 1;
+}
+
+message GetUsersByIdsResp {
+  repeated GetUserInfoResp users = 1;
+}

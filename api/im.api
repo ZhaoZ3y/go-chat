@@ -1,0 +1,539 @@
+// api/im.api
+syntax = "v1"
+
+info(
+    title: "IM系统API"
+    desc: "分布式即时通讯系统API接口定义"
+    author: "IM Team"
+    version: "v1.0"
+)
+
+// 用户相关接口
+@server(
+    group: user
+    prefix: /api/v1/user
+    jwt: Auth
+)
+service im-api {
+    @doc "用户注册"
+    @handler register
+    post /register (RegisterReq) returns (RegisterResp)
+    
+    @doc "用户登录"
+    @handler login
+    post /login (LoginReq) returns (LoginResp)
+    
+    @doc "获取用户信息"
+    @handler getUserInfo
+    get /info (GetUserInfoReq) returns (GetUserInfoResp)
+    
+    @doc "更新用户信息"
+    @handler updateUserInfo
+    put /info (UpdateUserInfoReq) returns (CommonResp)
+    
+    @doc "搜索用户"
+    @handler searchUser
+    get /search (SearchUserReq) returns (SearchUserResp)
+}
+
+// 好友相关接口
+@server(
+    group: friend
+    prefix: /api/v1/friend
+    jwt: Auth
+)
+service im-api {
+    @doc "发送好友申请"
+    @handler sendFriendRequest
+    post /request (SendFriendRequestReq) returns (CommonResp)
+    
+    @doc "处理好友申请"
+    @handler handleFriendRequest
+    put /request (HandleFriendRequestReq) returns (CommonResp)
+    
+    @doc "获取好友列表"
+    @handler getFriendList
+    get /list (GetFriendListReq) returns (GetFriendListResp)
+    
+    @doc "删除好友"
+    @handler deleteFriend
+    delete /:friendId (DeleteFriendReq) returns (CommonResp)
+    
+    @doc "获取好友申请列表"
+    @handler getFriendRequests
+    get /requests (GetFriendRequestsReq) returns (GetFriendRequestsResp)
+}
+
+// 群聊相关接口
+@server(
+    group: group
+    prefix: /api/v1/group
+    jwt: Auth
+)
+service im-api {
+    @doc "创建群聊"
+    @handler createGroup
+    post /create (CreateGroupReq) returns (CreateGroupResp)
+    
+    @doc "加入群聊"
+    @handler joinGroup
+    post /:groupId/join (JoinGroupReq) returns (CommonResp)
+    
+    @doc "退出群聊"
+    @handler leaveGroup
+    post /:groupId/leave (LeaveGroupReq) returns (CommonResp)
+    
+    @doc "获取群聊列表"
+    @handler getGroupList
+    get /list (GetGroupListReq) returns (GetGroupListResp)
+    
+    @doc "获取群成员列表"
+    @handler getGroupMembers
+    get /:groupId/members (GetGroupMembersReq) returns (GetGroupMembersResp)
+    
+    @doc "更新群信息"
+    @handler updateGroupInfo
+    put /:groupId (UpdateGroupInfoReq) returns (CommonResp)
+    
+    @doc "踢出群成员"
+    @handler kickGroupMember
+    delete /:groupId/member/:userId (KickGroupMemberReq) returns (CommonResp)
+}
+
+// 消息相关接口
+@server(
+    group: message
+    prefix: /api/v1/message
+    jwt: Auth
+)
+service im-api {
+    @doc "发送消息"
+    @handler sendMessage
+    post /send (SendMessageReq) returns (SendMessageResp)
+    
+    @doc "撤回消息"
+    @handler recallMessage
+    put /:messageId/recall (RecallMessageReq) returns (CommonResp)
+    
+    @doc "删除消息"
+    @handler deleteMessage
+    delete /:messageId (DeleteMessageReq) returns (CommonResp)
+    
+    @doc "获取消息历史"
+    @handler getMessageHistory
+    get /history (GetMessageHistoryReq) returns (GetMessageHistoryResp)
+    
+    @doc "标记消息已读"
+    @handler markMessageRead
+    put /read (MarkMessageReadReq) returns (CommonResp)
+    
+    @doc "获取未读消息数"
+    @handler getUnreadCount
+    get /unread/count (GetUnreadCountReq) returns (GetUnreadCountResp)
+}
+
+// 文件相关接口
+@server(
+    group: file
+    prefix: /api/v1/file
+    jwt: Auth
+)
+service im-api {
+    @doc "上传文件"
+    @handler uploadFile
+    post /upload (UploadFileReq) returns (UploadFileResp)
+    
+    @doc "获取文件信息"
+    @handler getFileInfo
+    get /:fileId (GetFileInfoReq) returns (GetFileInfoResp)
+    
+    @doc "下载文件"
+    @handler downloadFile
+    get /:fileId/download (DownloadFileReq) returns (DownloadFileResp)
+}
+
+// WebSocket连接
+@server(
+    group: ws
+    prefix: /api/v1/ws
+)
+service im-api {
+    @doc "WebSocket连接"
+    @handler connect
+    get /connect (ConnectReq) returns (ConnectResp)
+}
+
+// 请求响应结构体
+type (
+    // 通用响应
+    CommonResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+    }
+    
+    // 用户相关
+    RegisterReq {
+        Username string `json:"username"`
+        Password string `json:"password"`
+        Email    string `json:"email"`
+        Nickname string `json:"nickname"`
+    }
+    
+    RegisterResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *User `json:"data,omitempty"`
+    }
+    
+    LoginReq {
+        Username string `json:"username"`
+        Password string `json:"password"`
+    }
+    
+    LoginResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *LoginData `json:"data,omitempty"`
+    }
+    
+    LoginData {
+        User  *User  `json:"user"`
+        Token string `json:"token"`
+    }
+    
+    User {
+        Id       int64  `json:"id"`
+        Username string `json:"username"`
+        Nickname string `json:"nickname"`
+        Avatar   string `json:"avatar"`
+        Email    string `json:"email"`
+        Status   int    `json:"status"`
+        CreateAt int64  `json:"create_at"`
+        UpdateAt int64  `json:"update_at"`
+    }
+    
+    GetUserInfoReq {
+        UserId int64 `form:"user_id,optional"`
+    }
+    
+    GetUserInfoResp {
+        Code int   `json:"code"`
+        Msg  string `json:"msg"`
+        Data *User `json:"data,omitempty"`
+    }
+    
+    UpdateUserInfoReq {
+        Nickname string `json:"nickname,optional"`
+        Avatar   string `json:"avatar,optional"`
+        Email    string `json:"email,optional"`
+    }
+    
+    SearchUserReq {
+        Keyword string `form:"keyword"`
+        Page    int64  `form:"page,default=1"`
+        Size    int64  `form:"size,default=10"`
+    }
+    
+    SearchUserResp {
+        Code int     `json:"code"`
+        Msg  string  `json:"msg"`
+        Data *SearchUserData `json:"data,omitempty"`
+    }
+    
+    SearchUserData {
+        List  []*User `json:"list"`
+        Total int64   `json:"total"`
+    }
+    
+    // 好友相关
+    SendFriendRequestReq {
+        ToUserId int64  `json:"to_user_id"`
+        Message  string `json:"message,optional"`
+    }
+    
+    HandleFriendRequestReq {
+        RequestId int64 `json:"request_id"`
+        Action    int   `json:"action"` // 1:接受 2:拒绝
+    }
+    
+    GetFriendListReq {
+        Page int64 `form:"page,default=1"`
+        Size int64 `form:"size,default=100"`
+    }
+    
+    GetFriendListResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *FriendListData `json:"data,omitempty"`
+    }
+    
+    FriendListData {
+        List  []*Friend `json:"list"`
+        Total int64     `json:"total"`
+    }
+    
+    Friend {
+        Id       int64  `json:"id"`
+        UserId   int64  `json:"user_id"`
+        Username string `json:"username"`
+        Nickname string `json:"nickname"`
+        Avatar   string `json:"avatar"`
+        Status   int    `json:"status"`
+        CreateAt int64  `json:"create_at"`
+    }
+    
+    DeleteFriendReq {
+        FriendId int64 `path:"friendId"`
+    }
+    
+    GetFriendRequestsReq {
+        Page int64 `form:"page,default=1"`
+        Size int64 `form:"size,default=10"`
+    }
+    
+    GetFriendRequestsResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *FriendRequestsData `json:"data,omitempty"`
+    }
+    
+    FriendRequestsData {
+        List  []*FriendRequest `json:"list"`
+        Total int64            `json:"total"`
+    }
+    
+    FriendRequest {
+        Id         int64  `json:"id"`
+        FromUserId int64  `json:"from_user_id"`
+        FromUser   *User  `json:"from_user"`
+        ToUserId   int64  `json:"to_user_id"`
+        Message    string `json:"message"`
+        Status     int    `json:"status"`
+        CreateAt   int64  `json:"create_at"`
+    }
+    
+    // 群聊相关
+    CreateGroupReq {
+        Name        string  `json:"name"`
+        Description string  `json:"description,optional"`
+        Avatar      string  `json:"avatar,optional"`
+        MemberIds   []int64 `json:"member_ids,optional"`
+    }
+    
+    CreateGroupResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *Group `json:"data,omitempty"`
+    }
+    
+    Group {
+        Id          int64  `json:"id"`
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        Avatar      string `json:"avatar"`
+        OwnerId     int64  `json:"owner_id"`
+        MemberCount int    `json:"member_count"`
+        Status      int    `json:"status"`
+        CreateAt    int64  `json:"create_at"`
+        UpdateAt    int64  `json:"update_at"`
+    }
+    
+    JoinGroupReq {
+        GroupId int64 `path:"groupId"`
+    }
+    
+    LeaveGroupReq {
+        GroupId int64 `path:"groupId"`
+    }
+    
+    GetGroupListReq {
+        Page int64 `form:"page,default=1"`
+        Size int64 `form:"size,default=100"`
+    }
+    
+    GetGroupListResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *GroupListData `json:"data,omitempty"`
+    }
+    
+    GroupListData {
+        List  []*Group `json:"list"`
+        Total int64    `json:"total"`
+    }
+    
+    GetGroupMembersReq {
+        GroupId int64 `path:"groupId"`
+        Page    int64 `form:"page,default=1"`
+        Size    int64 `form:"size,default=100"`
+    }
+    
+    GetGroupMembersResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *GroupMembersData `json:"data,omitempty"`
+    }
+    
+    GroupMembersData {
+        List  []*GroupMember `json:"list"`
+        Total int64          `json:"total"`
+    }
+    
+    GroupMember {
+        Id       int64  `json:"id"`
+        UserId   int64  `json:"user_id"`
+        Username string `json:"username"`
+        Nickname string `json:"nickname"`
+        Avatar   string `json:"avatar"`
+        Role     int    `json:"role"`
+        JoinAt   int64  `json:"join_at"`
+    }
+    
+    UpdateGroupInfoReq {
+        GroupId     int64  `path:"groupId"`
+        Name        string `json:"name,optional"`
+        Description string `json:"description,optional"`
+        Avatar      string `json:"avatar,optional"`
+    }
+    
+    KickGroupMemberReq {
+        GroupId int64 `path:"groupId"`
+        UserId  int64 `path:"userId"`
+    }
+    
+    // 消息相关
+    SendMessageReq {
+        ToUserId  int64  `json:"to_user_id,optional"`
+        ToGroupId int64  `json:"to_group_id,optional"`
+        Type      int    `json:"type"`           // 1:文本 2:图片 3:语音 4:视频 5:文件
+        Content   string `json:"content"`
+        FileId    int64  `json:"file_id,optional"`
+        ReplyTo   int64  `json:"reply_to,optional"`
+    }
+    
+    SendMessageResp {
+        Code int      `json:"code"`
+        Msg  string   `json:"msg"`
+        Data *Message `json:"data,omitempty"`
+    }
+    
+    Message {
+        Id        int64  `json:"id"`
+        FromUserId int64 `json:"from_user_id"`
+        FromUser  *User  `json:"from_user"`
+        ToUserId  int64  `json:"to_user_id,optional"`
+        ToGroupId int64  `json:"to_group_id,optional"`
+        Type      int    `json:"type"`
+        Content   string `json:"content"`
+        FileId    int64  `json:"file_id,optional"`
+        FileInfo  *File  `json:"file_info,omitempty"`
+        ReplyTo   int64  `json:"reply_to,optional"`
+        Status    int    `json:"status"`
+        CreateAt  int64  `json:"create_at"`
+        UpdateAt  int64  `json:"update_at"`
+    }
+    
+    RecallMessageReq {
+        MessageId int64 `path:"messageId"`
+    }
+    
+    DeleteMessageReq {
+        MessageId int64 `path:"messageId"`
+    }
+    
+    GetMessageHistoryReq {
+        UserId    int64 `form:"user_id,optional"`
+        GroupId   int64 `form:"group_id,optional"`
+        LastMsgId int64 `form:"last_msg_id,optional"`
+        Size      int64 `form:"size,default=20"`
+    }
+    
+    GetMessageHistoryResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *MessageHistoryData `json:"data,omitempty"`
+    }
+    
+    MessageHistoryData {
+        List   []*Message `json:"list"`
+        HasMore bool      `json:"has_more"`
+    }
+    
+    MarkMessageReadReq {
+        MessageIds []int64 `json:"message_ids"`
+    }
+    
+    GetUnreadCountReq {
+    }
+    
+    GetUnreadCountResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data *UnreadCountData `json:"data,omitempty"`
+    }
+    
+    UnreadCountData {
+        Total int64                   `json:"total"`
+        List  []*ConversationUnread `json:"list"`
+    }
+    
+    ConversationUnread {
+        UserId    int64 `json:"user_id,optional"`
+        GroupId   int64 `json:"group_id,optional"`
+        Count     int64 `json:"count"`
+        LastMsgId int64 `json:"last_msg_id"`
+    }
+    
+    // 文件相关
+    UploadFileReq {
+        File     []byte `json:"file"`
+        FileName string `json:"file_name"`
+        FileType string `json:"file_type"`
+    }
+    
+    UploadFileResp {
+        Code int   `json:"code"`
+        Msg  string `json:"msg"`
+        Data *File `json:"data,omitempty"`
+    }
+    
+    File {
+        Id       int64  `json:"id"`
+        Name     string `json:"name"`
+        Type     string `json:"type"`
+        Size     int64  `json:"size"`
+        Url      string `json:"url"`
+        Hash     string `json:"hash"`
+        CreateAt int64  `json:"create_at"`
+    }
+    
+    GetFileInfoReq {
+        FileId int64 `path:"fileId"`
+    }
+    
+    GetFileInfoResp {
+        Code int   `json:"code"`
+        Msg  string `json:"msg"`
+        Data *File `json:"data,omitempty"`
+    }
+    
+    DownloadFileReq {
+        FileId int64 `path:"fileId"`
+    }
+    
+    DownloadFileResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+        Data []byte `json:"data,omitempty"`
+    }
+    
+    // WebSocket相关
+    ConnectReq {
+        Token string `form:"token"`
+    }
+    
+    ConnectResp {
+        Code int    `json:"code"`
+        Msg  string `json:"msg"`
+    }
+)
