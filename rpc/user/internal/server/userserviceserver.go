@@ -52,3 +52,15 @@ func (s *UserServiceServer) SearchUser(ctx context.Context, in *user.SearchUserR
 	l := logic.NewSearchUserLogic(ctx, s.svcCtx)
 	return l.SearchUser(in)
 }
+
+// 刷新Token
+func (s *UserServiceServer) RefreshToken(ctx context.Context, in *user.RefreshTokenRequest) (*user.RefreshTokenResponse, error) {
+	l := logic.NewRefreshTokenLogic(ctx, s.svcCtx)
+	return l.RefreshToken(in)
+}
+
+// 修改密码
+func (s *UserServiceServer) ChangePassword(ctx context.Context, in *user.ChangePasswordRequest) (*user.ChangePasswordResponse, error) {
+	l := logic.NewChangePasswordLogic(ctx, s.svcCtx)
+	return l.ChangePassword(in)
+}

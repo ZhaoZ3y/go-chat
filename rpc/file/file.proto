@@ -17,8 +17,8 @@ message FileInfo {
   string hash = 9; // 文件hash值，用于去重
   int64 user_id = 10;
   int32 status = 11; // 1:正常 2:已删除
-  int64 create_time = 12;
-  int64 update_time = 13;
+  int64 create_at = 12;
+  int64 update_at = 13;
 }
 
 // 上传文件请求

@@ -14,10 +14,14 @@ import (
 )
 
 type (
+	ChangePasswordRequest  = user.ChangePasswordRequest
+	ChangePasswordResponse = user.ChangePasswordResponse
 	GetUserInfoRequest     = user.GetUserInfoRequest
 	GetUserInfoResponse    = user.GetUserInfoResponse
 	LoginRequest           = user.LoginRequest
 	LoginResponse          = user.LoginResponse
+	RefreshTokenRequest    = user.RefreshTokenRequest
+	RefreshTokenResponse   = user.RefreshTokenResponse
 	RegisterRequest        = user.RegisterRequest
 	RegisterResponse       = user.RegisterResponse
 	SearchUserRequest      = user.SearchUserRequest
@@ -37,6 +41,10 @@ type (
 		UpdateUserInfo(ctx context.Context, in *UpdateUserInfoRequest, opts ...grpc.CallOption) (*UpdateUserInfoResponse, error)
 		// 搜索用户
 		SearchUser(ctx context.Context, in *SearchUserRequest, opts ...grpc.CallOption) (*SearchUserResponse, error)
+		// 刷新Token
+		RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
+		// 修改密码
+		ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 	}
 
 	defaultUserService struct {
@@ -78,4 +86,16 @@ func (m *defaultUserService) UpdateUserInfo(ctx context.Context, in *UpdateUserI
 func (m *defaultUserService) SearchUser(ctx context.Context, in *SearchUserRequest, opts ...grpc.CallOption) (*SearchUserResponse, error) {
 	client := user.NewUserServiceClient(m.cli.Conn())
 	return client.SearchUser(ctx, in, opts...)
+}
+
+// 刷新Token
+func (m *defaultUserService) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
+	client := user.NewUserServiceClient(m.cli.Conn())
+	return client.RefreshToken(ctx, in, opts...)
+}
+
+// 修改密码
+func (m *defaultUserService) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
+	client := user.NewUserServiceClient(m.cli.Conn())
+	return client.ChangePassword(ctx, in, opts...)
 }

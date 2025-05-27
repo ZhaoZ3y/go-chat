@@ -1,89 +1,119 @@
-// rpc/user/user.proto
 syntax = "proto3";
 
 package user;
+
 option go_package = "./user";
 
-service User {
-  rpc Register(RegisterReq) returns (RegisterResp);
-  rpc Login(LoginReq) returns (LoginResp);
-  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp);
-  rpc UpdateUserInfo(UpdateUserInfoReq) returns (UpdateUserInfoResp);
-  rpc SearchUser(SearchUserReq) returns (SearchUserResp);
-  rpc GetUsersByIds(GetUsersByIdsReq) returns (GetUsersByIdsResp);
+// 用户信息
+message User {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+  string nickname = 4;
+  string avatar = 5;
+  string phone = 6;
+  int32 status = 7; // 1:正常 2:禁用
+  int64 create_at = 8;
+  int64 update_at = 9;
 }
 
-message RegisterReq {
+// 用户注册请求
+message RegisterRequest {
   string username = 1;
   string password = 2;
   string email = 3;
   string nickname = 4;
 }
 
-message RegisterResp {
-  int64 id = 1;
-  string username = 2;
-  string nickname = 3;
-  string avatar = 4;
-  string email = 5;
-  int64 create_at = 6;
+// 用户注册响应
+message RegisterResponse {
+  string message = 2;
 }
 
-message LoginReq {
+// 用户登录请求
+message LoginRequest {
   string username = 1;
   string password = 2;
 }
 
-message LoginResp {
-  int64 id = 1;
-  string username = 2;
-  string nickname = 3;
-  string avatar = 4;
-  string email = 5;
-  int32 status = 6;
-  int64 create_at = 7;
+// 用户登录响应
+message LoginResponse {
+  string access_token = 2;
+  string refresh_token = 3;
 }
 
-message GetUserInfoReq {
+// 获取用户信息请求
+message GetUserInfoRequest {
   int64 user_id = 1;
 }
 
-message GetUserInfoResp {
-  int64 id = 1;
-  string username = 2;
-  string nickname = 3;
-  string avatar = 4;
-  string email = 5;
-  int32 status = 6;
-  int64 create_at = 7;
-  int64 update_at = 8;
+// 获取用户信息响应
+message GetUserInfoResponse {
+  User user_info = 1;
 }
 
-message UpdateUserInfoReq {
+// 更新用户信息请求
+message UpdateUserInfoRequest {
   int64 user_id = 1;
   string nickname = 2;
   string avatar = 3;
-  string email = 4;
+  string phone = 4;
+  string email = 5;
 }
 
-message UpdateUserInfoResp {
+// 更新用户信息响应
+message UpdateUserInfoResponse {
+  string message = 1;
 }
 
-message SearchUserReq {
+// 搜索用户请求
+message SearchUserRequest {
   string keyword = 1;
-  int64 page = 2;
-  int64 size = 3;
+  int32 page = 2;
+  int32 page_size = 3;
 }
 
-message SearchUserResp {
-  repeated GetUserInfoResp users = 1;
+// 搜索用户响应
+message SearchUserResponse {
+  repeated User users = 1;
   int64 total = 2;
 }
 
-message GetUsersByIdsReq {
-  repeated int64 user_ids = 1;
+// 刷新Token请求
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+// 刷新Token响应
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
 }
 
-message GetUsersByIdsResp {
-  repeated GetUserInfoResp users = 1;
+// 修改密码请求
+message ChangePasswordRequest {
+  int64 user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+// 修改密码响应
+message ChangePasswordResponse {
+  string message = 1;
+}
+
+// 用户服务
+service UserService {
+  // 用户注册
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  // 用户登录
+  rpc Login(LoginRequest) returns (LoginResponse);
+  // 获取用户信息
+  rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+  // 更新用户信息
+  rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UpdateUserInfoResponse);
+  // 搜索用户
+  rpc SearchUser(SearchUserRequest) returns (SearchUserResponse);
+  // 刷新Token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  // 修改密码
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }

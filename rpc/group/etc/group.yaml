@@ -1,6 +1,14 @@
 Name: group.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 0.0.0.0:10002
 Etcd:
   Hosts:
   - 127.0.0.1:2379
   Key: group.rpc
+
+DataSource: root:123465@tcp(localhost:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+
+Redis:
+  Host: 127.0.0.1
+  Port: 6379
+  Password: ""
+  DB: 0

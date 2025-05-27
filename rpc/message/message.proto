@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package chat;
+
+option go_package = "./chat";
+
+// 消息类型
+enum MessageType {
+  TEXT = 0;
+  IMAGE = 1;
+  FILE = 2;
+  AUDIO = 3;
+  VIDEO = 4;
+  SYSTEM = 5;
+}
+
+// 聊天类型
+enum ChatType {
+  PRIVATE = 0; // 私聊
+  GROUP = 1;   // 群聊
+}
+
+// 消息
+message Message {
+  int64 id = 1;
+  int64 from_user_id = 2;
+  int64 to_user_id = 3; // 私聊时使用
+  int64 group_id = 4;   // 群聊时使用
+  MessageType type = 5;
+  string content = 6;
+  string extra = 7; // 额外信息，JSON格式
+  int64 create_at = 8;
+  ChatType chat_type = 9;
+}
+
+// 会话
+message Conversation {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 target_id = 3; // 对方用户ID或群组ID
+  ChatType type = 4;
+  string last_message = 5;
+  int64 last_message_time = 6;
+  int32 unread_count = 7;
+  int64 create_at = 8;
+  int64 update_at = 9;
+}
+
+// 发送消息请求
+message SendMessageRequest {
+  int64 from_user_id = 1;
+  int64 to_user_id = 2; // 私聊时使用
+  int64 group_id = 3;   // 群聊时使用
+  MessageType type = 4;
+  string content = 5;
+  string extra = 6;
+  ChatType chat_type = 7;
+}
+
+// 发送消息响应
+message SendMessageResponse {
+  int64 message_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+// 获取消息历史请求
+message GetMessageHistoryRequest {
+  int64 user_id = 1;
+  int64 target_id = 2; // 对方用户ID或群组ID
+  ChatType chat_type = 3;
+  int64 last_message_id = 4; // 用于分页，获取此消息之前的消息
+  int32 limit = 5;
+}
+
+// 获取消息历史响应
+message GetMessageHistoryResponse {
+  repeated Message messages = 1;
+  bool has_more = 2;
+}
+
+// 获取会话列表请求
+message GetConversationListRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// 获取会话列表响应
+message GetConversationListResponse {
+  repeated Conversation conversations = 1;
+  int64 total = 2;
+}
+
+// 标记消息已读请求
+message MarkMessageReadRequest {
+  int64 user_id = 1;
+  int64 target_id = 2; // 对方用户ID或群组ID
+  ChatType chat_type = 3;
+  int64 last_read_message_id = 4;
+}
+
+// 标记消息已读响应
+message MarkMessageReadResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 删除消息请求
+message DeleteMessageRequest {
+  int64 message_id = 1;
+  int64 user_id = 2;
+}
+
+// 删除消息响应
+message DeleteMessageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 撤回消息请求
+message RecallMessageRequest {
+  int64 message_id = 1;
+  int64 user_id = 2;
+}
+
+// 撤回消息响应
+message RecallMessageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// WebSocket连接请求
+message ConnectRequest {
+  int64 user_id = 1;
+  string token = 2;
+}
+
+// WebSocket消息推送
+message PushMessage {
+  string type = 1; // message, notification, etc.
+  string data = 2; // JSON格式的数据
+}
+
+// 聊天服务
+service ChatService {
+  // 发送消息
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  // 获取消息历史
+  rpc GetMessageHistory(GetMessageHistoryRequest) returns (GetMessageHistoryResponse);
+  // 获取会话列表
+  rpc GetConversationList(GetConversationListRequest) returns (GetConversationListResponse);
+  // 标记消息已读
+  rpc MarkMessageRead(MarkMessageReadRequest) returns (MarkMessageReadResponse);
+  // 删除消息
+  rpc DeleteMessage(DeleteMessageRequest) returns (DeleteMessageResponse);
+  // 撤回消息
+  rpc RecallMessage(RecallMessageRequest) returns (RecallMessageResponse);
+}

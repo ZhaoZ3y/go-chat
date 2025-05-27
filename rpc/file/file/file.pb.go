@@ -35,8 +35,8 @@ type FileInfo struct {
 	Hash          string                 `protobuf:"bytes,9,opt,name=hash,proto3" json:"hash,omitempty"` // 文件hash值，用于去重
 	UserId        int64                  `protobuf:"varint,10,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Status        int32                  `protobuf:"varint,11,opt,name=status,proto3" json:"status,omitempty"` // 1:正常 2:已删除
-	CreateTime    int64                  `protobuf:"varint,12,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime    int64                  `protobuf:"varint,13,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	CreateAt      int64                  `protobuf:"varint,12,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt      int64                  `protobuf:"varint,13,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -148,16 +148,16 @@ func (x *FileInfo) GetStatus() int32 {
 	return 0
 }
 
-func (x *FileInfo) GetCreateTime() int64 {
+func (x *FileInfo) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
 
-func (x *FileInfo) GetUpdateTime() int64 {
+func (x *FileInfo) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -1629,7 +1629,7 @@ var File_file_proto protoreflect.FileDescriptor
 const file_file_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"file.proto\x12\x04file\"\xf1\x02\n" +
+	"file.proto\x12\x04file\"\xe9\x02\n" +
 	"\bFileInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12#\n" +
@@ -1642,11 +1642,9 @@ const file_file_proto_rawDesc = "" +
 	"\x04hash\x18\t \x01(\tR\x04hash\x12\x17\n" +
 	"\auser_id\x18\n" +
 	" \x01(\x03R\x06userId\x12\x16\n" +
-	"\x06status\x18\v \x01(\x05R\x06status\x12\x1f\n" +
-	"\vcreate_time\x18\f \x01(\x03R\n" +
-	"createTime\x12\x1f\n" +
-	"\vupdate_time\x18\r \x01(\x03R\n" +
-	"updateTime\"\x9f\x01\n" +
+	"\x06status\x18\v \x01(\x05R\x06status\x12\x1b\n" +
+	"\tcreate_at\x18\f \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\r \x01(\x03R\bupdateAt\"\x9f\x01\n" +
 	"\x11UploadFileRequest\x12\x1b\n" +
 	"\tfile_data\x18\x01 \x01(\fR\bfileData\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x1b\n" +

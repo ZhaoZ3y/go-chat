@@ -137,7 +137,7 @@ type Message struct {
 	Type          MessageType            `protobuf:"varint,5,opt,name=type,proto3,enum=chat.MessageType" json:"type,omitempty"`
 	Content       string                 `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
 	Extra         string                 `protobuf:"bytes,7,opt,name=extra,proto3" json:"extra,omitempty"` // 额外信息，JSON格式
-	CreateTime    int64                  `protobuf:"varint,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	CreateAt      int64                  `protobuf:"varint,8,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
 	ChatType      ChatType               `protobuf:"varint,9,opt,name=chat_type,json=chatType,proto3,enum=chat.ChatType" json:"chat_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -222,9 +222,9 @@ func (x *Message) GetExtra() string {
 	return ""
 }
 
-func (x *Message) GetCreateTime() int64 {
+func (x *Message) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
@@ -246,8 +246,8 @@ type Conversation struct {
 	LastMessage     string                 `protobuf:"bytes,5,opt,name=last_message,json=lastMessage,proto3" json:"last_message,omitempty"`
 	LastMessageTime int64                  `protobuf:"varint,6,opt,name=last_message_time,json=lastMessageTime,proto3" json:"last_message_time,omitempty"`
 	UnreadCount     int32                  `protobuf:"varint,7,opt,name=unread_count,json=unreadCount,proto3" json:"unread_count,omitempty"`
-	CreateTime      int64                  `protobuf:"varint,8,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime      int64                  `protobuf:"varint,9,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	CreateAt        int64                  `protobuf:"varint,8,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt        int64                  `protobuf:"varint,9,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -331,16 +331,16 @@ func (x *Conversation) GetUnreadCount() int32 {
 	return 0
 }
 
-func (x *Conversation) GetCreateTime() int64 {
+func (x *Conversation) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
 
-func (x *Conversation) GetUpdateTime() int64 {
+func (x *Conversation) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -1187,7 +1187,7 @@ var File_message_proto protoreflect.FileDescriptor
 
 const file_message_proto_rawDesc = "" +
 	"\n" +
-	"\rmessage.proto\x12\x04chat\"\x99\x02\n" +
+	"\rmessage.proto\x12\x04chat\"\x95\x02\n" +
 	"\aMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12 \n" +
 	"\ffrom_user_id\x18\x02 \x01(\x03R\n" +
@@ -1197,10 +1197,9 @@ const file_message_proto_rawDesc = "" +
 	"\bgroup_id\x18\x04 \x01(\x03R\agroupId\x12%\n" +
 	"\x04type\x18\x05 \x01(\x0e2\x11.chat.MessageTypeR\x04type\x12\x18\n" +
 	"\acontent\x18\x06 \x01(\tR\acontent\x12\x14\n" +
-	"\x05extra\x18\a \x01(\tR\x05extra\x12\x1f\n" +
-	"\vcreate_time\x18\b \x01(\x03R\n" +
-	"createTime\x12+\n" +
-	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xac\x02\n" +
+	"\x05extra\x18\a \x01(\tR\x05extra\x12\x1b\n" +
+	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12+\n" +
+	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xa4\x02\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
@@ -1208,11 +1207,9 @@ const file_message_proto_rawDesc = "" +
 	"\x04type\x18\x04 \x01(\x0e2\x0e.chat.ChatTypeR\x04type\x12!\n" +
 	"\flast_message\x18\x05 \x01(\tR\vlastMessage\x12*\n" +
 	"\x11last_message_time\x18\x06 \x01(\x03R\x0flastMessageTime\x12!\n" +
-	"\funread_count\x18\a \x01(\x05R\vunreadCount\x12\x1f\n" +
-	"\vcreate_time\x18\b \x01(\x03R\n" +
-	"createTime\x12\x1f\n" +
-	"\vupdate_time\x18\t \x01(\x03R\n" +
-	"updateTime\"\xf3\x01\n" +
+	"\funread_count\x18\a \x01(\x05R\vunreadCount\x12\x1b\n" +
+	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\t \x01(\x03R\bupdateAt\"\xf3\x01\n" +
 	"\x12SendMessageRequest\x12 \n" +
 	"\ffrom_user_id\x18\x01 \x01(\x03R\n" +
 	"fromUserId\x12\x1c\n" +

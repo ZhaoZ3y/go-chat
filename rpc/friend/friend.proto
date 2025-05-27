@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package friend;
+
+option go_package = "./friend";
+
+// 好友信息
+message Friend {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 friend_id = 3;
+  string remark = 4; // 备注名
+  int32 status = 5; // 1:正常 2:拉黑
+  int64 create_at = 6;
+  int64 update_at = 7;
+}
+
+// 好友申请
+message FriendRequest {
+  int64 id = 1;
+  int64 from_user_id = 2;
+  int64 to_user_id = 3;
+  string message = 4; // 申请消息
+  int32 status = 5; // 1:待处理 2:已同意 3:已拒绝
+  int64 create_at = 6;
+  int64 update_at = 7;
+}
+
+// 发送好友申请请求
+message SendFriendRequestRequest {
+  int64 from_user_id = 1;
+  int64 to_user_id = 2;
+  string message = 3;
+}
+
+// 发送好友申请响应
+message SendFriendRequestResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 处理好友申请请求
+message HandleFriendRequestRequest {
+  int64 request_id = 1;
+  int64 user_id = 2;
+  int32 action = 3; // 2:同意 3:拒绝
+}
+
+// 处理好友申请响应
+message HandleFriendRequestResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 获取好友申请列表请求
+message GetFriendRequestListRequest {
+  int64 user_id = 1;
+  int32 status = 2; // 0:全部 1:待处理 2:已同意 3:已拒绝
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// 获取好友申请列表响应
+message GetFriendRequestListResponse {
+  repeated FriendRequest requests = 1;
+  int64 total = 2;
+}
+
+// 获取好友列表请求
+message GetFriendListRequest {
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// 获取好友列表响应
+message GetFriendListResponse {
+  repeated Friend friends = 1;
+  int64 total = 2;
+}
+
+// 删除好友请求
+message DeleteFriendRequest {
+  int64 user_id = 1;
+  int64 friend_id = 2;
+}
+
+// 删除好友响应
+message DeleteFriendResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 更新好友备注请求
+message UpdateFriendRemarkRequest {
+  int64 user_id = 1;
+  int64 friend_id = 2;
+  string remark = 3;
+}
+
+// 更新好友备注响应
+message UpdateFriendRemarkResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 拉黑好友请求
+message BlockFriendRequest {
+  int64 user_id = 1;
+  int64 friend_id = 2;
+}
+
+// 拉黑好友响应
+message BlockFriendResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 好友服务
+service FriendService {
+  // 发送好友申请
+  rpc SendFriendRequest(SendFriendRequestRequest) returns (SendFriendRequestResponse);
+  // 处理好友申请
+  rpc HandleFriendRequest(HandleFriendRequestRequest) returns (HandleFriendRequestResponse);
+  // 获取好友申请列表
+  rpc GetFriendRequestList(GetFriendRequestListRequest) returns (GetFriendRequestListResponse);
+  // 获取好友列表
+  rpc GetFriendList(GetFriendListRequest) returns (GetFriendListResponse);
+  // 删除好友
+  rpc DeleteFriend(DeleteFriendRequest) returns (DeleteFriendResponse);
+  // 更新好友备注
+  rpc UpdateFriendRemark(UpdateFriendRemarkRequest) returns (UpdateFriendRemarkResponse);
+  // 拉黑好友
+  rpc BlockFriend(BlockFriendRequest) returns (BlockFriendResponse);
+}

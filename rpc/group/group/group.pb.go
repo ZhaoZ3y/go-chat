@@ -32,8 +32,8 @@ type Group struct {
 	MemberCount    int32                  `protobuf:"varint,6,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`
 	MaxMemberCount int32                  `protobuf:"varint,7,opt,name=max_member_count,json=maxMemberCount,proto3" json:"max_member_count,omitempty"`
 	Status         int32                  `protobuf:"varint,8,opt,name=status,proto3" json:"status,omitempty"` // 1:正常 2:禁用
-	CreateTime     int64                  `protobuf:"varint,9,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime     int64                  `protobuf:"varint,10,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	CreateAt       int64                  `protobuf:"varint,9,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt       int64                  `protobuf:"varint,10,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -124,16 +124,16 @@ func (x *Group) GetStatus() int32 {
 	return 0
 }
 
-func (x *Group) GetCreateTime() int64 {
+func (x *Group) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
 
-func (x *Group) GetUpdateTime() int64 {
+func (x *Group) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -148,7 +148,7 @@ type GroupMember struct {
 	Nickname      string                 `protobuf:"bytes,5,opt,name=nickname,proto3" json:"nickname,omitempty"` // 群昵称
 	Status        int32                  `protobuf:"varint,6,opt,name=status,proto3" json:"status,omitempty"`    // 1:正常 2:禁言
 	JoinTime      int64                  `protobuf:"varint,7,opt,name=join_time,json=joinTime,proto3" json:"join_time,omitempty"`
-	UpdateTime    int64                  `protobuf:"varint,8,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	UpdateAt      int64                  `protobuf:"varint,8,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -232,9 +232,9 @@ func (x *GroupMember) GetJoinTime() int64 {
 	return 0
 }
 
-func (x *GroupMember) GetUpdateTime() int64 {
+func (x *GroupMember) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -1773,7 +1773,7 @@ var File_group_proto protoreflect.FileDescriptor
 
 const file_group_proto_rawDesc = "" +
 	"\n" +
-	"\vgroup.proto\x12\x05group\"\xa7\x02\n" +
+	"\vgroup.proto\x12\x05group\"\x9f\x02\n" +
 	"\x05Group\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1782,12 +1782,10 @@ const file_group_proto_rawDesc = "" +
 	"\bowner_id\x18\x05 \x01(\x03R\aownerId\x12!\n" +
 	"\fmember_count\x18\x06 \x01(\x05R\vmemberCount\x12(\n" +
 	"\x10max_member_count\x18\a \x01(\x05R\x0emaxMemberCount\x12\x16\n" +
-	"\x06status\x18\b \x01(\x05R\x06status\x12\x1f\n" +
-	"\vcreate_time\x18\t \x01(\x03R\n" +
-	"createTime\x12\x1f\n" +
-	"\vupdate_time\x18\n" +
-	" \x01(\x03R\n" +
-	"updateTime\"\xd7\x01\n" +
+	"\x06status\x18\b \x01(\x05R\x06status\x12\x1b\n" +
+	"\tcreate_at\x18\t \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\n" +
+	" \x01(\x03R\bupdateAt\"\xd3\x01\n" +
 	"\vGroupMember\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\x03R\agroupId\x12\x17\n" +
@@ -1795,9 +1793,8 @@ const file_group_proto_rawDesc = "" +
 	"\x04role\x18\x04 \x01(\x05R\x04role\x12\x1a\n" +
 	"\bnickname\x18\x05 \x01(\tR\bnickname\x12\x16\n" +
 	"\x06status\x18\x06 \x01(\x05R\x06status\x12\x1b\n" +
-	"\tjoin_time\x18\a \x01(\x03R\bjoinTime\x12\x1f\n" +
-	"\vupdate_time\x18\b \x01(\x03R\n" +
-	"updateTime\"\x9c\x01\n" +
+	"\tjoin_time\x18\a \x01(\x03R\bjoinTime\x12\x1b\n" +
+	"\tupdate_at\x18\b \x01(\x03R\bupdateAt\"\x9c\x01\n" +
 	"\x12CreateGroupRequest\x12\x19\n" +
 	"\bowner_id\x18\x01 \x01(\x03R\aownerId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +

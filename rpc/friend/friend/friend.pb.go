@@ -29,8 +29,8 @@ type Friend struct {
 	FriendId      int64                  `protobuf:"varint,3,opt,name=friend_id,json=friendId,proto3" json:"friend_id,omitempty"`
 	Remark        string                 `protobuf:"bytes,4,opt,name=remark,proto3" json:"remark,omitempty"`  // 备注名
 	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"` // 1:正常 2:拉黑
-	CreateTime    int64                  `protobuf:"varint,6,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime    int64                  `protobuf:"varint,7,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	CreateAt      int64                  `protobuf:"varint,6,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt      int64                  `protobuf:"varint,7,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -100,16 +100,16 @@ func (x *Friend) GetStatus() int32 {
 	return 0
 }
 
-func (x *Friend) GetCreateTime() int64 {
+func (x *Friend) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
 
-func (x *Friend) GetUpdateTime() int64 {
+func (x *Friend) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -122,8 +122,8 @@ type FriendRequest struct {
 	ToUserId      int64                  `protobuf:"varint,3,opt,name=to_user_id,json=toUserId,proto3" json:"to_user_id,omitempty"`
 	Message       string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"` // 申请消息
 	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`  // 1:待处理 2:已同意 3:已拒绝
-	CreateTime    int64                  `protobuf:"varint,6,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	UpdateTime    int64                  `protobuf:"varint,7,opt,name=update_time,json=updateTime,proto3" json:"update_time,omitempty"`
+	CreateAt      int64                  `protobuf:"varint,6,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt      int64                  `protobuf:"varint,7,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -193,16 +193,16 @@ func (x *FriendRequest) GetStatus() int32 {
 	return 0
 }
 
-func (x *FriendRequest) GetCreateTime() int64 {
+func (x *FriendRequest) GetCreateAt() int64 {
 	if x != nil {
-		return x.CreateTime
+		return x.CreateAt
 	}
 	return 0
 }
 
-func (x *FriendRequest) GetUpdateTime() int64 {
+func (x *FriendRequest) GetUpdateAt() int64 {
 	if x != nil {
-		return x.UpdateTime
+		return x.UpdateAt
 	}
 	return 0
 }
@@ -1001,17 +1001,15 @@ var File_friend_proto protoreflect.FileDescriptor
 
 const file_friend_proto_rawDesc = "" +
 	"\n" +
-	"\ffriend.proto\x12\x06friend\"\xc0\x01\n" +
+	"\ffriend.proto\x12\x06friend\"\xb8\x01\n" +
 	"\x06Friend\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\tfriend_id\x18\x03 \x01(\x03R\bfriendId\x12\x16\n" +
 	"\x06remark\x18\x04 \x01(\tR\x06remark\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1f\n" +
-	"\vcreate_time\x18\x06 \x01(\x03R\n" +
-	"createTime\x12\x1f\n" +
-	"\vupdate_time\x18\a \x01(\x03R\n" +
-	"updateTime\"\xd3\x01\n" +
+	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1b\n" +
+	"\tcreate_at\x18\x06 \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\"\xcb\x01\n" +
 	"\rFriendRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12 \n" +
 	"\ffrom_user_id\x18\x02 \x01(\x03R\n" +
@@ -1019,11 +1017,9 @@ const file_friend_proto_rawDesc = "" +
 	"\n" +
 	"to_user_id\x18\x03 \x01(\x03R\btoUserId\x12\x18\n" +
 	"\amessage\x18\x04 \x01(\tR\amessage\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1f\n" +
-	"\vcreate_time\x18\x06 \x01(\x03R\n" +
-	"createTime\x12\x1f\n" +
-	"\vupdate_time\x18\a \x01(\x03R\n" +
-	"updateTime\"t\n" +
+	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1b\n" +
+	"\tcreate_at\x18\x06 \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\"t\n" +
 	"\x18SendFriendRequestRequest\x12 \n" +
 	"\ffrom_user_id\x18\x01 \x01(\x03R\n" +
 	"fromUserId\x12\x1c\n" +
