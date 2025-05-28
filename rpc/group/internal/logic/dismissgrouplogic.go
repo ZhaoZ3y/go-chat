@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"IM/pkg/model"
 	"context"
 
 	"IM/rpc/group/group"
@@ -25,7 +26,26 @@ func NewDismissGroupLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Dism
 
 // 解散群组
 func (l *DismissGroupLogic) DismissGroup(in *group.DismissGroupRequest) (*group.DismissGroupResponse, error) {
-	// todo: add your logic here and delete this line
+	// 检查是否为群主
+	var groupInfo model.Groups
+	if err := l.svcCtx.DB.Where("id = ? AND owner_id = ?", in.GroupId, in.OwnerId).First(&groupInfo).Error; err != nil {
+		return &group.DismissGroupResponse{Success: false, Message: "只有群主可以解散群组"}, nil
+	}
 
-	return &group.DismissGroupResponse{}, nil
+	tx := l.svcCtx.DB.Begin()
+
+	// 删除所有群成员
+	if err := tx.Where("group_id = ?", in.GroupId).Delete(&model.GroupMembers{}).Error; err != nil {
+		tx.Rollback()
+		return &group.DismissGroupResponse{Success: false, Message: "解散群组失败"}, nil
+	}
+
+	// 删除群组
+	if err := tx.Delete(&groupInfo).Error; err != nil {
+		tx.Rollback()
+		return &group.DismissGroupResponse{Success: false, Message: "解散群组失败"}, nil
+	}
+
+	tx.Commit()
+	return &group.DismissGroupResponse{Success: true, Message: "解散群组成功"}, nil
 }
