@@ -14,8 +14,6 @@ import (
 )
 
 type (
-	CompleteUploadRequest        = file.CompleteUploadRequest
-	CompleteUploadResponse       = file.CompleteUploadResponse
 	CompressImageRequest         = file.CompressImageRequest
 	CompressImageResponse        = file.CompressImageResponse
 	ConfirmUploadRequest         = file.ConfirmUploadRequest
@@ -31,22 +29,12 @@ type (
 	GetFileInfoResponse          = file.GetFileInfoResponse
 	GetFileListRequest           = file.GetFileListRequest
 	GetFileListResponse          = file.GetFileListResponse
-	InitUploadRequest            = file.InitUploadRequest
-	InitUploadResponse           = file.InitUploadResponse
-	UploadChunkRequest           = file.UploadChunkRequest
-	UploadChunkResponse          = file.UploadChunkResponse
 	UploadFileRequest            = file.UploadFileRequest
 	UploadFileResponse           = file.UploadFileResponse
 
 	FileService interface {
-		// 上传文件
+		// 服务端直接上传文件
 		UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
-		// 初始化分块上传
-		InitUpload(ctx context.Context, in *InitUploadRequest, opts ...grpc.CallOption) (*InitUploadResponse, error)
-		// 分块上传
-		UploadChunk(ctx context.Context, in *UploadChunkRequest, opts ...grpc.CallOption) (*UploadChunkResponse, error)
-		// 完成分块上传
-		CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error)
 		// 下载文件
 		DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (*DownloadFileResponse, error)
 		// 获取文件信息
@@ -55,9 +43,9 @@ type (
 		GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
 		// 删除文件
 		DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error)
-		// 生成预签名URL
+		// 生成预签名上传URL
 		GeneratePresignedUrl(ctx context.Context, in *GeneratePresignedUrlRequest, opts ...grpc.CallOption) (*GeneratePresignedUrlResponse, error)
-		// 确认上传
+		// 确认上传 (配合预签名URL使用)
 		ConfirmUpload(ctx context.Context, in *ConfirmUploadRequest, opts ...grpc.CallOption) (*ConfirmUploadResponse, error)
 		// 图片压缩
 		CompressImage(ctx context.Context, in *CompressImageRequest, opts ...grpc.CallOption) (*CompressImageResponse, error)
@@ -74,28 +62,10 @@ func NewFileService(cli zrpc.Client) FileService {
 	}
 }
 
-// 上传文件
+// 服务端直接上传文件
 func (m *defaultFileService) UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error) {
 	client := file.NewFileServiceClient(m.cli.Conn())
 	return client.UploadFile(ctx, in, opts...)
-}
-
-// 初始化分块上传
-func (m *defaultFileService) InitUpload(ctx context.Context, in *InitUploadRequest, opts ...grpc.CallOption) (*InitUploadResponse, error) {
-	client := file.NewFileServiceClient(m.cli.Conn())
-	return client.InitUpload(ctx, in, opts...)
-}
-
-// 分块上传
-func (m *defaultFileService) UploadChunk(ctx context.Context, in *UploadChunkRequest, opts ...grpc.CallOption) (*UploadChunkResponse, error) {
-	client := file.NewFileServiceClient(m.cli.Conn())
-	return client.UploadChunk(ctx, in, opts...)
-}
-
-// 完成分块上传
-func (m *defaultFileService) CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error) {
-	client := file.NewFileServiceClient(m.cli.Conn())
-	return client.CompleteUpload(ctx, in, opts...)
 }
 
 // 下载文件
@@ -122,13 +92,13 @@ func (m *defaultFileService) DeleteFile(ctx context.Context, in *DeleteFileReque
 	return client.DeleteFile(ctx, in, opts...)
 }
 
-// 生成预签名URL
+// 生成预签名上传URL
 func (m *defaultFileService) GeneratePresignedUrl(ctx context.Context, in *GeneratePresignedUrlRequest, opts ...grpc.CallOption) (*GeneratePresignedUrlResponse, error) {
 	client := file.NewFileServiceClient(m.cli.Conn())
 	return client.GeneratePresignedUrl(ctx, in, opts...)
 }
 
-// 确认上传
+// 确认上传 (配合预签名URL使用)
 func (m *defaultFileService) ConfirmUpload(ctx context.Context, in *ConfirmUploadRequest, opts ...grpc.CallOption) (*ConfirmUploadResponse, error) {
 	client := file.NewFileServiceClient(m.cli.Conn())
 	return client.ConfirmUpload(ctx, in, opts...)

@@ -7,27 +7,27 @@ option go_package = "./file";
 // 文件信息
 message FileInfo {
   int64 id = 1;
-  string filename = 2;
-  string original_name = 3;
-  string file_path = 4;
-  string file_url = 5;
-  string file_type = 6; // image, video, audio, document, etc.
+  string filename = 2;        // MinIO 对象的实际存储名称 (例如: timestamp_random.ext)
+  string original_name = 3;   // 用户上传时的原始文件名
+  string file_path = 4;       // MinIO 对象键 (Object Key)
+  string file_url = 5;        // 文件的可访问 URL
+  string file_type = 6;       // 文件分类 (image, video, audio, document, other)
   int64 file_size = 7;
   string mime_type = 8;
-  string hash = 9; // 文件hash值，用于去重
+  string hash = 9;            // 文件内容的哈希值，用于秒传和校验
   int64 user_id = 10;
-  int32 status = 11; // 1:正常 2:已删除
+  int32 status = 11;          // 1: 正常, 2: 已删除
   int64 create_at = 12;
   int64 update_at = 13;
 }
 
-// 上传文件请求
+// 上传文件请求 (服务端直接接收文件内容)
 message UploadFileRequest {
   bytes file_data = 1;
-  string filename = 2;
+  string filename = 2;    // 用户上传时的原始文件名
   string mime_type = 3;
   int64 user_id = 4;
-  string file_type = 5;
+  string file_type = 5;   // 文件分类 (由客户端或服务端判断)
 }
 
 // 上传文件响应
@@ -38,63 +38,16 @@ message UploadFileResponse {
   string message = 4;
 }
 
-// 分块上传初始化请求
-message InitUploadRequest {
-  string filename = 2;
-  string mime_type = 3;
-  int64 file_size = 4;
-  int64 user_id = 5;
-  string file_type = 6;
-  string hash = 7;
-}
-
-// 分块上传初始化响应
-message InitUploadResponse {
-  string upload_id = 1;
-  int32 chunk_size = 2;
-  int32 total_chunks = 3;
-  bool success = 4;
-  string message = 5;
-}
-
-// 分块上传请求
-message UploadChunkRequest {
-  string upload_id = 1;
-  int32 chunk_index = 2;
-  bytes chunk_data = 3;
-  string chunk_hash = 4;
-}
-
-// 分块上传响应
-message UploadChunkResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-// 完成分块上传请求
-message CompleteUploadRequest {
-  string upload_id = 1;
-  int64 user_id = 2;
-}
-
-// 完成分块上传响应
-message CompleteUploadResponse {
-  int64 file_id = 1;
-  string file_url = 2;
-  bool success = 3;
-  string message = 4;
-}
-
 // 下载文件请求
 message DownloadFileRequest {
   int64 file_id = 1;
-  int64 user_id = 2;
+  int64 user_id = 2; // 可用于权限校验
 }
 
 // 下载文件响应
 message DownloadFileResponse {
   bytes file_data = 1;
-  string filename = 2;
+  string filename = 2;    // 原始文件名，便于客户端保存
   string mime_type = 3;
   bool success = 4;
   string message = 5;
@@ -103,7 +56,7 @@ message DownloadFileResponse {
 // 获取文件信息请求
 message GetFileInfoRequest {
   int64 file_id = 1;
-  int64 user_id = 2;
+  int64 user_id = 2; // 可用于权限校验
 }
 
 // 获取文件信息响应
@@ -139,31 +92,34 @@ message DeleteFileResponse {
   string message = 2;
 }
 
-// 生成预签名URL请求
+// 生成预签名URL请求 (用于客户端直接上传到MinIO)
 message GeneratePresignedUrlRequest {
-  string filename = 1;
-  string mime_type = 2;
+  string filename = 1;    // 用户上传时的原始文件名
+  string mime_type = 2;   // 文件的MIME类型
   int64 user_id = 3;
-  int64 expire_time = 4; // 过期时间(秒)
+  int64 expire_time = 4; // URL过期时间 (秒)
+  // file_size: 可选，某些MinIO策略可能需要
+  // string hash: 可选，如果客户端能预先计算hash，可用于秒传检查
 }
 
 // 生成预签名URL响应
 message GeneratePresignedUrlResponse {
-  string upload_url = 1;
-  string file_key = 2;
-  int64 expire_time = 3;
+  string upload_url = 1;  // MinIO预签名的PUT上传URL
+  string file_key = 2;    // 文件在MinIO中应使用的对象键 (Object Key)
+  int64 expire_time = 3;  // URL实际过期的时间戳 (Unix timestamp)
   bool success = 4;
   string message = 5;
 }
 
-// 确认上传请求
+// 确认上传请求 (客户端通过预签名URL上传完成后调用)
 message ConfirmUploadRequest {
-  string file_key = 1;
-  string filename = 2;
+  string file_key = 1;      // 文件在MinIO中的对象键 (与GeneratePresignedUrlResponse中的file_key对应)
+  string filename = 2;      // 用户上传时的原始文件名
   string mime_type = 3;
-  int64 file_size = 4;
+  int64 file_size = 4;    // 文件实际大小 (客户端上传后从MinIO或自行获取)
   int64 user_id = 5;
-  string file_type = 6;
+  string file_type = 6;     // 文件分类
+  string hash = 7;          // 文件的哈希值 (重要，用于秒传和数据完整性)
 }
 
 // 确认上传响应
@@ -176,30 +132,24 @@ message ConfirmUploadResponse {
 
 // 图片压缩请求
 message CompressImageRequest {
-  int64 file_id = 1;
-  int32 quality = 2; // 压缩质量 1-100
-  int32 width = 3;   // 目标宽度，0表示不限制
-  int32 height = 4;  // 目标高度，0表示不限制
+  int64 file_id = 1; // 原始图片在 'files' 表中的ID
+  int32 quality = 2; // 压缩质量 1-100 (主要对JPEG有效)
+  int32 width = 3;   // 目标宽度，0表示等比缩放或不限制
+  int32 height = 4;  // 目标高度，0表示等比缩放或不限制
 }
 
 // 图片压缩响应
 message CompressImageResponse {
-  int64 compressed_file_id = 1;
-  string compressed_file_url = 2;
+  int64 compressed_file_id = 1;  // 压缩后文件在 'files' 表中的ID
+  string compressed_file_url = 2; // 压缩后文件的访问URL
   bool success = 3;
   string message = 4;
 }
 
 // 文件服务
 service FileService {
-  // 上传文件
+  // 服务端直接上传文件
   rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
-  // 初始化分块上传
-  rpc InitUpload(InitUploadRequest) returns (InitUploadResponse);
-  // 分块上传
-  rpc UploadChunk(UploadChunkRequest) returns (UploadChunkResponse);
-  // 完成分块上传
-  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
   // 下载文件
   rpc DownloadFile(DownloadFileRequest) returns (DownloadFileResponse);
   // 获取文件信息
@@ -208,9 +158,9 @@ service FileService {
   rpc GetFileList(GetFileListRequest) returns (GetFileListResponse);
   // 删除文件
   rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
-  // 生成预签名URL
+  // 生成预签名上传URL
   rpc GeneratePresignedUrl(GeneratePresignedUrlRequest) returns (GeneratePresignedUrlResponse);
-  // 确认上传
+  // 确认上传 (配合预签名URL使用)
   rpc ConfirmUpload(ConfirmUploadRequest) returns (ConfirmUploadResponse);
   // 图片压缩
   rpc CompressImage(CompressImageRequest) returns (CompressImageResponse);

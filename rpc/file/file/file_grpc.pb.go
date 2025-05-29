@@ -20,9 +20,6 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	FileService_UploadFile_FullMethodName           = "/file.FileService/UploadFile"
-	FileService_InitUpload_FullMethodName           = "/file.FileService/InitUpload"
-	FileService_UploadChunk_FullMethodName          = "/file.FileService/UploadChunk"
-	FileService_CompleteUpload_FullMethodName       = "/file.FileService/CompleteUpload"
 	FileService_DownloadFile_FullMethodName         = "/file.FileService/DownloadFile"
 	FileService_GetFileInfo_FullMethodName          = "/file.FileService/GetFileInfo"
 	FileService_GetFileList_FullMethodName          = "/file.FileService/GetFileList"
@@ -38,14 +35,8 @@ const (
 //
 // 文件服务
 type FileServiceClient interface {
-	// 上传文件
+	// 服务端直接上传文件
 	UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
-	// 初始化分块上传
-	InitUpload(ctx context.Context, in *InitUploadRequest, opts ...grpc.CallOption) (*InitUploadResponse, error)
-	// 分块上传
-	UploadChunk(ctx context.Context, in *UploadChunkRequest, opts ...grpc.CallOption) (*UploadChunkResponse, error)
-	// 完成分块上传
-	CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error)
 	// 下载文件
 	DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (*DownloadFileResponse, error)
 	// 获取文件信息
@@ -54,9 +45,9 @@ type FileServiceClient interface {
 	GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
 	// 删除文件
 	DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error)
-	// 生成预签名URL
+	// 生成预签名上传URL
 	GeneratePresignedUrl(ctx context.Context, in *GeneratePresignedUrlRequest, opts ...grpc.CallOption) (*GeneratePresignedUrlResponse, error)
-	// 确认上传
+	// 确认上传 (配合预签名URL使用)
 	ConfirmUpload(ctx context.Context, in *ConfirmUploadRequest, opts ...grpc.CallOption) (*ConfirmUploadResponse, error)
 	// 图片压缩
 	CompressImage(ctx context.Context, in *CompressImageRequest, opts ...grpc.CallOption) (*CompressImageResponse, error)
@@ -74,36 +65,6 @@ func (c *fileServiceClient) UploadFile(ctx context.Context, in *UploadFileReques
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UploadFileResponse)
 	err := c.cc.Invoke(ctx, FileService_UploadFile_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) InitUpload(ctx context.Context, in *InitUploadRequest, opts ...grpc.CallOption) (*InitUploadResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(InitUploadResponse)
-	err := c.cc.Invoke(ctx, FileService_InitUpload_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) UploadChunk(ctx context.Context, in *UploadChunkRequest, opts ...grpc.CallOption) (*UploadChunkResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UploadChunkResponse)
-	err := c.cc.Invoke(ctx, FileService_UploadChunk_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) CompleteUpload(ctx context.Context, in *CompleteUploadRequest, opts ...grpc.CallOption) (*CompleteUploadResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CompleteUploadResponse)
-	err := c.cc.Invoke(ctx, FileService_CompleteUpload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,14 +147,8 @@ func (c *fileServiceClient) CompressImage(ctx context.Context, in *CompressImage
 //
 // 文件服务
 type FileServiceServer interface {
-	// 上传文件
+	// 服务端直接上传文件
 	UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
-	// 初始化分块上传
-	InitUpload(context.Context, *InitUploadRequest) (*InitUploadResponse, error)
-	// 分块上传
-	UploadChunk(context.Context, *UploadChunkRequest) (*UploadChunkResponse, error)
-	// 完成分块上传
-	CompleteUpload(context.Context, *CompleteUploadRequest) (*CompleteUploadResponse, error)
 	// 下载文件
 	DownloadFile(context.Context, *DownloadFileRequest) (*DownloadFileResponse, error)
 	// 获取文件信息
@@ -202,9 +157,9 @@ type FileServiceServer interface {
 	GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error)
 	// 删除文件
 	DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error)
-	// 生成预签名URL
+	// 生成预签名上传URL
 	GeneratePresignedUrl(context.Context, *GeneratePresignedUrlRequest) (*GeneratePresignedUrlResponse, error)
-	// 确认上传
+	// 确认上传 (配合预签名URL使用)
 	ConfirmUpload(context.Context, *ConfirmUploadRequest) (*ConfirmUploadResponse, error)
 	// 图片压缩
 	CompressImage(context.Context, *CompressImageRequest) (*CompressImageResponse, error)
@@ -220,15 +175,6 @@ type UnimplementedFileServiceServer struct{}
 
 func (UnimplementedFileServiceServer) UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadFile not implemented")
-}
-func (UnimplementedFileServiceServer) InitUpload(context.Context, *InitUploadRequest) (*InitUploadResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InitUpload not implemented")
-}
-func (UnimplementedFileServiceServer) UploadChunk(context.Context, *UploadChunkRequest) (*UploadChunkResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UploadChunk not implemented")
-}
-func (UnimplementedFileServiceServer) CompleteUpload(context.Context, *CompleteUploadRequest) (*CompleteUploadResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CompleteUpload not implemented")
 }
 func (UnimplementedFileServiceServer) DownloadFile(context.Context, *DownloadFileRequest) (*DownloadFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
@@ -286,60 +232,6 @@ func _FileService_UploadFile_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FileServiceServer).UploadFile(ctx, req.(*UploadFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_InitUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(InitUploadRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).InitUpload(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_InitUpload_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).InitUpload(ctx, req.(*InitUploadRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_UploadChunk_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UploadChunkRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).UploadChunk(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_UploadChunk_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).UploadChunk(ctx, req.(*UploadChunkRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_CompleteUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompleteUploadRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).CompleteUpload(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_CompleteUpload_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).CompleteUpload(ctx, req.(*CompleteUploadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -480,18 +372,6 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UploadFile",
 			Handler:    _FileService_UploadFile_Handler,
-		},
-		{
-			MethodName: "InitUpload",
-			Handler:    _FileService_InitUpload_Handler,
-		},
-		{
-			MethodName: "UploadChunk",
-			Handler:    _FileService_UploadChunk_Handler,
-		},
-		{
-			MethodName: "CompleteUpload",
-			Handler:    _FileService_CompleteUpload_Handler,
 		},
 		{
 			MethodName: "DownloadFile",

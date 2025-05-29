@@ -23,28 +23,10 @@ func NewFileServiceServer(svcCtx *svc.ServiceContext) *FileServiceServer {
 	}
 }
 
-// 上传文件
+// 服务端直接上传文件
 func (s *FileServiceServer) UploadFile(ctx context.Context, in *file.UploadFileRequest) (*file.UploadFileResponse, error) {
 	l := logic.NewUploadFileLogic(ctx, s.svcCtx)
 	return l.UploadFile(in)
-}
-
-// 初始化分块上传
-func (s *FileServiceServer) InitUpload(ctx context.Context, in *file.InitUploadRequest) (*file.InitUploadResponse, error) {
-	l := logic.NewInitUploadLogic(ctx, s.svcCtx)
-	return l.InitUpload(in)
-}
-
-// 分块上传
-func (s *FileServiceServer) UploadChunk(ctx context.Context, in *file.UploadChunkRequest) (*file.UploadChunkResponse, error) {
-	l := logic.NewUploadChunkLogic(ctx, s.svcCtx)
-	return l.UploadChunk(in)
-}
-
-// 完成分块上传
-func (s *FileServiceServer) CompleteUpload(ctx context.Context, in *file.CompleteUploadRequest) (*file.CompleteUploadResponse, error) {
-	l := logic.NewCompleteUploadLogic(ctx, s.svcCtx)
-	return l.CompleteUpload(in)
 }
 
 // 下载文件
@@ -71,13 +53,13 @@ func (s *FileServiceServer) DeleteFile(ctx context.Context, in *file.DeleteFileR
 	return l.DeleteFile(in)
 }
 
-// 生成预签名URL
+// 生成预签名上传URL
 func (s *FileServiceServer) GeneratePresignedUrl(ctx context.Context, in *file.GeneratePresignedUrlRequest) (*file.GeneratePresignedUrlResponse, error) {
 	l := logic.NewGeneratePresignedUrlLogic(ctx, s.svcCtx)
 	return l.GeneratePresignedUrl(in)
 }
 
-// 确认上传
+// 确认上传 (配合预签名URL使用)
 func (s *FileServiceServer) ConfirmUpload(ctx context.Context, in *file.ConfirmUploadRequest) (*file.ConfirmUploadResponse, error) {
 	l := logic.NewConfirmUploadLogic(ctx, s.svcCtx)
 	return l.ConfirmUpload(in)
