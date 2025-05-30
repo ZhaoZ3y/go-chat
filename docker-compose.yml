@@ -1,7 +1,8 @@
-version: '3.8'
 services:
+  # --- MySQL ---
   mysql:
     image: mysql:8.0
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: im_db
@@ -9,41 +10,75 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./pkg/sql/tables.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
 
+  # --- Redis ---
   redis:
-    image: redis:7-alpine
+    image: redis:7.0
+    container_name: redis
     ports:
       - "6379:6379"
+    restart: unless-stopped
 
+  # --- etcd ---
   etcd:
-    image: quay.io/coreos/etcd:v3.5.0
+    image: bitnami/etcd:3.5
+    container_name: etcd
     environment:
-      - ETCD_ADVERTISE_CLIENT_URLS=http://0.0.0.0:2379
-      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
-      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
-      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
       - ALLOW_NONE_AUTHENTICATION=yes
-      - ETCD_INITIAL_CLUSTER=etcd=http://etcd:2380
-      - ETCD_NAME=etcd
-      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
     ports:
       - "2379:2379"
-      - "2380:2380"
+    restart: unless-stopped
 
-  im-service:
-    build: .
+  # --- RocketMQ NameServer ---
+  rmqnamesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: rmqnamesrv
+    command: sh mqnamesrv
     ports:
-      - "10001:10001"
-      - "8080:8080"
-      - "8081:8081"
+      - "9876:9876"
+    restart: unless-stopped
+
+  rmqbroker:
+    image: apache/rocketmq:5.1.4
+    container_name: rmqbroker
+    depends_on:
+      - rmqnamesrv
+    command: sh mqbroker -c /opt/rocketmq/conf/broker.conf
+    volumes:
+      - ./pkg/config/broker.conf:/opt/rocketmq/conf/broker.conf
+    environment:
+      - JAVA_OPT_EXT=-Duser.home=/opt -Xms512M -Xmx512M
+      - NAMESRV_ADDR=rmqnamesrv:9876     # 环境变量可以传递，具体代码是否读取视版本
+      - BROKER_IP1=容器或宿主机IP        # 如果想覆盖 brokerIP1
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    restart: unless-stopped
+
+  # --- user-rpc 服务 ---
+  user-rpc:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.user
+    container_name: user-rpc
+    ports:
+      - "10000:10000"
     depends_on:
       - mysql
       - redis
       - etcd
+      - rmqnamesrv
+      - rmqbroker
     environment:
-      - DB_HOST=mysql
-      - REDIS_HOST=redis
-      - ETCD_HOST=etcd
+      - ETCD_ADDR=etcd:2379
+      - MYSQL_DSN=user:password@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+      - ROCKETMQ_NAMESRV_ADDR=rmqnamesrv:9876
+    restart: unless-stopped
 
 volumes:
   mysql_data:

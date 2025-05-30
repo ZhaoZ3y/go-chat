@@ -1,0 +1,20 @@
+# 忽略编辑器/IDE缓存
+.idea
+.vscode
+
+# 忽略 Git 仓库
+.git
+.gitignore
+
+# 忽略系统文件
+Thumbs.db
+.DS_Store
+
+# 忽略 Go 构建缓存
+bin
+obj
+*.exe
+
+# 可选：限制上下文大小
+testdata
+*.md

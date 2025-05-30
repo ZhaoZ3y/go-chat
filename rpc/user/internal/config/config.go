@@ -4,9 +4,8 @@ import "github.com/zeromicro/go-zero/zrpc"
 
 type Config struct {
 	zrpc.RpcServerConf
-	DataSource string
-	Redis      RedisConfig
-	Salt       string // 密码加盐
+	DataSource  string
+	CustomRedis RedisConfig
 }
 
 type RedisConfig struct {

@@ -2,6 +2,7 @@ package svc
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/mq"
 	"IM/rpc/message/internal/config"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
@@ -9,9 +10,10 @@ import (
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *gorm.DB
-	Redis  *redis.Client
+	Config   config.Config
+	DB       *gorm.DB
+	Redis    *redis.Client
+	RocketMQ *mq.RocketMQClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -31,9 +33,16 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		DB:       0,
 	})
 
+	// 初始化RocketMQ
+	mqClient, err := mq.NewRocketMQClient(c.RocketMQ.NameSrvAddrs)
+	if err != nil {
+		panic("failed to connect rocketmq: " + err.Error())
+	}
+
 	return &ServiceContext{
-		Config: c,
-		DB:     db,
-		Redis:  rdb,
+		Config:   c,
+		DB:       db,
+		Redis:    rdb,
+		RocketMQ: mqClient,
 	}
 }

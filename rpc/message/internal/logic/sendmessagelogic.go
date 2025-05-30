@@ -2,6 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/mq"
 	"context"
 	"time"
 
@@ -49,9 +50,27 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 		}, nil
 	}
 
-	// 更新或创建会话记录
+	// 更新会话记录
 	if err := l.updateConversation(in, message.Content); err != nil {
 		l.Logger.Errorf("更新会话失败: %v", err)
+	}
+
+	// 发送消息事件到RocketMQ
+	event := &mq.MessageEvent{
+		Type:        mq.EventNewMessage,
+		MessageID:   message.Id,
+		FromUserID:  message.FromUserId,
+		ToUserID:    message.ToUserId,
+		GroupID:     message.GroupId,
+		ChatType:    message.ChatType,
+		Content:     message.Content,
+		MessageType: message.Type,
+		Extra:       message.Extra,
+		CreateAt:    message.CreateAt,
+	}
+
+	if err := l.svcCtx.RocketMQ.SendMessage(mq.TopicMessage, event); err != nil {
+		l.Logger.Errorf("发送消息事件失败: %v", err)
 	}
 
 	return &chat.SendMessageResponse{
@@ -61,6 +80,7 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 	}, nil
 }
 
+// 更新会话记录
 func (l *SendMessageLogic) updateConversation(req *chat.SendMessageRequest, content string) error {
 	now := time.Now().Unix()
 

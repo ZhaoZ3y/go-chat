@@ -2,6 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/mq"
 	"context"
 	"time"
 
@@ -31,14 +32,13 @@ func (l *RecallMessageLogic) RecallMessage(in *chat.RecallMessageRequest) (*chat
 	var message model.Messages
 	err := l.svcCtx.DB.Where("id = ? AND from_user_id = ?", in.MessageId, in.UserId).First(&message).Error
 	if err != nil {
-		l.Logger.Errorf("消息不存在或无权限撤回: %v", err)
 		return &chat.RecallMessageResponse{
 			Success: false,
 			Message: "消息不存在或无权限撤回",
 		}, nil
 	}
 
-	// 检查是否在可撤回时间内（例如2分钟内）
+	// 检查撤回时间限制
 	if time.Now().Unix()-message.CreateAt > 120 {
 		return &chat.RecallMessageResponse{
 			Success: false,
@@ -46,18 +46,32 @@ func (l *RecallMessageLogic) RecallMessage(in *chat.RecallMessageRequest) (*chat
 		}, nil
 	}
 
-	// 更新消息状态为已撤回
+	// 更新消息状态
 	err = l.svcCtx.DB.Model(&message).Updates(map[string]interface{}{
-		"status":  0, // 0表示已撤回
+		"status":  0,
 		"content": "[消息已撤回]",
 	}).Error
 
 	if err != nil {
-		l.Logger.Errorf("撤回消息失败: %v", err)
 		return &chat.RecallMessageResponse{
 			Success: false,
 			Message: "撤回消息失败",
 		}, nil
+	}
+
+	// 发送撤回事件到RocketMQ
+	event := &mq.MessageEvent{
+		Type:       mq.EventMessageRecall,
+		MessageID:  message.Id,
+		FromUserID: message.FromUserId,
+		ToUserID:   message.ToUserId,
+		GroupID:    message.GroupId,
+		ChatType:   message.ChatType,
+		CreateAt:   time.Now().Unix(),
+	}
+
+	if err := l.svcCtx.RocketMQ.SendMessage(mq.TopicNotify, event); err != nil {
+		l.Logger.Errorf("发送撤回事件失败: %v", err)
 	}
 
 	return &chat.RecallMessageResponse{
