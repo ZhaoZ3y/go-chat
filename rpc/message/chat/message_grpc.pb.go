@@ -22,6 +22,7 @@ const (
 	ChatService_SendMessage_FullMethodName         = "/chat.ChatService/SendMessage"
 	ChatService_GetMessageHistory_FullMethodName   = "/chat.ChatService/GetMessageHistory"
 	ChatService_GetConversationList_FullMethodName = "/chat.ChatService/GetConversationList"
+	ChatService_DeleteConversation_FullMethodName  = "/chat.ChatService/DeleteConversation"
 	ChatService_MarkMessageRead_FullMethodName     = "/chat.ChatService/MarkMessageRead"
 	ChatService_DeleteMessage_FullMethodName       = "/chat.ChatService/DeleteMessage"
 	ChatService_RecallMessage_FullMethodName       = "/chat.ChatService/RecallMessage"
@@ -39,6 +40,8 @@ type ChatServiceClient interface {
 	GetMessageHistory(ctx context.Context, in *GetMessageHistoryRequest, opts ...grpc.CallOption) (*GetMessageHistoryResponse, error)
 	// 获取会话列表
 	GetConversationList(ctx context.Context, in *GetConversationListRequest, opts ...grpc.CallOption) (*GetConversationListResponse, error)
+	// 删除会话
+	DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error)
 	// 标记消息已读
 	MarkMessageRead(ctx context.Context, in *MarkMessageReadRequest, opts ...grpc.CallOption) (*MarkMessageReadResponse, error)
 	// 删除消息
@@ -79,6 +82,16 @@ func (c *chatServiceClient) GetConversationList(ctx context.Context, in *GetConv
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetConversationListResponse)
 	err := c.cc.Invoke(ctx, ChatService_GetConversationList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chatServiceClient) DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteConversationResponse)
+	err := c.cc.Invoke(ctx, ChatService_DeleteConversation_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +140,8 @@ type ChatServiceServer interface {
 	GetMessageHistory(context.Context, *GetMessageHistoryRequest) (*GetMessageHistoryResponse, error)
 	// 获取会话列表
 	GetConversationList(context.Context, *GetConversationListRequest) (*GetConversationListResponse, error)
+	// 删除会话
+	DeleteConversation(context.Context, *DeleteConversationRequest) (*DeleteConversationResponse, error)
 	// 标记消息已读
 	MarkMessageRead(context.Context, *MarkMessageReadRequest) (*MarkMessageReadResponse, error)
 	// 删除消息
@@ -151,6 +166,9 @@ func (UnimplementedChatServiceServer) GetMessageHistory(context.Context, *GetMes
 }
 func (UnimplementedChatServiceServer) GetConversationList(context.Context, *GetConversationListRequest) (*GetConversationListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConversationList not implemented")
+}
+func (UnimplementedChatServiceServer) DeleteConversation(context.Context, *DeleteConversationRequest) (*DeleteConversationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConversation not implemented")
 }
 func (UnimplementedChatServiceServer) MarkMessageRead(context.Context, *MarkMessageReadRequest) (*MarkMessageReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MarkMessageRead not implemented")
@@ -236,6 +254,24 @@ func _ChatService_GetConversationList_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_DeleteConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConversationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).DeleteConversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_DeleteConversation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).DeleteConversation(ctx, req.(*DeleteConversationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ChatService_MarkMessageRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MarkMessageReadRequest)
 	if err := dec(in); err != nil {
@@ -308,6 +344,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConversationList",
 			Handler:    _ChatService_GetConversationList_Handler,
+		},
+		{
+			MethodName: "DeleteConversation",
+			Handler:    _ChatService_DeleteConversation_Handler,
 		},
 		{
 			MethodName: "MarkMessageRead",

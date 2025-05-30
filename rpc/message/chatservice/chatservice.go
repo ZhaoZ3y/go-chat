@@ -16,6 +16,8 @@ import (
 type (
 	ConnectRequest              = chat.ConnectRequest
 	Conversation                = chat.Conversation
+	DeleteConversationRequest   = chat.DeleteConversationRequest
+	DeleteConversationResponse  = chat.DeleteConversationResponse
 	DeleteMessageRequest        = chat.DeleteMessageRequest
 	DeleteMessageResponse       = chat.DeleteMessageResponse
 	GetConversationListRequest  = chat.GetConversationListRequest
@@ -38,6 +40,8 @@ type (
 		GetMessageHistory(ctx context.Context, in *GetMessageHistoryRequest, opts ...grpc.CallOption) (*GetMessageHistoryResponse, error)
 		// 获取会话列表
 		GetConversationList(ctx context.Context, in *GetConversationListRequest, opts ...grpc.CallOption) (*GetConversationListResponse, error)
+		// 删除会话
+		DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error)
 		// 标记消息已读
 		MarkMessageRead(ctx context.Context, in *MarkMessageReadRequest, opts ...grpc.CallOption) (*MarkMessageReadResponse, error)
 		// 删除消息
@@ -73,6 +77,12 @@ func (m *defaultChatService) GetMessageHistory(ctx context.Context, in *GetMessa
 func (m *defaultChatService) GetConversationList(ctx context.Context, in *GetConversationListRequest, opts ...grpc.CallOption) (*GetConversationListResponse, error) {
 	client := chat.NewChatServiceClient(m.cli.Conn())
 	return client.GetConversationList(ctx, in, opts...)
+}
+
+// 删除会话
+func (m *defaultChatService) DeleteConversation(ctx context.Context, in *DeleteConversationRequest, opts ...grpc.CallOption) (*DeleteConversationResponse, error) {
+	client := chat.NewChatServiceClient(m.cli.Conn())
+	return client.DeleteConversation(ctx, in, opts...)
 }
 
 // 标记消息已读

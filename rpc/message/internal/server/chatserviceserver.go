@@ -41,6 +41,12 @@ func (s *ChatServiceServer) GetConversationList(ctx context.Context, in *chat.Ge
 	return l.GetConversationList(in)
 }
 
+// 删除会话
+func (s *ChatServiceServer) DeleteConversation(ctx context.Context, in *chat.DeleteConversationRequest) (*chat.DeleteConversationResponse, error) {
+	l := logic.NewDeleteConversationLogic(ctx, s.svcCtx)
+	return l.DeleteConversation(in)
+}
+
 // 标记消息已读
 func (s *ChatServiceServer) MarkMessageRead(ctx context.Context, in *chat.MarkMessageReadRequest) (*chat.MarkMessageReadResponse, error) {
 	l := logic.NewMarkMessageReadLogic(ctx, s.svcCtx)

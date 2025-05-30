@@ -92,6 +92,18 @@ message GetConversationListResponse {
   int64 total = 2;
 }
 
+// 删除会话请求
+message DeleteConversationRequest {
+  int64 user_id = 1;
+  int64 target_id = 2; // 对方用户ID或群组ID
+  ChatType chat_type = 3;
+}
+// 删除会话响应
+message DeleteConversationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 // 标记消息已读请求
 message MarkMessageReadRequest {
   int64 user_id = 1;
@@ -150,6 +162,8 @@ service ChatService {
   rpc GetMessageHistory(GetMessageHistoryRequest) returns (GetMessageHistoryResponse);
   // 获取会话列表
   rpc GetConversationList(GetConversationListRequest) returns (GetConversationListResponse);
+  // 删除会话
+  rpc DeleteConversation(DeleteConversationRequest) returns (DeleteConversationResponse);
   // 标记消息已读
   rpc MarkMessageRead(MarkMessageReadRequest) returns (MarkMessageReadResponse);
   // 删除消息
