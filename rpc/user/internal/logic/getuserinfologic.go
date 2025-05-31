@@ -40,7 +40,7 @@ func (l *GetUserInfoLogic) GetUserInfo(in *user.GetUserInfoRequest) (*user.GetUs
 	var userModel model.User
 
 	// 从数据库查询
-	err := l.svcCtx.DB.Where("id = ? AND deleted_at = 0", in.UserId).First(&userModel).Error
+	err := l.svcCtx.DB.Where("id = ? AND deleted_at IS NULL", in.UserId).First(&userModel).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Error(codes.NotFound, "用户不存在")
@@ -60,6 +60,7 @@ func (l *GetUserInfoLogic) GetUserInfo(in *user.GetUserInfoRequest) (*user.GetUs
 		UserInfo: &user.User{
 			Id:       userModel.Id,
 			Username: userModel.Username,
+			Nickname: userModel.Nickname,
 			Email:    userModel.Email,
 			Avatar:   userModel.Avatar,
 			Phone:    userModel.Phone,

@@ -39,7 +39,7 @@ func (l *ChangePasswordLogic) ChangePassword(in *user.ChangePasswordRequest) (*u
 	}
 
 	var userModel model.User
-	err := l.svcCtx.DB.Where("id = ? AND deleted_at = 0", in.UserId).First(&userModel).Error
+	err := l.svcCtx.DB.Where("id = ? AND deleted_at IS NULL", in.UserId).First(&userModel).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Error(codes.NotFound, "用户不存在")

@@ -3,12 +3,11 @@ package controller
 import (
 	"IM/api/rpc"
 	"IM/pkg/model/request"
-	"IM/pkg/response"
+	"IM/pkg/utils/response"
 	"IM/rpc/user/user"
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/zeromicro/go-zero/core/logx"
-	"strconv"
 	"time"
 )
 
@@ -16,7 +15,7 @@ import (
 func Register(c *gin.Context) {
 	var req request.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -32,7 +31,7 @@ func Register(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("注册失败: %v", err)
-		response.ErrorResponse(c, response.ServerErrorCode, "注册失败: "+err.Error())
+		response.ServerErrorResponse(c, "注册失败: "+err.Error())
 		return
 	}
 
@@ -45,7 +44,7 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req request.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -59,7 +58,7 @@ func Login(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("登录失败: %v", err)
-		response.ErrorResponse(c, response.RPCClientErrorCode, "登录失败: "+err.Error())
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, "登录失败: "+err.Error())
 		return
 	}
 
@@ -71,15 +70,14 @@ func Login(c *gin.Context) {
 
 // GetUserInfo 获取用户信息
 func GetUserInfo(c *gin.Context) {
-	userIdStr := c.Param("id")
-	if userIdStr == "" {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID不能为空")
+	userIDAny, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
 		return
 	}
-
-	userId, err := strconv.ParseInt(userIdStr, 10, 64)
-	if err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID格式错误")
+	userId, ok := userIDAny.(int64)
+	if !ok {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID类型错误")
 		return
 	}
 
@@ -92,7 +90,7 @@ func GetUserInfo(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("获取用户信息失败: %v", err)
-		response.ErrorResponse(c, response.ServerErrorCode, "获取用户信息失败: "+err.Error())
+		response.ServerErrorResponse(c, "获取用户信息失败: "+err.Error())
 		return
 	}
 
@@ -101,21 +99,20 @@ func GetUserInfo(c *gin.Context) {
 
 // UpdateUserInfo 更新用户信息
 func UpdateUserInfo(c *gin.Context) {
-	userIdStr := c.Param("id")
-	if userIdStr == "" {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID不能为空")
+	userIDAny, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
 		return
 	}
-
-	userId, err := strconv.ParseInt(userIdStr, 10, 64)
-	if err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID格式错误")
+	userId, ok := userIDAny.(int64)
+	if !ok {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID类型错误")
 		return
 	}
 
 	var req request.UpdateUserInfoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -131,7 +128,7 @@ func UpdateUserInfo(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("更新用户信息失败: %v", err)
-		response.ErrorResponse(c, response.ServerErrorCode, "更新用户信息失败: "+err.Error())
+		response.ServerErrorResponse(c, "更新用户信息失败: "+err.Error())
 		return
 	}
 
@@ -142,21 +139,20 @@ func UpdateUserInfo(c *gin.Context) {
 
 // ChangePassword 修改密码
 func ChangePassword(c *gin.Context) {
-	userIdStr := c.Param("id")
-	if userIdStr == "" {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID不能为空")
+	userIDAny, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
 		return
 	}
-
-	userId, err := strconv.ParseInt(userIdStr, 10, 64)
-	if err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "用户ID格式错误")
+	userId, ok := userIDAny.(int64)
+	if !ok {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID类型错误")
 		return
 	}
 
 	var req request.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -171,7 +167,7 @@ func ChangePassword(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("修改密码失败: %v", err)
-		response.ErrorResponse(c, response.ServerErrorCode, "修改密码失败: "+err.Error())
+		response.ServerErrorResponse(c, "修改密码失败: "+err.Error())
 		return
 	}
 
@@ -184,7 +180,7 @@ func ChangePassword(c *gin.Context) {
 func SearchUser(c *gin.Context) {
 	var req request.SearchUserRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -199,7 +195,7 @@ func SearchUser(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("搜索用户失败: %v", err)
-		response.ErrorResponse(c, response.ServerErrorCode, "搜索用户失败: "+err.Error())
+		response.SuccessResponse(c, "搜索用户失败: "+err.Error())
 		return
 	}
 
@@ -213,7 +209,7 @@ func SearchUser(c *gin.Context) {
 func RefreshToken(c *gin.Context) {
 	var req request.RefreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
 		return
 	}
 
@@ -226,7 +222,7 @@ func RefreshToken(c *gin.Context) {
 
 	if err != nil {
 		logx.Errorf("刷新Token失败: %v", err)
-		response.ErrorResponse(c, response.RPCClientErrorCode, "刷新Token失败: "+err.Error())
+		response.ServerErrorResponse(c, "刷新Token失败: "+err.Error())
 		return
 	}
 

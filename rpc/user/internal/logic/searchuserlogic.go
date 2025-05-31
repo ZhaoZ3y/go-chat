@@ -48,7 +48,7 @@ func (l *SearchUserLogic) SearchUser(in *user.SearchUserRequest) (*user.SearchUs
 	offset := (page - 1) * size
 
 	// 构建查询条件
-	query := l.svcCtx.DB.Model(&model.User{}).Where("deleted_at = 0 AND status = 1")
+	query := l.svcCtx.DB.Model(&model.User{}).Where("deleted_at IS NULL AND status = 1")
 	query = query.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?",
 		"%"+in.Keyword+"%", "%"+in.Keyword+"%", "%"+in.Keyword+"%")
 

@@ -2,13 +2,13 @@ Name: user.rpc
 ListenOn: 0.0.0.0:10000
 Etcd:
   Hosts:
-  - localhost:2379
+  - etcd:2379
   Key: user.rpc
 
 DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 
 CustomRedis:
-  Host: localhost
+  Host: redis
   Port: 6379
   Password: ""
   DB: 0

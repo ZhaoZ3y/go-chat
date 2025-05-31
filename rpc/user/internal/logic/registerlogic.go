@@ -38,7 +38,7 @@ func (l *RegisterLogic) Register(in *user.RegisterRequest) (*user.RegisterRespon
 
 	// 检查用户名是否已存在
 	var existUser model.User
-	err := l.svcCtx.DB.Where("username = ? AND deleted_at = 0", in.Username).First(&existUser).Error
+	err := l.svcCtx.DB.Where("username = ? AND deleted_at IS NULL", in.Username).First(&existUser).Error
 	if err == nil {
 		return nil, status.Error(codes.AlreadyExists, "用户名已存在")
 	}
@@ -48,7 +48,7 @@ func (l *RegisterLogic) Register(in *user.RegisterRequest) (*user.RegisterRespon
 	}
 
 	// 检查邮箱是否已存在
-	err = l.svcCtx.DB.Where("email = ? AND deleted_at = 0", in.Email).First(&existUser).Error
+	err = l.svcCtx.DB.Where("email = ? AND deleted_at IS NULL", in.Email).First(&existUser).Error
 	if err == nil {
 		return nil, status.Error(codes.AlreadyExists, "邮箱已存在")
 	}

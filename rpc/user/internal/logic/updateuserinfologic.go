@@ -37,7 +37,7 @@ func (l *UpdateUserInfoLogic) UpdateUserInfo(in *user.UpdateUserInfoRequest) (*u
 
 	// 检查用户是否存在
 	var existUser model.User
-	err := l.svcCtx.DB.Where("id = ? AND deleted_at = 0", in.UserId).First(&existUser).Error
+	err := l.svcCtx.DB.Where("id = ? AND deleted_at IS NULL", in.UserId).First(&existUser).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, status.Error(codes.NotFound, "用户不存在")
@@ -49,7 +49,7 @@ func (l *UpdateUserInfoLogic) UpdateUserInfo(in *user.UpdateUserInfoRequest) (*u
 	// 如果更新邮箱，检查邮箱是否已被其他用户使用
 	if in.Email != "" && in.Email != existUser.Email {
 		var emailUser model.User
-		err = l.svcCtx.DB.Where("email = ? AND id != ? AND deleted_at = 0", in.Email, in.UserId).First(&emailUser).Error
+		err = l.svcCtx.DB.Where("email = ? AND id != ? AND deleted_at IS NULL", in.Email, in.UserId).First(&emailUser).Error
 		if err == nil {
 			return nil, status.Error(codes.AlreadyExists, "邮箱已被使用")
 		}

@@ -96,6 +96,51 @@ services:
       - KAFKA_BROKERS=kafka:29092
     restart: unless-stopped
 
+  # --- web-api 服务 ---
+  web-api:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+    container_name: web-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-rpc
+      - etcd
+      - mysql
+      - redis
+    environment:
+      - ETCD_ADDR=etcd:2379
+      - MYSQL_DSN=user:password@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+    restart: unless-stopped
+
+  # --- UI 服务 ---
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "10010:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    restart: unless-stopped
+
+  etcdkeeper:
+    image: evildecay/etcdkeeper:latest
+    container_name: etcdkeeper
+    ports:
+      - "10011:8080"  # 映射本机端口，可自定义
+    environment:
+      - ETCD_ENDPOINTS=http://etcd:2379
+    depends_on:
+      - etcd
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   minio_data:

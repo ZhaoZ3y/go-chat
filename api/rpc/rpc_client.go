@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	EtcdHost   = []string{"localhost:2379"}
+	EtcdHost   = []string{"etcd:2379"}
 	UserClient user.UserServiceClient
 )
 

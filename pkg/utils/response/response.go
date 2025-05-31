@@ -28,10 +28,18 @@ func SuccessResponse(c *gin.Context, data interface{}) {
 	})
 }
 
-// ErrorResponse 错误响应
-func ErrorResponse(c *gin.Context, code int, message string) {
-	c.JSON(http.StatusOK, Response{
+// ClientErrorResponse 错误响应
+func ClientErrorResponse(c *gin.Context, code int, message string) {
+	c.JSON(http.StatusBadRequest, Response{
 		Code:    code,
+		Message: message,
+	})
+}
+
+// ServerErrorResponse 服务器错误响应
+func ServerErrorResponse(c *gin.Context, message string) {
+	c.JSON(http.StatusInternalServerError, Response{
+		Code:    ServerErrorCode,
 		Message: message,
 	})
 }

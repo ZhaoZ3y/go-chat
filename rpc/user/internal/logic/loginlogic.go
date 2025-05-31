@@ -38,7 +38,7 @@ func (l *LoginLogic) Login(in *user.LoginRequest) (*user.LoginResponse, error) {
 	}
 
 	var userModel model.User
-	err := l.svcCtx.DB.Where("username = ? AND deleted_at = 0", in.Username).First(&userModel).Error
+	err := l.svcCtx.DB.Where("username = ? AND deleted_at IS NULL", in.Username).First(&userModel).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "用户不存在")
