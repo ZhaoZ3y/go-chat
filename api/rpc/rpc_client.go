@@ -11,6 +11,10 @@ var (
 	UserClient user.UserServiceClient
 )
 
+func init() {
+	InitUserClient()
+}
+
 func InitUserClient() {
 	client := zrpc.MustNewClient(zrpc.RpcClientConf{
 		Etcd: discov.EtcdConf{

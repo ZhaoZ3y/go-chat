@@ -2,19 +2,19 @@ Name: message.rpc
 ListenOn: 0.0.0.0:10001
 Etcd:
   Hosts:
-    - etcd:2379
+    - localhost:2379
   Key: message.rpc
 
 DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 
 CustomRedis:
-  Host: redis
+  Host: localhost
   Port: 6379
   Password: ""
   DB: 0
 
 Kafka:
   Brokers:
-    - "127.0.0.1:9092"
-  ProducerGroup: "im_producer_group"
-  ConsumerGroup: "im_consumer_group"
+    - 127.0.0.1:9092
+  ProducerGroup: im_producer_group
+  ConsumerGroup: im_consumer_group

@@ -1,21 +1,22 @@
 Name: file.rpc
 ListenOn: 0.0.0.0:10004
+
 Etcd:
   Hosts:
-  - etcd:2379
+    - localhost:2379
   Key: file.rpc
 
 DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 
 CustomRedis:
-  Host: redis
+  Host: localhost
   Port: 6379
   Password: ""
   DB: 0
 
 MinIO:
-  Endpoint: "minio:9000",
-  AccessKeyID: "minioadmin",
-  SecretAccessKey: "minioadmin",
-  UseSSL: false,
-  BucketName: "IM",
+  Endpoint: localhost:9000
+  AccessKeyID: minioadmin
+  SecretAccessKey: minioadmin
+  UseSSL: false
+  BucketName: IM
