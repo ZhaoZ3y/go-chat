@@ -70,7 +70,7 @@ func (l *RecallMessageLogic) RecallMessage(in *chat.RecallMessageRequest) (*chat
 		CreateAt:   time.Now().Unix(),
 	}
 
-	if err := l.svcCtx.RocketMQ.SendMessage(mq.TopicNotify, event); err != nil {
+	if err := l.svcCtx.Kafka.SendMessage(mq.TopicNotify, event); err != nil {
 		l.Logger.Errorf("发送撤回事件失败: %v", err)
 	}
 

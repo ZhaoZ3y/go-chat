@@ -52,7 +52,7 @@ func (l *MarkMessageReadLogic) MarkMessageRead(in *chat.MarkMessageReadRequest) 
 		},
 	}
 
-	if err := l.svcCtx.RocketMQ.SendMessage(mq.TopicNotify, event); err != nil {
+	if err := l.svcCtx.Kafka.SendMessage(mq.TopicNotify, event); err != nil {
 		l.Logger.Errorf("发送已读事件失败: %v", err)
 	}
 

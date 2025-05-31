@@ -3,6 +3,7 @@ package svc
 import (
 	"IM/pkg/model"
 	"IM/rpc/friend/internal/config"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -26,9 +27,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	// 初始化Redis
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     c.Redis.Host + ":" + c.Redis.Port,
-		Password: c.Redis.Password,
-		DB:       c.Redis.DB,
+		Addr:     fmt.Sprintf("%s:%d", c.CustomRedis.Host, c.CustomRedis.Port),
+		Password: c.CustomRedis.Password,
+		DB:       c.CustomRedis.DB,
 	})
 
 	return &ServiceContext{

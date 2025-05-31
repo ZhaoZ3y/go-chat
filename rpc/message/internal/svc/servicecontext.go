@@ -4,16 +4,17 @@ import (
 	"IM/pkg/model"
 	"IM/pkg/mq"
 	"IM/rpc/message/internal/config"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 type ServiceContext struct {
-	Config   config.Config
-	DB       *gorm.DB
-	Redis    *redis.Client
-	RocketMQ *mq.RocketMQClient
+	Config config.Config
+	DB     *gorm.DB
+	Redis  *redis.Client
+	Kafka  *mq.KafkaClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -26,23 +27,23 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 自动迁移表结构
 	db.AutoMigrate(&model.Messages{}, &model.Conversations{})
 
-	// 初始化Redis连接
+	// 初始化Redis
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
+		Addr:     fmt.Sprintf("%s:%d", c.CustomRedis.Host, c.CustomRedis.Port),
+		Password: c.CustomRedis.Password,
+		DB:       c.CustomRedis.DB,
 	})
 
-	// 初始化RocketMQ
-	mqClient, err := mq.NewRocketMQClient(c.RocketMQ.NameSrvAddrs)
+	// 初始化Kafka
+	kafkaClient, err := mq.NewKafkaClient(c.Kafka.Brokers)
 	if err != nil {
-		panic("failed to connect rocketmq: " + err.Error())
+		panic("failed to connect kafka: " + err.Error())
 	}
 
 	return &ServiceContext{
-		Config:   c,
-		DB:       db,
-		Redis:    rdb,
-		RocketMQ: mqClient,
+		Config: c,
+		DB:     db,
+		Redis:  rdb,
+		Kafka:  kafkaClient,
 	}
 }

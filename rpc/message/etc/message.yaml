@@ -2,19 +2,19 @@ Name: message.rpc
 ListenOn: 0.0.0.0:10001
 Etcd:
   Hosts:
-    - 127.0.0.1:2379
+    - etcd:2379
   Key: message.rpc
 
-DataSource: root:123456@tcp(localhost:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 
-Redis:
-  Host: 127.0.0.1
+CustomRedis:
+  Host: redis
   Port: 6379
   Password: ""
   DB: 0
 
-RocketMQ:
-  NameSrvAddrs:
-    - "127.0.0.1:9876"
+Kafka:
+  Brokers:
+    - "127.0.0.1:9092"
   ProducerGroup: "im_producer_group"
   ConsumerGroup: "im_consumer_group"

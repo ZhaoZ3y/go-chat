@@ -69,7 +69,7 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 		CreateAt:    message.CreateAt,
 	}
 
-	if err := l.svcCtx.RocketMQ.SendMessage(mq.TopicMessage, event); err != nil {
+	if err := l.svcCtx.Kafka.SendMessage(mq.TopicMessage, event); err != nil {
 		l.Logger.Errorf("发送消息事件失败: %v", err)
 	}
 

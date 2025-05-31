@@ -6,7 +6,7 @@ import (
 )
 
 type MessageConsumer struct {
-	mqClient    *mq.RocketMQClient
+	kafkaClient *mq.KafkaClient
 	pushService PushService // WebSocket推送服务接口
 }
 
@@ -20,15 +20,15 @@ type PushMessage struct {
 	Data interface{} `json:"data"`
 }
 
-func NewMessageConsumer(mqClient *mq.RocketMQClient, pushService PushService) *MessageConsumer {
+func NewMessageConsumer(kafkaClient *mq.KafkaClient, pushService PushService) *MessageConsumer {
 	return &MessageConsumer{
-		mqClient:    mqClient,
+		kafkaClient: kafkaClient,
 		pushService: pushService,
 	}
 }
 
 func (c *MessageConsumer) Start() error {
-	return c.mqClient.CreateConsumer("im_message_consumer", c.handleMessage)
+	return c.kafkaClient.CreateConsumer(mq.TopicMessage, "im_message_consumer", c.handleMessage)
 }
 
 func (c *MessageConsumer) handleMessage(event *mq.MessageEvent) error {

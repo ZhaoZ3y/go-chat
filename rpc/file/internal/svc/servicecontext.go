@@ -39,11 +39,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		panic("自动迁移 Files 表失败: " + err.Error())
 	}
 
-	// 初始化Redis客户端
+	// 初始化Redis
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", c.Redis.Host, c.Redis.Port),
-		Password: c.Redis.Password,
-		DB:       c.Redis.DB,
+		Addr:     fmt.Sprintf("%s:%d", c.CustomRedis.Host, c.CustomRedis.Port),
+		Password: c.CustomRedis.Password,
+		DB:       c.CustomRedis.DB,
 	})
 
 	// 初始化MinIO客户端
