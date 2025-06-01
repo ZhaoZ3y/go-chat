@@ -62,8 +62,6 @@ message JoinGroupResponse {
 // 搜索群组请求
 message SearchGroupRequest {
    string keyword = 1; // 搜索关键词
-   int32 page = 2; // 页码
-   int32 page_size = 3; // 每页数量
 }
 
 // 搜索群组响应
@@ -126,8 +124,6 @@ message GetGroupInfoResponse {
 // 获取群组列表请求
 message GetGroupListRequest {
   int64 user_id = 1;
-  int32 page = 2;
-  int32 page_size = 3;
 }
 
 // 获取群组列表响应
@@ -140,8 +136,6 @@ message GetGroupListResponse {
 message GetGroupMemberListRequest {
   int64 group_id = 1;
   int64 user_id = 2; // 请求者ID，用于权限验证
-  int32 page = 3;
-  int32 page_size = 4;
 }
 
 // 获取群组成员列表响应

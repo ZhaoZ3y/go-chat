@@ -494,9 +494,7 @@ func (x *JoinGroupResponse) GetMessage() string {
 // 搜索群组请求
 type SearchGroupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`                    // 搜索关键词
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`                         // 页码
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"` // 每页数量
+	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"` // 搜索关键词
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -536,20 +534,6 @@ func (x *SearchGroupRequest) GetKeyword() string {
 		return x.Keyword
 	}
 	return ""
-}
-
-func (x *SearchGroupRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *SearchGroupRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
 }
 
 // 搜索群组响应
@@ -1057,8 +1041,6 @@ func (x *GetGroupInfoResponse) GetUserMemberInfo() *GroupMember {
 type GetGroupListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1096,20 +1078,6 @@ func (*GetGroupListRequest) Descriptor() ([]byte, []int) {
 func (x *GetGroupListRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
-	}
-	return 0
-}
-
-func (x *GetGroupListRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetGroupListRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
 	}
 	return 0
 }
@@ -1172,8 +1140,6 @@ type GetGroupMemberListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GroupId       int64                  `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 请求者ID，用于权限验证
-	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1218,20 +1184,6 @@ func (x *GetGroupMemberListRequest) GetGroupId() int64 {
 func (x *GetGroupMemberListRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
-	}
-	return 0
-}
-
-func (x *GetGroupMemberListRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetGroupMemberListRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
 	}
 	return 0
 }
@@ -1926,11 +1878,9 @@ const file_group_proto_rawDesc = "" +
 	"\x06reason\x18\x03 \x01(\tR\x06reason\"G\n" +
 	"\x11JoinGroupResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"_\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\".\n" +
 	"\x12SearchGroupRequest\x12\x18\n" +
-	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"Q\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\"Q\n" +
 	"\x13SearchGroupResponse\x12$\n" +
 	"\x06groups\x18\x01 \x03(\v2\f.group.GroupR\x06groups\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\"k\n" +
@@ -1963,19 +1913,15 @@ const file_group_proto_rawDesc = "" +
 	"\x14GetGroupInfoResponse\x12+\n" +
 	"\n" +
 	"group_info\x18\x01 \x01(\v2\f.group.GroupR\tgroupInfo\x12<\n" +
-	"\x10user_member_info\x18\x02 \x01(\v2\x12.group.GroupMemberR\x0euserMemberInfo\"_\n" +
+	"\x10user_member_info\x18\x02 \x01(\v2\x12.group.GroupMemberR\x0euserMemberInfo\".\n" +
 	"\x13GetGroupListRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"R\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"R\n" +
 	"\x14GetGroupListResponse\x12$\n" +
 	"\x06groups\x18\x01 \x03(\v2\f.group.GroupR\x06groups\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"\x80\x01\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"O\n" +
 	"\x19GetGroupMemberListRequest\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\x03R\agroupId\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"`\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\"`\n" +
 	"\x1aGetGroupMemberListResponse\x12,\n" +
 	"\amembers\x18\x01 \x03(\v2\x12.group.GroupMemberR\amembers\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\"\xa2\x01\n" +

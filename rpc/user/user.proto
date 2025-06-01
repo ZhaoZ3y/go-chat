@@ -69,8 +69,6 @@ message UpdateUserInfoResponse {
 // 搜索用户请求
 message SearchUserRequest {
   string keyword = 1;
-  int32 page = 2;
-  int32 page_size = 3;
 }
 
 // 搜索用户响应

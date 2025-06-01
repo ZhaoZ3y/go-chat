@@ -6,8 +6,10 @@ import (
 )
 
 const (
-	SuccessCode        = 20000 // 成功响应码
-	ParamErrorCode     = 40000 // 参数错误响应码
+	SuccessCode      = 20000 // 成功响应码
+	ParamErrorCode   = 40000 // 参数错误响应码
+	UnauthorizedCode = 40001 // 未授权响应码
+
 	ServerErrorCode    = 50000 // 服务器错误响应码
 	RPCClientErrorCode = 50001 // RPC客户端错误响应码
 )

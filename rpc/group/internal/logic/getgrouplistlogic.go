@@ -38,8 +38,7 @@ func (l *GetGroupListLogic) GetGroupList(in *group.GetGroupListRequest) (*group.
 	query.Count(&total)
 
 	// 分页查询
-	offset := (in.Page - 1) * in.PageSize
-	if err := query.Offset(int(offset)).Limit(int(in.PageSize)).Find(&groups).Error; err != nil {
+	if err := query.Find(&groups).Error; err != nil {
 		return &group.GetGroupListResponse{}, nil
 	}
 

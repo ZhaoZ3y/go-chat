@@ -566,8 +566,6 @@ func (x *UpdateUserInfoResponse) GetMessage() string {
 type SearchUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -607,20 +605,6 @@ func (x *SearchUserRequest) GetKeyword() string {
 		return x.Keyword
 	}
 	return ""
-}
-
-func (x *SearchUserRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *SearchUserRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
 }
 
 // 搜索用户响应
@@ -921,11 +905,9 @@ const file_user_proto_rawDesc = "" +
 	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x14\n" +
 	"\x05email\x18\x05 \x01(\tR\x05email\"2\n" +
 	"\x16UpdateUserInfoResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"^\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"-\n" +
 	"\x11SearchUserRequest\x12\x18\n" +
-	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"L\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\"L\n" +
 	"\x12SearchUserResponse\x12 \n" +
 	"\x05users\x18\x01 \x03(\v2\n" +
 	".user.UserR\x05users\x12\x14\n" +

@@ -72,7 +72,7 @@ func Login(c *gin.Context) {
 func GetUserInfo(c *gin.Context) {
 	userIDAny, exists := c.Get("userID")
 	if !exists {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录")
 		return
 	}
 	userId, ok := userIDAny.(int64)
@@ -101,7 +101,7 @@ func GetUserInfo(c *gin.Context) {
 func UpdateUserInfo(c *gin.Context) {
 	userIDAny, exists := c.Get("userID")
 	if !exists {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录")
 		return
 	}
 	userId, ok := userIDAny.(int64)
@@ -141,7 +141,7 @@ func UpdateUserInfo(c *gin.Context) {
 func ChangePassword(c *gin.Context) {
 	userIDAny, exists := c.Get("userID")
 	if !exists {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "用户未登录")
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录")
 		return
 	}
 	userId, ok := userIDAny.(int64)
@@ -173,35 +173,6 @@ func ChangePassword(c *gin.Context) {
 
 	response.SuccessResponse(c, gin.H{
 		"message": resp.Message,
-	})
-}
-
-// SearchUser 搜索用户
-func SearchUser(c *gin.Context) {
-	var req request.SearchUserRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	resp, err := rpc.UserClient.SearchUser(ctx, &user.SearchUserRequest{
-		Keyword:  req.Keyword,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	})
-
-	if err != nil {
-		logx.Errorf("搜索用户失败: %v", err)
-		response.SuccessResponse(c, "搜索用户失败: "+err.Error())
-		return
-	}
-
-	response.SuccessResponse(c, gin.H{
-		"users": resp.Users,
-		"total": resp.Total,
 	})
 }
 

@@ -32,20 +32,6 @@ func (l *SearchGroupLogic) SearchGroup(in *group.SearchGroupRequest) (*group.Sea
 		return nil, status.Error(codes.InvalidArgument, "搜索关键词不能为空")
 	}
 
-	// 设置分页参数
-	page := in.Page
-	size := in.PageSize
-	if page <= 0 {
-		page = 1
-	}
-	if size <= 0 {
-		size = 10
-	}
-	if size > 100 {
-		size = 100
-	}
-	offset := (page - 1) * size
-
 	// 构建查询
 	query := l.svcCtx.DB.Model(&model.Groups{}).
 		Where("deleted_at IS NULL AND status = 1").
@@ -62,7 +48,6 @@ func (l *SearchGroupLogic) SearchGroup(in *group.SearchGroupRequest) (*group.Sea
 	// 获取群组列表
 	var groups []model.Groups
 	err = query.Select("id, name, description, avatar, owner_id, member_count, max_member_count, status, create_at, update_at").
-		Offset(int(offset)).Limit(int(size)).
 		Order("create_at DESC").
 		Find(&groups).Error
 	if err != nil {

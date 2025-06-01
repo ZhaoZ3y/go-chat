@@ -38,8 +38,7 @@ func (l *GetGroupMemberListLogic) GetGroupMemberList(in *group.GetGroupMemberLis
 	query := l.svcCtx.DB.Where("group_id = ?", in.GroupId)
 	query.Count(&total)
 
-	offset := (in.Page - 1) * in.PageSize
-	if err := query.Offset(int(offset)).Limit(int(in.PageSize)).Find(&members).Error; err != nil {
+	if err := query.Find(&members).Error; err != nil {
 		return &group.GetGroupMemberListResponse{}, nil
 	}
 

@@ -32,21 +32,6 @@ func (l *SearchUserLogic) SearchUser(in *user.SearchUserRequest) (*user.SearchUs
 		return nil, status.Error(codes.InvalidArgument, "搜索关键词不能为空")
 	}
 
-	// 设置默认分页参数
-	page := in.Page
-	size := in.PageSize
-	if page <= 0 {
-		page = 1
-	}
-	if size <= 0 {
-		size = 10
-	}
-	if size > 100 {
-		size = 100 // 限制每页最大数量
-	}
-
-	offset := (page - 1) * size
-
 	// 构建查询条件
 	query := l.svcCtx.DB.Model(&model.User{}).Where("deleted_at IS NULL AND status = 1")
 	query = query.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?",
@@ -63,7 +48,6 @@ func (l *SearchUserLogic) SearchUser(in *user.SearchUserRequest) (*user.SearchUs
 	// 获取用户列表
 	var users []model.User
 	err = query.Select("id, username, nickname, avatar, email, status, create_at, update_at").
-		Offset(int(offset)).Limit(int(size)).
 		Order("create_at DESC").
 		Find(&users).Error
 	if err != nil {

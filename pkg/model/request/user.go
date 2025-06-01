@@ -27,13 +27,6 @@ type UpdateUserInfoRequest struct {
 	Email    string `json:"email" binding:"omitempty,email"`
 }
 
-// SearchUserRequest 搜索用户请求
-type SearchUserRequest struct {
-	Keyword  string `form:"keyword" binding:"required"`
-	Page     int32  `form:"page"`
-	PageSize int32  `form:"page_size"`
-}
-
 // RefreshTokenRequest 刷新Token请求
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
