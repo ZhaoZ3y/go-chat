@@ -2,7 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -116,9 +116,10 @@ func (l *MuteMemberLogic) MuteMember(in *group.MuteMemberRequest) (*group.MuteMe
 			},
 		}
 
+		// 发送群内消息 - 通过WebSocket发送给所有群成员
 		if err := l.svcCtx.NotifyService.SendGroupMessage(notifyEvent); err != nil {
 			logx.Errorf("发送群内通知失败: %v", err)
-			// 可选：return err // 失败是否回滚由你决定
+			// 继续执行，不因通知失败而回滚事务
 		}
 
 		return nil

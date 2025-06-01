@@ -3,7 +3,7 @@ package svc
 import (
 	"IM/pkg/model"
 	"IM/pkg/mq"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"IM/rpc/group/internal/config"
 	"fmt"
 	"github.com/redis/go-redis/v9"

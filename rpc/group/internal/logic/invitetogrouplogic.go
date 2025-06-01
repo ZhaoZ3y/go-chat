@@ -2,7 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"context"
 	"gorm.io/gorm"
 	"time"
@@ -99,9 +99,9 @@ func (l *InviteToGroupLogic) InviteToGroup(in *group.InviteToGroupRequest) (*gro
 
 	tx.Commit()
 
-	// 如果有成功邀请的用户，发送通知给群主和管理员
 	if len(successUserIds) > 0 {
-		notifyEvent := &notify.NotifyEvent{
+		// 发送站外通知给群主和管理员
+		adminNotifyEvent := &notify.NotifyEvent{
 			Type:      notify.NotifyTypeInviteToGroup,
 			GroupID:   in.GroupId,
 			GroupName: groupInfo.Name,
@@ -113,8 +113,25 @@ func (l *InviteToGroupLogic) InviteToGroup(in *group.InviteToGroupRequest) (*gro
 			},
 		}
 
-		if err := l.svcCtx.NotifyService.SendNotifyToAdmins(notifyEvent); err != nil {
+		if err := l.svcCtx.NotifyService.SendNotifyToAdmins(adminNotifyEvent); err != nil {
 			logx.Errorf("发送邀请加入群聊通知失败: %v", err)
+		}
+
+		// 发送群内消息通知 - 所有群成员都能看到
+		groupMessageEvent := &notify.NotifyEvent{
+			Type:      notify.NotifyTypeInviteToGroup,
+			GroupID:   in.GroupId,
+			GroupName: groupInfo.Name,
+			Data: &notify.InviteToGroupData{
+				InviterID:   in.InviterId,
+				InviterName: inviterInfo.Username,
+				UserIDs:     successUserIds,
+				Usernames:   successUsernames,
+			},
+		}
+
+		if err := l.svcCtx.NotifyService.SendGroupMessage(groupMessageEvent); err != nil {
+			logx.Errorf("发送群内邀请通知失败: %v", err)
 		}
 	}
 

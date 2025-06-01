@@ -2,7 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"context"
 
 	"IM/rpc/group/group"

@@ -2,7 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"context"
 	"gorm.io/gorm"
 	"time"
@@ -88,8 +88,8 @@ func (l *JoinGroupLogic) JoinGroup(in *group.JoinGroupRequest) (*group.JoinGroup
 
 	tx.Commit()
 
-	// 发送通知给群主和管理员
-	notifyEvent := &notify.NotifyEvent{
+	// 发送站外通知给群主和管理员
+	adminNotifyEvent := &notify.NotifyEvent{
 		Type:      notify.NotifyTypeJoinRequest,
 		GroupID:   in.GroupId,
 		GroupName: groupInfo.Name,
@@ -100,8 +100,24 @@ func (l *JoinGroupLogic) JoinGroup(in *group.JoinGroupRequest) (*group.JoinGroup
 		},
 	}
 
-	if err := l.svcCtx.NotifyService.SendNotifyToAdmins(notifyEvent); err != nil {
+	if err := l.svcCtx.NotifyService.SendNotifyToAdmins(adminNotifyEvent); err != nil {
 		logx.Errorf("发送加入群聊通知失败: %v", err)
+	}
+
+	// 发送群内消息通知 - 所有群成员都能看到（包括新加入的成员）
+	groupMessageEvent := &notify.NotifyEvent{
+		Type:      notify.NotifyTypeJoinRequest, // 这里可以用新的类型来区分
+		GroupID:   in.GroupId,
+		GroupName: groupInfo.Name,
+		Data: &notify.JoinRequestData{
+			UserID:   in.UserId,
+			Username: userInfo.Username,
+			Reason:   in.Reason,
+		},
+	}
+
+	if err := l.svcCtx.NotifyService.SendGroupMessage(groupMessageEvent); err != nil {
+		logx.Errorf("发送群内加入通知失败: %v", err)
 	}
 
 	return &group.JoinGroupResponse{

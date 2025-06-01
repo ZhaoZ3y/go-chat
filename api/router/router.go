@@ -13,6 +13,9 @@ func SetRouter() *gin.Engine {
 	r.POST("/register", controller.Register)          // 用户注册
 	r.POST("/login", controller.Login)                // 用户登录
 	r.POST("/refresh_token", controller.RefreshToken) // 刷新用户令牌
+
+	r.GET("/ws", middleware.AuthMiddleware(), controller.WSHandler) // WebSocket连接处理
+
 	// 用户相关路由
 	user := r.Group("/user")
 	{

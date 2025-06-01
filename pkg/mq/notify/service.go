@@ -144,6 +144,34 @@ func (s *NotifyServiceImpl) buildNotifyMessage(event *NotifyEvent) string {
 			return fmt.Sprintf("%s 取消了 %s 的禁言", data.OperatorName, data.Username)
 		}
 		return fmt.Sprintf("%s 禁言了 %s", data.OperatorName, data.Username)
+
+	case NotifyTypeJoinRequest:
+		data := event.Data.(*JoinRequestData)
+		return fmt.Sprintf("%s 加入了群聊", data.Username)
+
+	case NotifyTypeInviteToGroup:
+		data := event.Data.(*InviteToGroupData)
+		if len(data.Usernames) == 1 {
+			return fmt.Sprintf("%s 邀请 %s 加入了群聊", data.InviterName, data.Usernames[0])
+		}
+		return fmt.Sprintf("%s 邀请了 %d 人加入了群聊", data.InviterName, len(data.Usernames))
+
+	case NotifyTypeKickFromGroup:
+		data := event.Data.(*KickFromGroupData)
+		return fmt.Sprintf("%s 将 %s 移出了群聊", data.OperatorName, data.Username)
+
+	case NotifyTypeLeaveGroup:
+		data := event.Data.(*LeaveGroupData)
+		return fmt.Sprintf("%s 退出了群聊", data.Username)
+
+	case NotifyTypeDismissGroup:
+		data := event.Data.(*DismissGroupData)
+		return fmt.Sprintf("群主 %s 解散了群聊", data.OwnerName)
+
+	case NotifyTypeTransferGroup:
+		data := event.Data.(*TransferGroupData)
+		return fmt.Sprintf("%s 将群聊转让给了 %s", data.OldOwnerName, data.NewOwnerName)
+
 	default:
 		return "群组通知"
 	}

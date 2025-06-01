@@ -198,6 +198,250 @@ func SetMemberRole(c *gin.Context) {
 		UserId:     req.UserId,
 		Role:       req.Role,
 	})
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// MuteMember 禁言群成员
+func MuteMember(c *gin.Context) {
+	operatorId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.MuteMemberRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.MuteMember(c.Request.Context(), &group.MuteMemberRequest{
+		GroupId:    req.GroupId,
+		OperatorId: operatorId.(int64),
+		UserId:     req.UserId,
+		Duration:   req.Duration,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// InviteToGroup 邀请进群
+func InviteToGroup(c *gin.Context) {
+	inviterId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.InviteToGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.InviteToGroup(c.Request.Context(), &group.InviteToGroupRequest{
+		GroupId:   req.GroupId,
+		InviterId: inviterId.(int64),
+		UserIds:   req.UserIds,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message":         resp.Message,
+		"failed_user_ids": resp.FailedUserIds,
+	})
+}
+
+// JoinGroup 加入群组
+func JoinGroup(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.JoinGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.JoinGroup(c.Request.Context(), &group.JoinGroupRequest{
+		GroupId: req.GroupId,
+		UserId:  userId.(int64),
+		Reason:  req.Reason,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// KickFromGroup 踢出群成员
+func KickFromGroup(c *gin.Context) {
+	operatorId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.KickFromGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.KickFromGroup(c.Request.Context(), &group.KickFromGroupRequest{
+		GroupId:    req.GroupId,
+		OperatorId: operatorId.(int64),
+		UserId:     req.UserId,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// LeaveGroup 退出群组
+func LeaveGroup(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.LeaveGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.LeaveGroup(c.Request.Context(), &group.LeaveGroupRequest{
+		GroupId: req.GroupId,
+		UserId:  userId.(int64),
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// DismissGroup 解散群组
+func DismissGroup(c *gin.Context) {
+	ownerId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.DismissGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.DismissGroup(c.Request.Context(), &group.DismissGroupRequest{
+		GroupId: req.GroupId,
+		OwnerId: ownerId.(int64),
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// TransferGroup 转让群组
+func TransferGroup(c *gin.Context) {
+	ownerId, exists := c.Get("user_id")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.TransferGroupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.TransferGroup(c.Request.Context(), &group.TransferGroupRequest{
+		GroupId:    req.GroupId,
+		OwnerId:    ownerId.(int64),
+		NewOwnerId: req.NewOwnerId,
+	})
 
 	if err != nil {
 		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())

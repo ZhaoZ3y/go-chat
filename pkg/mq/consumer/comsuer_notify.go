@@ -3,7 +3,7 @@ package consumer
 import (
 	"IM/pkg/model"
 	"IM/pkg/mq"
-	"IM/pkg/notify"
+	"IM/pkg/mq/notify"
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
