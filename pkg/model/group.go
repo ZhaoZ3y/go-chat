@@ -1,6 +1,9 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type Groups struct {
 	Id             int64          `gorm:"primaryKey;autoIncrement" json:"id"`
@@ -22,7 +25,8 @@ type GroupMembers struct {
 	UserId    int64          `gorm:"not null;index:idx_group_user,unique;index:idx_user_id" json:"user_id"`
 	Role      int8           `gorm:"type:tinyint(4);default:3;index:idx_role" json:"role"`
 	Nickname  string         `gorm:"type:varchar(50);default:''" json:"nickname"`
-	Status    int8           `gorm:"type:tinyint(4);default:1" json:"status"`
+	Status    int8           `gorm:"type:tinyint(4);default:1" json:"status"`      // 1 正常 2 禁言（标志位，非必须）
+	MuteUntil time.Time      `gorm:"type:datetime;default:null" json:"mute_until"` // 新增字段，记录禁言结束时间
 	JoinTime  int64          `gorm:"not null" json:"join_time"`
 	UpdateAt  int64          `gorm:"autoUpdateTime" json:"update_time"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
