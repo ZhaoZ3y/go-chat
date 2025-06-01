@@ -34,6 +34,10 @@ const (
 	EventMessageRead   = "message_read"
 	EventMessageRecall = "message_recall"
 	EventMessageDelete = "message_delete"
+
+	// 新增通知事件类型
+	EventNotifyAdmins     = "notify_admins"      // 通知群主和管理员
+	EventNotifyAllMembers = "notify_all_members" // 通知所有群成员
 )
 
 func NewKafkaClient(brokers []string) (*KafkaClient, error) {
