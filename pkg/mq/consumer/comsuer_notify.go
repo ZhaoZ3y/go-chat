@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"IM/pkg/message"
 	"IM/pkg/model"
 	"IM/pkg/mq"
 	"IM/pkg/mq/notify"
@@ -58,7 +59,7 @@ func (c *NotifyConsumer) handleNotifyAdmins(event *mq.MessageEvent) error {
 	}
 
 	// 构造推送消息
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "group_notify",
 		Data: map[string]interface{}{
 			"notify_type": notifyEvent.Type,
@@ -97,7 +98,7 @@ func (c *NotifyConsumer) handleNotifyAllMembers(event *mq.MessageEvent) error {
 	}
 
 	// 构造推送消息
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "group_notify",
 		Data: map[string]interface{}{
 			"notify_type": notifyEvent.Type,

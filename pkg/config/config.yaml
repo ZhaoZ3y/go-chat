@@ -1,0 +1,7 @@
+DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+
+Kafka:
+  Brokers:
+    - kafka:9092
+  ProducerGroup: im_producer_group
+  ConsumerGroup: im_consumer_group

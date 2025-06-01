@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"IM/pkg/message"
 	"IM/pkg/mq"
 	"log"
 )
@@ -11,8 +12,8 @@ type MessageConsumer struct {
 }
 
 type PushService interface {
-	PushToUser(userID int64, message *PushMessage) error
-	PushToGroup(groupID int64, message *PushMessage, excludeUserID int64) error
+	PushToUser(userID int64, message *message.PushMessage) error
+	PushToGroup(groupID int64, message *message.PushMessage, excludeUserID int64) error
 }
 
 type PushMessage struct {
@@ -48,7 +49,7 @@ func (c *MessageConsumer) handleMessage(event *mq.MessageEvent) error {
 }
 
 func (c *MessageConsumer) handleNewMessage(event *mq.MessageEvent) error {
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "new_message",
 		Data: map[string]interface{}{
 			"message_id":   event.MessageID,
@@ -71,7 +72,7 @@ func (c *MessageConsumer) handleNewMessage(event *mq.MessageEvent) error {
 }
 
 func (c *MessageConsumer) handleMessageRecall(event *mq.MessageEvent) error {
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "message_recall",
 		Data: map[string]interface{}{
 			"message_id":   event.MessageID,
@@ -87,7 +88,7 @@ func (c *MessageConsumer) handleMessageRecall(event *mq.MessageEvent) error {
 }
 
 func (c *MessageConsumer) handleMessageRead(event *mq.MessageEvent) error {
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "message_read",
 		Data: event.Data,
 	}
@@ -97,7 +98,7 @@ func (c *MessageConsumer) handleMessageRead(event *mq.MessageEvent) error {
 }
 
 func (c *MessageConsumer) handleMessageDelete(event *mq.MessageEvent) error {
-	pushMsg := &PushMessage{
+	pushMsg := &message.PushMessage{
 		Type: "message_delete",
 		Data: map[string]interface{}{
 			"message_id": event.MessageID,
