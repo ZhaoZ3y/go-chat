@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	GroupService_CreateGroup_FullMethodName        = "/group.GroupService/CreateGroup"
 	GroupService_JoinGroup_FullMethodName          = "/group.GroupService/JoinGroup"
+	GroupService_SearchGroup_FullMethodName        = "/group.GroupService/SearchGroup"
 	GroupService_InviteToGroup_FullMethodName      = "/group.GroupService/InviteToGroup"
 	GroupService_LeaveGroup_FullMethodName         = "/group.GroupService/LeaveGroup"
 	GroupService_KickFromGroup_FullMethodName      = "/group.GroupService/KickFromGroup"
@@ -44,6 +45,8 @@ type GroupServiceClient interface {
 	CreateGroup(ctx context.Context, in *CreateGroupRequest, opts ...grpc.CallOption) (*CreateGroupResponse, error)
 	// 加入群组
 	JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
+	// 搜索群组
+	SearchGroup(ctx context.Context, in *SearchGroupRequest, opts ...grpc.CallOption) (*SearchGroupResponse, error)
 	// 邀请加入群组
 	InviteToGroup(ctx context.Context, in *InviteToGroupRequest, opts ...grpc.CallOption) (*InviteToGroupResponse, error)
 	// 退出群组
@@ -90,6 +93,16 @@ func (c *groupServiceClient) JoinGroup(ctx context.Context, in *JoinGroupRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(JoinGroupResponse)
 	err := c.cc.Invoke(ctx, GroupService_JoinGroup_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *groupServiceClient) SearchGroup(ctx context.Context, in *SearchGroupRequest, opts ...grpc.CallOption) (*SearchGroupResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchGroupResponse)
+	err := c.cc.Invoke(ctx, GroupService_SearchGroup_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -216,6 +229,8 @@ type GroupServiceServer interface {
 	CreateGroup(context.Context, *CreateGroupRequest) (*CreateGroupResponse, error)
 	// 加入群组
 	JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error)
+	// 搜索群组
+	SearchGroup(context.Context, *SearchGroupRequest) (*SearchGroupResponse, error)
 	// 邀请加入群组
 	InviteToGroup(context.Context, *InviteToGroupRequest) (*InviteToGroupResponse, error)
 	// 退出群组
@@ -253,6 +268,9 @@ func (UnimplementedGroupServiceServer) CreateGroup(context.Context, *CreateGroup
 }
 func (UnimplementedGroupServiceServer) JoinGroup(context.Context, *JoinGroupRequest) (*JoinGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinGroup not implemented")
+}
+func (UnimplementedGroupServiceServer) SearchGroup(context.Context, *SearchGroupRequest) (*SearchGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchGroup not implemented")
 }
 func (UnimplementedGroupServiceServer) InviteToGroup(context.Context, *InviteToGroupRequest) (*InviteToGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InviteToGroup not implemented")
@@ -340,6 +358,24 @@ func _GroupService_JoinGroup_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GroupServiceServer).JoinGroup(ctx, req.(*JoinGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GroupService_SearchGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GroupServiceServer).SearchGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GroupService_SearchGroup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GroupServiceServer).SearchGroup(ctx, req.(*SearchGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -556,6 +592,10 @@ var GroupService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinGroup",
 			Handler:    _GroupService_JoinGroup_Handler,
+		},
+		{
+			MethodName: "SearchGroup",
+			Handler:    _GroupService_SearchGroup_Handler,
 		},
 		{
 			MethodName: "InviteToGroup",

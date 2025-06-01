@@ -36,6 +36,8 @@ type (
 	LeaveGroupResponse         = group.LeaveGroupResponse
 	MuteMemberRequest          = group.MuteMemberRequest
 	MuteMemberResponse         = group.MuteMemberResponse
+	SearchGroupRequest         = group.SearchGroupRequest
+	SearchGroupResponse        = group.SearchGroupResponse
 	SetMemberRoleRequest       = group.SetMemberRoleRequest
 	SetMemberRoleResponse      = group.SetMemberRoleResponse
 	TransferGroupRequest       = group.TransferGroupRequest
@@ -48,6 +50,8 @@ type (
 		CreateGroup(ctx context.Context, in *CreateGroupRequest, opts ...grpc.CallOption) (*CreateGroupResponse, error)
 		// 加入群组
 		JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
+		// 搜索群组
+		SearchGroup(ctx context.Context, in *SearchGroupRequest, opts ...grpc.CallOption) (*SearchGroupResponse, error)
 		// 邀请加入群组
 		InviteToGroup(ctx context.Context, in *InviteToGroupRequest, opts ...grpc.CallOption) (*InviteToGroupResponse, error)
 		// 退出群组
@@ -93,6 +97,12 @@ func (m *defaultGroupService) CreateGroup(ctx context.Context, in *CreateGroupRe
 func (m *defaultGroupService) JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error) {
 	client := group.NewGroupServiceClient(m.cli.Conn())
 	return client.JoinGroup(ctx, in, opts...)
+}
+
+// 搜索群组
+func (m *defaultGroupService) SearchGroup(ctx context.Context, in *SearchGroupRequest, opts ...grpc.CallOption) (*SearchGroupResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.SearchGroup(ctx, in, opts...)
 }
 
 // 邀请加入群组

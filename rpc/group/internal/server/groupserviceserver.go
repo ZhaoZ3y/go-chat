@@ -35,6 +35,12 @@ func (s *GroupServiceServer) JoinGroup(ctx context.Context, in *group.JoinGroupR
 	return l.JoinGroup(in)
 }
 
+// 搜索群组
+func (s *GroupServiceServer) SearchGroup(ctx context.Context, in *group.SearchGroupRequest) (*group.SearchGroupResponse, error) {
+	l := logic.NewSearchGroupLogic(ctx, s.svcCtx)
+	return l.SearchGroup(in)
+}
+
 // 邀请加入群组
 func (s *GroupServiceServer) InviteToGroup(ctx context.Context, in *group.InviteToGroupRequest) (*group.InviteToGroupResponse, error) {
 	l := logic.NewInviteToGroupLogic(ctx, s.svcCtx)

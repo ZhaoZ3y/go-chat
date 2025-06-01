@@ -59,6 +59,19 @@ message JoinGroupResponse {
   string message = 2;
 }
 
+// 搜索群组请求
+message SearchGroupRequest {
+   string keyword = 1; // 搜索关键词
+   int32 page = 2; // 页码
+   int32 page_size = 3; // 每页数量
+}
+
+// 搜索群组响应
+message SearchGroupResponse {
+  repeated Group groups = 1; // 匹配的群组列表
+  int64 total = 2; // 总数
+}
+
 // 邀请加入群组请求
 message InviteToGroupRequest {
   int64 group_id = 1;
@@ -211,6 +224,8 @@ service GroupService {
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
   // 加入群组
   rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse);
+  // 搜索群组
+  rpc SearchGroup(SearchGroupRequest) returns (SearchGroupResponse);
   // 邀请加入群组
   rpc InviteToGroup(InviteToGroupRequest) returns (InviteToGroupResponse);
   // 退出群组
