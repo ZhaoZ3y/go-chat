@@ -2,6 +2,7 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/notify"
 	"context"
 
 	"IM/rpc/group/group"
@@ -49,6 +50,20 @@ func (l *MuteMemberLogic) MuteMember(in *group.MuteMemberRequest) (*group.MuteMe
 		return &group.MuteMemberResponse{Success: false, Message: "管理员不能禁言其他管理员"}, nil
 	}
 
+	// 获取操作者、目标用户信息和群组信息
+	var operatorInfo model.User
+	var targetUserInfo model.User
+	var groupInfo model.Groups
+	if err := l.svcCtx.DB.Where("id = ?", in.OperatorId).First(&operatorInfo).Error; err != nil {
+		return &group.MuteMemberResponse{Success: false, Message: "操作者不存在"}, nil
+	}
+	if err := l.svcCtx.DB.Where("id = ?", in.UserId).First(&targetUserInfo).Error; err != nil {
+		return &group.MuteMemberResponse{Success: false, Message: "目标用户不存在"}, nil
+	}
+	if err := l.svcCtx.DB.Where("id = ?", in.GroupId).First(&groupInfo).Error; err != nil {
+		return &group.MuteMemberResponse{Success: false, Message: "群组不存在"}, nil
+	}
+
 	// 设置禁言状态
 	status := int8(2) // 禁言
 	if in.Duration == 0 {
@@ -59,6 +74,24 @@ func (l *MuteMemberLogic) MuteMember(in *group.MuteMemberRequest) (*group.MuteMe
 		Where("group_id = ? AND user_id = ?", in.GroupId, in.UserId).
 		Update("status", status).Error; err != nil {
 		return &group.MuteMemberResponse{Success: false, Message: "操作失败"}, nil
+	}
+
+	// 发送群内通知消息
+	notifyEvent := &notify.NotifyEvent{
+		Type:      notify.NotifyTypeMuteMember,
+		GroupID:   in.GroupId,
+		GroupName: groupInfo.Name,
+		Data: &notify.MuteMemberData{
+			OperatorID:   in.OperatorId,
+			OperatorName: operatorInfo.Username,
+			UserID:       in.UserId,
+			Username:     targetUserInfo.Username,
+			Duration:     in.Duration,
+		},
+	}
+
+	if err := l.svcCtx.NotifyService.SendGroupMessage(notifyEvent); err != nil {
+		logx.Errorf("发送禁言群内通知失败: %v", err)
 	}
 
 	message := "禁言成功"

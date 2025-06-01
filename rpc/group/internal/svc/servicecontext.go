@@ -2,6 +2,8 @@ package svc
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/mq"
+	"IM/pkg/notify"
 	"IM/rpc/group/internal/config"
 	"fmt"
 	"github.com/redis/go-redis/v9"
@@ -10,9 +12,10 @@ import (
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *gorm.DB
-	Redis  *redis.Client
+	Config        config.Config
+	DB            *gorm.DB
+	Redis         *redis.Client
+	NotifyService notify.NotifyService
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -32,9 +35,19 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		DB:       c.CustomRedis.DB,
 	})
 
+	// 初始化Kafka客户端
+	kafkaClient, err := mq.NewKafkaClient([]string{"kafka:9092"})
+	if err != nil {
+		panic("failed to connect kafka")
+	}
+
+	// 初始化通知服务
+	notifyService := notify.NewNotifyService(kafkaClient)
+
 	return &ServiceContext{
-		Config: c,
-		DB:     db,
-		Redis:  rdb,
+		Config:        c,
+		DB:            db,
+		Redis:         rdb,
+		NotifyService: notifyService,
 	}
 }
