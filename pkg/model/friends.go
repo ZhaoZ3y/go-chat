@@ -18,7 +18,8 @@ type FriendRequests struct {
 	FromUserId int64          `gorm:"not null;index:idx_from_user" json:"from_user_id"`
 	ToUserId   int64          `gorm:"not null;index:idx_to_user" json:"to_user_id"`
 	Message    string         `gorm:"type:varchar(200);default:''" json:"message"`
-	Status     int8           `gorm:"type:tinyint(4);default:1;index:idx_status" json:"status"`
+	Status     int8           `gorm:"type:tinyint(4);default:1;index:idx_status" json:"status"`              // 1: 待处理 2: 同意 3: 拒绝
+	IsRead     bool           `gorm:"type:tinyint(1);default:false;index:idx_to_user_isread" json:"is_read"` // 是否已读
 	CreateAt   int64          `gorm:"autoCreateTime" json:"create_time"`
 	UpdateAt   int64          `gorm:"autoUpdateTime" json:"update_time"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
