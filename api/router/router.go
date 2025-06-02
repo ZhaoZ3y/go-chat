@@ -5,36 +5,11 @@ import (
 	"IM/api/middleware"
 	"IM/pkg/websocket"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func SetRouter(hub *websocket.Hub) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware()) // 跨域中间件
-
-	// WebSocket路由（不需要认证中间件，因为通过URL参数传递用户ID）
-	r.GET("/ws", func(c *gin.Context) {
-		websocket.ServeWS(hub, c.Writer, c.Request)
-	})
-
-	// WebSocket状态查询
-	r.GET("/websocket/status", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"online_users": hub.GetOnlineUserCount(),
-			"status":       "running",
-		})
-	})
-
-	// WebSocket用户在线状态查询
-	r.GET("/websocket/online/:user_id", func(c *gin.Context) {
-		userID := c.Param("user_id")
-		// 这里需要转换userID字符串为int64
-		// isOnline := hub.IsUserOnline(userID)
-		c.JSON(http.StatusOK, gin.H{
-			"user_id":   userID,
-			"is_online": false, // 这里需要实际实现
-		})
-	})
 
 	r.POST("/register", controller.Register)          // 用户注册
 	r.POST("/login", controller.Login)                // 用户登录

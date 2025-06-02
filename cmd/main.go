@@ -33,7 +33,7 @@ func main() {
 	pushService := websocket.NewPushService(hub)
 
 	// 启动消息消费者
-	messageConsumer := consumer.NewMessageConsumer(kafkaClient, pushService)
+	messageConsumer := consumer.NewMessageConsumer(kafkaClient.GetBrokers(), pushService)
 	go func() {
 		if err := messageConsumer.Start(); err != nil {
 			log.Printf("消息消费者启动失败: %v", err)
@@ -41,17 +41,12 @@ func main() {
 	}()
 
 	// 启动通知消费者
-	notifyConsumer := consumer.NewNotifyConsumer(kafkaClient, pushService, db)
+	notifyConsumer := consumer.NewNotifyConsumer(kafkaClient.GetBrokers(), pushService, db)
 	go func() {
 		if err := notifyConsumer.Start(); err != nil {
 			log.Printf("通知消费者启动失败: %v", err)
 		}
 	}()
-
-	log.Println("IM服务启动成功")
-	log.Println("WebSocket地址: ws://localhost:8080/ws")
-	log.Println("API地址: http://localhost:8080")
-
 	// 初始化路由（需要传入hub以便注册WebSocket路由）
 	api := router.SetRouter(hub)
 

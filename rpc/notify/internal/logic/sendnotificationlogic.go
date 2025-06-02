@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/IBM/sarama"
+	"time"
 
 	"IM/rpc/notify/internal/svc"
 	"IM/rpc/notify/notification"
@@ -27,30 +28,41 @@ func NewSendNotificationLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 
 // 发送通知接口，将通知消息推送到 Kafka 等消息队列
 func (l *SendNotificationLogic) SendNotification(in *notification.SendNotificationRequest) (*notification.SendNotificationResponse, error) {
+	// 设置时间戳
+	if in.Notification.Timestamp == 0 {
+		in.Notification.Timestamp = time.Now().Unix()
+	}
+
+	// 序列化通知消息
 	data, err := json.Marshal(in.Notification)
 	if err != nil {
-		l.Errorf("failed to marshal notification: %v", err)
+		l.Errorf("序列化通知消息失败: %v", err)
 		return &notification.SendNotificationResponse{
 			Success:  false,
-			ErrorMsg: "marshal error",
+			ErrorMsg: "序列化错误",
 		}, nil
 	}
 
+	// 发送到Kafka
 	msg := &sarama.ProducerMessage{
-		Topic: l.svcCtx.Config.Kafka.ProducerTopic,
-		Value: sarama.ByteEncoder(data),
+		Topic:     l.svcCtx.Config.Kafka.ProducerTopic,
+		Key:       sarama.StringEncoder(string(rune(in.Notification.UserId))),
+		Value:     sarama.ByteEncoder(data),
+		Timestamp: time.Now(),
 	}
 
 	partition, offset, err := l.svcCtx.KafkaProducer.SendMessage(msg)
 	if err != nil {
-		l.Errorf("failed to send kafka message: %v", err)
+		l.Errorf("发送Kafka消息失败: %v", err)
 		return &notification.SendNotificationResponse{
 			Success:  false,
-			ErrorMsg: "kafka send error",
+			ErrorMsg: "消息队列发送失败",
 		}, nil
 	}
 
-	l.Infof("sent kafka message partition=%d offset=%d", partition, offset)
+	l.Infof("通知消息发送成功: UserID=%d, Type=%v, Partition=%d, Offset=%d",
+		in.Notification.UserId, in.Notification.Type, partition, offset)
+
 	return &notification.SendNotificationResponse{
 		Success: true,
 	}, nil
