@@ -35,6 +35,12 @@ func (s *FriendServiceServer) HandleFriendRequest(ctx context.Context, in *frien
 	return l.HandleFriendRequest(in)
 }
 
+// 获取未读好友申请数量
+func (s *FriendServiceServer) GetUnreadFriendRequestCount(ctx context.Context, in *friend.GetUnreadFriendRequestCountRequest) (*friend.GetUnreadFriendRequestCountResponse, error) {
+	l := logic.NewGetUnreadFriendRequestCountLogic(ctx, s.svcCtx)
+	return l.GetUnreadFriendRequestCount(in)
+}
+
 // 获取好友申请列表
 func (s *FriendServiceServer) GetFriendRequestList(ctx context.Context, in *friend.GetFriendRequestListRequest) (*friend.GetFriendRequestListResponse, error) {
 	l := logic.NewGetFriendRequestListLogic(ctx, s.svcCtx)

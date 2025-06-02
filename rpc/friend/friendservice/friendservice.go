@@ -14,28 +14,32 @@ import (
 )
 
 type (
-	BlockFriendRequest           = friend.BlockFriendRequest
-	BlockFriendResponse          = friend.BlockFriendResponse
-	DeleteFriendRequest          = friend.DeleteFriendRequest
-	DeleteFriendResponse         = friend.DeleteFriendResponse
-	Friend                       = friend.Friend
-	FriendRequest                = friend.FriendRequest
-	GetFriendListRequest         = friend.GetFriendListRequest
-	GetFriendListResponse        = friend.GetFriendListResponse
-	GetFriendRequestListRequest  = friend.GetFriendRequestListRequest
-	GetFriendRequestListResponse = friend.GetFriendRequestListResponse
-	HandleFriendRequestRequest   = friend.HandleFriendRequestRequest
-	HandleFriendRequestResponse  = friend.HandleFriendRequestResponse
-	SendFriendRequestRequest     = friend.SendFriendRequestRequest
-	SendFriendRequestResponse    = friend.SendFriendRequestResponse
-	UpdateFriendRemarkRequest    = friend.UpdateFriendRemarkRequest
-	UpdateFriendRemarkResponse   = friend.UpdateFriendRemarkResponse
+	BlockFriendRequest                  = friend.BlockFriendRequest
+	BlockFriendResponse                 = friend.BlockFriendResponse
+	DeleteFriendRequest                 = friend.DeleteFriendRequest
+	DeleteFriendResponse                = friend.DeleteFriendResponse
+	Friend                              = friend.Friend
+	FriendRequest                       = friend.FriendRequest
+	GetFriendListRequest                = friend.GetFriendListRequest
+	GetFriendListResponse               = friend.GetFriendListResponse
+	GetFriendRequestListRequest         = friend.GetFriendRequestListRequest
+	GetFriendRequestListResponse        = friend.GetFriendRequestListResponse
+	GetUnreadFriendRequestCountRequest  = friend.GetUnreadFriendRequestCountRequest
+	GetUnreadFriendRequestCountResponse = friend.GetUnreadFriendRequestCountResponse
+	HandleFriendRequestRequest          = friend.HandleFriendRequestRequest
+	HandleFriendRequestResponse         = friend.HandleFriendRequestResponse
+	SendFriendRequestRequest            = friend.SendFriendRequestRequest
+	SendFriendRequestResponse           = friend.SendFriendRequestResponse
+	UpdateFriendRemarkRequest           = friend.UpdateFriendRemarkRequest
+	UpdateFriendRemarkResponse          = friend.UpdateFriendRemarkResponse
 
 	FriendService interface {
 		// 发送好友申请
 		SendFriendRequest(ctx context.Context, in *SendFriendRequestRequest, opts ...grpc.CallOption) (*SendFriendRequestResponse, error)
 		// 处理好友申请
 		HandleFriendRequest(ctx context.Context, in *HandleFriendRequestRequest, opts ...grpc.CallOption) (*HandleFriendRequestResponse, error)
+		// 获取未读好友申请数量
+		GetUnreadFriendRequestCount(ctx context.Context, in *GetUnreadFriendRequestCountRequest, opts ...grpc.CallOption) (*GetUnreadFriendRequestCountResponse, error)
 		// 获取好友申请列表
 		GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error)
 		// 获取好友列表
@@ -69,6 +73,12 @@ func (m *defaultFriendService) SendFriendRequest(ctx context.Context, in *SendFr
 func (m *defaultFriendService) HandleFriendRequest(ctx context.Context, in *HandleFriendRequestRequest, opts ...grpc.CallOption) (*HandleFriendRequestResponse, error) {
 	client := friend.NewFriendServiceClient(m.cli.Conn())
 	return client.HandleFriendRequest(ctx, in, opts...)
+}
+
+// 获取未读好友申请数量
+func (m *defaultFriendService) GetUnreadFriendRequestCount(ctx context.Context, in *GetUnreadFriendRequestCountRequest, opts ...grpc.CallOption) (*GetUnreadFriendRequestCountResponse, error) {
+	client := friend.NewFriendServiceClient(m.cli.Conn())
+	return client.GetUnreadFriendRequestCount(ctx, in, opts...)
 }
 
 // 获取好友申请列表

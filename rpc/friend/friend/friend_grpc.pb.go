@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FriendService_SendFriendRequest_FullMethodName    = "/friend.FriendService/SendFriendRequest"
-	FriendService_HandleFriendRequest_FullMethodName  = "/friend.FriendService/HandleFriendRequest"
-	FriendService_GetFriendRequestList_FullMethodName = "/friend.FriendService/GetFriendRequestList"
-	FriendService_GetFriendList_FullMethodName        = "/friend.FriendService/GetFriendList"
-	FriendService_DeleteFriend_FullMethodName         = "/friend.FriendService/DeleteFriend"
-	FriendService_UpdateFriendRemark_FullMethodName   = "/friend.FriendService/UpdateFriendRemark"
-	FriendService_BlockFriend_FullMethodName          = "/friend.FriendService/BlockFriend"
+	FriendService_SendFriendRequest_FullMethodName           = "/friend.FriendService/SendFriendRequest"
+	FriendService_HandleFriendRequest_FullMethodName         = "/friend.FriendService/HandleFriendRequest"
+	FriendService_GetUnreadFriendRequestCount_FullMethodName = "/friend.FriendService/GetUnreadFriendRequestCount"
+	FriendService_GetFriendRequestList_FullMethodName        = "/friend.FriendService/GetFriendRequestList"
+	FriendService_GetFriendList_FullMethodName               = "/friend.FriendService/GetFriendList"
+	FriendService_DeleteFriend_FullMethodName                = "/friend.FriendService/DeleteFriend"
+	FriendService_UpdateFriendRemark_FullMethodName          = "/friend.FriendService/UpdateFriendRemark"
+	FriendService_BlockFriend_FullMethodName                 = "/friend.FriendService/BlockFriend"
 )
 
 // FriendServiceClient is the client API for FriendService service.
@@ -38,6 +39,8 @@ type FriendServiceClient interface {
 	SendFriendRequest(ctx context.Context, in *SendFriendRequestRequest, opts ...grpc.CallOption) (*SendFriendRequestResponse, error)
 	// 处理好友申请
 	HandleFriendRequest(ctx context.Context, in *HandleFriendRequestRequest, opts ...grpc.CallOption) (*HandleFriendRequestResponse, error)
+	// 获取未读好友申请数量
+	GetUnreadFriendRequestCount(ctx context.Context, in *GetUnreadFriendRequestCountRequest, opts ...grpc.CallOption) (*GetUnreadFriendRequestCountResponse, error)
 	// 获取好友申请列表
 	GetFriendRequestList(ctx context.Context, in *GetFriendRequestListRequest, opts ...grpc.CallOption) (*GetFriendRequestListResponse, error)
 	// 获取好友列表
@@ -72,6 +75,16 @@ func (c *friendServiceClient) HandleFriendRequest(ctx context.Context, in *Handl
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(HandleFriendRequestResponse)
 	err := c.cc.Invoke(ctx, FriendService_HandleFriendRequest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *friendServiceClient) GetUnreadFriendRequestCount(ctx context.Context, in *GetUnreadFriendRequestCountRequest, opts ...grpc.CallOption) (*GetUnreadFriendRequestCountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUnreadFriendRequestCountResponse)
+	err := c.cc.Invoke(ctx, FriendService_GetUnreadFriendRequestCount_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +151,8 @@ type FriendServiceServer interface {
 	SendFriendRequest(context.Context, *SendFriendRequestRequest) (*SendFriendRequestResponse, error)
 	// 处理好友申请
 	HandleFriendRequest(context.Context, *HandleFriendRequestRequest) (*HandleFriendRequestResponse, error)
+	// 获取未读好友申请数量
+	GetUnreadFriendRequestCount(context.Context, *GetUnreadFriendRequestCountRequest) (*GetUnreadFriendRequestCountResponse, error)
 	// 获取好友申请列表
 	GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error)
 	// 获取好友列表
@@ -163,6 +178,9 @@ func (UnimplementedFriendServiceServer) SendFriendRequest(context.Context, *Send
 }
 func (UnimplementedFriendServiceServer) HandleFriendRequest(context.Context, *HandleFriendRequestRequest) (*HandleFriendRequestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HandleFriendRequest not implemented")
+}
+func (UnimplementedFriendServiceServer) GetUnreadFriendRequestCount(context.Context, *GetUnreadFriendRequestCountRequest) (*GetUnreadFriendRequestCountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUnreadFriendRequestCount not implemented")
 }
 func (UnimplementedFriendServiceServer) GetFriendRequestList(context.Context, *GetFriendRequestListRequest) (*GetFriendRequestListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFriendRequestList not implemented")
@@ -232,6 +250,24 @@ func _FriendService_HandleFriendRequest_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FriendServiceServer).HandleFriendRequest(ctx, req.(*HandleFriendRequestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FriendService_GetUnreadFriendRequestCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUnreadFriendRequestCountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).GetUnreadFriendRequestCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_GetUnreadFriendRequestCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).GetUnreadFriendRequestCount(ctx, req.(*GetUnreadFriendRequestCountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -340,6 +376,10 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HandleFriendRequest",
 			Handler:    _FriendService_HandleFriendRequest_Handler,
+		},
+		{
+			MethodName: "GetUnreadFriendRequestCount",
+			Handler:    _FriendService_GetUnreadFriendRequestCount_Handler,
 		},
 		{
 			MethodName: "GetFriendRequestList",
