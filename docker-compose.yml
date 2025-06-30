@@ -102,7 +102,7 @@ services:
 #      dockerfile: deploy/Dockerfile.group
 #    container_name: group-rpc
 #    ports:
-#      - "10001:10001"
+#      - "10002:10002"
 #    depends_on:
 #      - mysql
 #      - redis
@@ -115,6 +115,25 @@ services:
 #      - KAFKA_BROKERS=kafka:29092
 #    restart: unless-stopped
 
+  friend-rpc:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.friend
+    container_name: friend-rpc
+    ports:
+      - "10003:10003"
+    depends_on:
+      - mysql
+      - redis
+      - etcd
+      - kafka
+    environment:
+      - ETCD_ADDR=etcd:2379
+      - MYSQL_DSN=root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+      - KAFKA_BROKERS=kafka:29092
+    restart: unless-stopped
+
   # --- web-api 服务 ---
   web-api:
     build:
@@ -126,6 +145,7 @@ services:
     depends_on:
       - user-rpc
 #      - group-rpc
+      - friend-rpc
       - etcd
       - mysql
       - redis

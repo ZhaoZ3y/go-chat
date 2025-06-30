@@ -26,6 +26,21 @@ func SetRouter(hub *websocket.Hub) *gin.Engine {
 
 	r.GET("/search", controller.Search) // 搜索用户和群组
 
+	// 好友相关路由
+	friend := r.Group("/friend")
+	friend.Use(middleware.AuthMiddleware())
+	{
+		friend.POST("/request/send", controller.SendFriendRequest)                  // 发送好友申请
+		friend.POST("/request/handle", controller.HandleFriendRequest)              // 处理好友申请
+		friend.GET("/request/list", controller.GetFriendRequestList)                // 获取好友申请列表
+		friend.GET("/request/unread-count", controller.GetUnreadFriendRequestCount) // 获取未读好友申请数量
+		friend.GET("/list", controller.GetFriendList)                               // 获取好友列表
+		friend.DELETE("/delete", controller.DeleteFriend)                           // 删除好友
+		friend.POST("/block", controller.BlockFriend)                               // 拉黑好友
+		friend.GET("/blocked/list", controller.GetBlockedFriendList)                // 获取拉黑好友列表
+		friend.PUT("/remark", controller.UpdateFriendRemark)                        // 更新好友备注
+	}
+
 	// 群组相关路由
 	group := r.Group("/group")
 	group.Use(middleware.AuthMiddleware())

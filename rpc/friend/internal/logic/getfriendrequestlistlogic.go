@@ -31,13 +31,6 @@ func (l *GetFriendRequestListLogic) GetFriendRequestList(in *friend.GetFriendReq
 		return &friend.GetFriendRequestListResponse{}, nil
 	}
 
-	if in.Page <= 0 {
-		in.Page = 1
-	}
-	if in.PageSize <= 0 {
-		in.PageSize = 20
-	}
-
 	// 构建查询条件
 	query := l.svcCtx.DB.Model(&model.FriendRequests{}).Where("to_user_id = ?", in.UserId)
 
@@ -54,8 +47,7 @@ func (l *GetFriendRequestListLogic) GetFriendRequestList(in *friend.GetFriendReq
 
 	// 获取列表数据
 	var requests []model.FriendRequests
-	offset := (in.Page - 1) * in.PageSize
-	if err := query.Order("create_at DESC").Offset(int(offset)).Limit(int(in.PageSize)).Find(&requests).Error; err != nil {
+	if err := query.Order("create_at DESC").Find(&requests).Error; err != nil {
 		l.Logger.Errorf("获取好友申请列表失败: %v", err)
 		return &friend.GetFriendRequestListResponse{}, nil
 	}

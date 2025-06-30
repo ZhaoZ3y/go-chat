@@ -37,6 +37,7 @@ message SendFriendRequestRequest {
 message SendFriendRequestResponse {
   bool success = 1;
   string message = 2;
+  int64 request_id = 3;
 }
 
 // 处理好友申请请求
@@ -51,6 +52,7 @@ message HandleFriendRequestRequest {
 message HandleFriendRequestResponse {
   bool success = 1;
   string message = 2;
+  FriendRequest request_info = 3; // 处理后的好友申请信息
 }
 
 // 获取好友申请列表请求
@@ -68,8 +70,6 @@ message GetFriendRequestListResponse {
 // 获取好友列表请求
 message GetFriendListRequest {
   int64 user_id = 1;
-  int32 page = 2;
-  int32 page_size = 3;
 }
 
 // 获取好友列表响应
@@ -116,6 +116,15 @@ message BlockFriendResponse {
   string message = 2;
 }
 
+message GetBlockedListRequest {
+  int64 user_id = 1;
+}
+
+message GetBlockedListResponse {
+  repeated Friend friends = 1;
+  int64 total = 2;
+}
+
 // 获取未读好友申请数量请求
 message GetUnreadFriendRequestCountRequest {
   int64 user_id = 1;
@@ -144,4 +153,6 @@ service FriendService {
   rpc UpdateFriendRemark(UpdateFriendRemarkRequest) returns (UpdateFriendRemarkResponse);
   // 拉黑好友
   rpc BlockFriend(BlockFriendRequest) returns (BlockFriendResponse);
+  // 获取拉黑列表
+  rpc GetBlockedList(GetBlockedListRequest) returns (GetBlockedListResponse);
 }

@@ -20,6 +20,8 @@ type (
 	DeleteFriendResponse                = friend.DeleteFriendResponse
 	Friend                              = friend.Friend
 	FriendRequest                       = friend.FriendRequest
+	GetBlockedListRequest               = friend.GetBlockedListRequest
+	GetBlockedListResponse              = friend.GetBlockedListResponse
 	GetFriendListRequest                = friend.GetFriendListRequest
 	GetFriendListResponse               = friend.GetFriendListResponse
 	GetFriendRequestListRequest         = friend.GetFriendRequestListRequest
@@ -50,6 +52,8 @@ type (
 		UpdateFriendRemark(ctx context.Context, in *UpdateFriendRemarkRequest, opts ...grpc.CallOption) (*UpdateFriendRemarkResponse, error)
 		// 拉黑好友
 		BlockFriend(ctx context.Context, in *BlockFriendRequest, opts ...grpc.CallOption) (*BlockFriendResponse, error)
+		// 获取拉黑列表
+		GetBlockedList(ctx context.Context, in *GetBlockedListRequest, opts ...grpc.CallOption) (*GetBlockedListResponse, error)
 	}
 
 	defaultFriendService struct {
@@ -109,4 +113,10 @@ func (m *defaultFriendService) UpdateFriendRemark(ctx context.Context, in *Updat
 func (m *defaultFriendService) BlockFriend(ctx context.Context, in *BlockFriendRequest, opts ...grpc.CallOption) (*BlockFriendResponse, error) {
 	client := friend.NewFriendServiceClient(m.cli.Conn())
 	return client.BlockFriend(ctx, in, opts...)
+}
+
+// 获取拉黑列表
+func (m *defaultFriendService) GetBlockedList(ctx context.Context, in *GetBlockedListRequest, opts ...grpc.CallOption) (*GetBlockedListResponse, error) {
+	client := friend.NewFriendServiceClient(m.cli.Conn())
+	return client.GetBlockedList(ctx, in, opts...)
 }

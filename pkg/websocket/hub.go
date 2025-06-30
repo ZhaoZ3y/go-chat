@@ -25,13 +25,12 @@ type Hub struct {
 	db         *gorm.DB
 }
 
-func NewHub(db *gorm.DB) *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		clients:    make(map[int64]*Client),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan []byte),
-		db:         db,
 	}
 }
 

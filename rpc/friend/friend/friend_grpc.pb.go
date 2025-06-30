@@ -27,6 +27,7 @@ const (
 	FriendService_DeleteFriend_FullMethodName                = "/friend.FriendService/DeleteFriend"
 	FriendService_UpdateFriendRemark_FullMethodName          = "/friend.FriendService/UpdateFriendRemark"
 	FriendService_BlockFriend_FullMethodName                 = "/friend.FriendService/BlockFriend"
+	FriendService_GetBlockedList_FullMethodName              = "/friend.FriendService/GetBlockedList"
 )
 
 // FriendServiceClient is the client API for FriendService service.
@@ -51,6 +52,8 @@ type FriendServiceClient interface {
 	UpdateFriendRemark(ctx context.Context, in *UpdateFriendRemarkRequest, opts ...grpc.CallOption) (*UpdateFriendRemarkResponse, error)
 	// 拉黑好友
 	BlockFriend(ctx context.Context, in *BlockFriendRequest, opts ...grpc.CallOption) (*BlockFriendResponse, error)
+	// 获取拉黑列表
+	GetBlockedList(ctx context.Context, in *GetBlockedListRequest, opts ...grpc.CallOption) (*GetBlockedListResponse, error)
 }
 
 type friendServiceClient struct {
@@ -141,6 +144,16 @@ func (c *friendServiceClient) BlockFriend(ctx context.Context, in *BlockFriendRe
 	return out, nil
 }
 
+func (c *friendServiceClient) GetBlockedList(ctx context.Context, in *GetBlockedListRequest, opts ...grpc.CallOption) (*GetBlockedListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetBlockedListResponse)
+	err := c.cc.Invoke(ctx, FriendService_GetBlockedList_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FriendServiceServer is the server API for FriendService service.
 // All implementations must embed UnimplementedFriendServiceServer
 // for forward compatibility.
@@ -163,6 +176,8 @@ type FriendServiceServer interface {
 	UpdateFriendRemark(context.Context, *UpdateFriendRemarkRequest) (*UpdateFriendRemarkResponse, error)
 	// 拉黑好友
 	BlockFriend(context.Context, *BlockFriendRequest) (*BlockFriendResponse, error)
+	// 获取拉黑列表
+	GetBlockedList(context.Context, *GetBlockedListRequest) (*GetBlockedListResponse, error)
 	mustEmbedUnimplementedFriendServiceServer()
 }
 
@@ -196,6 +211,9 @@ func (UnimplementedFriendServiceServer) UpdateFriendRemark(context.Context, *Upd
 }
 func (UnimplementedFriendServiceServer) BlockFriend(context.Context, *BlockFriendRequest) (*BlockFriendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BlockFriend not implemented")
+}
+func (UnimplementedFriendServiceServer) GetBlockedList(context.Context, *GetBlockedListRequest) (*GetBlockedListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBlockedList not implemented")
 }
 func (UnimplementedFriendServiceServer) mustEmbedUnimplementedFriendServiceServer() {}
 func (UnimplementedFriendServiceServer) testEmbeddedByValue()                       {}
@@ -362,6 +380,24 @@ func _FriendService_BlockFriend_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FriendService_GetBlockedList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBlockedListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FriendServiceServer).GetBlockedList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FriendService_GetBlockedList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FriendServiceServer).GetBlockedList(ctx, req.(*GetBlockedListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FriendService_ServiceDesc is the grpc.ServiceDesc for FriendService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -400,6 +436,10 @@ var FriendService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BlockFriend",
 			Handler:    _FriendService_BlockFriend_Handler,
+		},
+		{
+			MethodName: "GetBlockedList",
+			Handler:    _FriendService_GetBlockedList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

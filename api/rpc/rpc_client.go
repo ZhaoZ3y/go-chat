@@ -1,8 +1,8 @@
 package rpc
 
 import (
+	"IM/rpc/friend/friend"
 	"IM/rpc/group/group"
-	"IM/rpc/notify/notification"
 	"IM/rpc/user/user"
 	"github.com/zeromicro/go-zero/core/discov"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -12,13 +12,13 @@ var (
 	EtcdHost     = []string{"etcd:2379"}
 	UserClient   user.UserServiceClient
 	GroupClient  group.GroupServiceClient
-	NotifyClient notification.NotificationServiceClient
+	FriendClient friend.FriendServiceClient
 )
 
 func init() {
 	InitUserClient()
 	InitGroupClient()
-	InitNotifyClient()
+	InitFriendClient()
 }
 
 func InitUserClient() {
@@ -41,12 +41,12 @@ func InitGroupClient() {
 	GroupClient = group.NewGroupServiceClient(client.Conn())
 }
 
-func InitNotifyClient() {
+func InitFriendClient() {
 	client := zrpc.MustNewClient(zrpc.RpcClientConf{
 		Etcd: discov.EtcdConf{
 			Hosts: EtcdHost,
-			Key:   "notify.rpc",
+			Key:   "friend.rpc",
 		},
 	})
-	NotifyClient = notification.NewNotificationServiceClient(client.Conn())
+	FriendClient = friend.NewFriendServiceClient(client.Conn())
 }

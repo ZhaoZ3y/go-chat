@@ -273,6 +273,7 @@ type SendFriendRequestResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	RequestId     int64                  `protobuf:"varint,3,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -319,6 +320,13 @@ func (x *SendFriendRequestResponse) GetMessage() string {
 		return x.Message
 	}
 	return ""
+}
+
+func (x *SendFriendRequestResponse) GetRequestId() int64 {
+	if x != nil {
+		return x.RequestId
+	}
+	return 0
 }
 
 // 处理好友申请请求
@@ -395,6 +403,7 @@ type HandleFriendRequestResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	RequestInfo   *FriendRequest         `protobuf:"bytes,3,opt,name=request_info,json=requestInfo,proto3" json:"request_info,omitempty"` // 处理后的好友申请信息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -441,6 +450,13 @@ func (x *HandleFriendRequestResponse) GetMessage() string {
 		return x.Message
 	}
 	return ""
+}
+
+func (x *HandleFriendRequestResponse) GetRequestInfo() *FriendRequest {
+	if x != nil {
+		return x.RequestInfo
+	}
+	return nil
 }
 
 // 获取好友申请列表请求
@@ -553,8 +569,6 @@ func (x *GetFriendRequestListResponse) GetTotal() int64 {
 type GetFriendListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -592,20 +606,6 @@ func (*GetFriendListRequest) Descriptor() ([]byte, []int) {
 func (x *GetFriendListRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
-	}
-	return 0
-}
-
-func (x *GetFriendListRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetFriendListRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
 	}
 	return 0
 }
@@ -997,6 +997,102 @@ func (x *BlockFriendResponse) GetMessage() string {
 	return ""
 }
 
+type GetBlockedListRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBlockedListRequest) Reset() {
+	*x = GetBlockedListRequest{}
+	mi := &file_friend_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBlockedListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBlockedListRequest) ProtoMessage() {}
+
+func (x *GetBlockedListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_friend_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBlockedListRequest.ProtoReflect.Descriptor instead.
+func (*GetBlockedListRequest) Descriptor() ([]byte, []int) {
+	return file_friend_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *GetBlockedListRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+type GetBlockedListResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Friends       []*Friend              `protobuf:"bytes,1,rep,name=friends,proto3" json:"friends,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBlockedListResponse) Reset() {
+	*x = GetBlockedListResponse{}
+	mi := &file_friend_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBlockedListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBlockedListResponse) ProtoMessage() {}
+
+func (x *GetBlockedListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_friend_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBlockedListResponse.ProtoReflect.Descriptor instead.
+func (*GetBlockedListResponse) Descriptor() ([]byte, []int) {
+	return file_friend_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetBlockedListResponse) GetFriends() []*Friend {
+	if x != nil {
+		return x.Friends
+	}
+	return nil
+}
+
+func (x *GetBlockedListResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
 // 获取未读好友申请数量请求
 type GetUnreadFriendRequestCountRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1007,7 +1103,7 @@ type GetUnreadFriendRequestCountRequest struct {
 
 func (x *GetUnreadFriendRequestCountRequest) Reset() {
 	*x = GetUnreadFriendRequestCountRequest{}
-	mi := &file_friend_proto_msgTypes[16]
+	mi := &file_friend_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1019,7 +1115,7 @@ func (x *GetUnreadFriendRequestCountRequest) String() string {
 func (*GetUnreadFriendRequestCountRequest) ProtoMessage() {}
 
 func (x *GetUnreadFriendRequestCountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_friend_proto_msgTypes[16]
+	mi := &file_friend_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1032,7 +1128,7 @@ func (x *GetUnreadFriendRequestCountRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GetUnreadFriendRequestCountRequest.ProtoReflect.Descriptor instead.
 func (*GetUnreadFriendRequestCountRequest) Descriptor() ([]byte, []int) {
-	return file_friend_proto_rawDescGZIP(), []int{16}
+	return file_friend_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetUnreadFriendRequestCountRequest) GetUserId() int64 {
@@ -1052,7 +1148,7 @@ type GetUnreadFriendRequestCountResponse struct {
 
 func (x *GetUnreadFriendRequestCountResponse) Reset() {
 	*x = GetUnreadFriendRequestCountResponse{}
-	mi := &file_friend_proto_msgTypes[17]
+	mi := &file_friend_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1064,7 +1160,7 @@ func (x *GetUnreadFriendRequestCountResponse) String() string {
 func (*GetUnreadFriendRequestCountResponse) ProtoMessage() {}
 
 func (x *GetUnreadFriendRequestCountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_friend_proto_msgTypes[17]
+	mi := &file_friend_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1077,7 +1173,7 @@ func (x *GetUnreadFriendRequestCountResponse) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetUnreadFriendRequestCountResponse.ProtoReflect.Descriptor instead.
 func (*GetUnreadFriendRequestCountResponse) Descriptor() ([]byte, []int) {
-	return file_friend_proto_rawDescGZIP(), []int{17}
+	return file_friend_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetUnreadFriendRequestCountResponse) GetCount() int32 {
@@ -1115,29 +1211,30 @@ const file_friend_proto_rawDesc = "" +
 	"fromUserId\x12\x1c\n" +
 	"\n" +
 	"to_user_id\x18\x02 \x01(\x03R\btoUserId\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"O\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"n\n" +
 	"\x19SendFriendRequestResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x86\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\x03 \x01(\x03R\trequestId\"\x86\x01\n" +
 	"\x1aHandleFriendRequestRequest\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\x03R\trequestId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06action\x18\x03 \x01(\x05R\x06action\x12\x18\n" +
-	"\amessage\x18\x04 \x01(\tR\amessage\"Q\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\"\x8b\x01\n" +
 	"\x1bHandleFriendRequestResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"N\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x128\n" +
+	"\frequest_info\x18\x03 \x01(\v2\x15.friend.FriendRequestR\vrequestInfo\"N\n" +
 	"\x1bGetFriendRequestListRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\x05R\x06status\"g\n" +
 	"\x1cGetFriendRequestListResponse\x121\n" +
 	"\brequests\x18\x01 \x03(\v2\x15.friend.FriendRequestR\brequests\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"`\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"/\n" +
 	"\x14GetFriendListRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"W\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"W\n" +
 	"\x15GetFriendListResponse\x12(\n" +
 	"\afriends\x18\x01 \x03(\v2\x0e.friend.FriendR\afriends\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\"K\n" +
@@ -1160,11 +1257,16 @@ const file_friend_proto_rawDesc = "" +
 	"\x06status\x18\x03 \x01(\x05R\x06status\"I\n" +
 	"\x13BlockFriendResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"=\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"0\n" +
+	"\x15GetBlockedListRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"X\n" +
+	"\x16GetBlockedListResponse\x12(\n" +
+	"\afriends\x18\x01 \x03(\v2\x0e.friend.FriendR\afriends\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"=\n" +
 	"\"GetUnreadFriendRequestCountRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\";\n" +
 	"#GetUnreadFriendRequestCountResponse\x12\x14\n" +
-	"\x05count\x18\x01 \x01(\x05R\x05count2\xe2\x05\n" +
+	"\x05count\x18\x01 \x01(\x05R\x05count2\xb3\x06\n" +
 	"\rFriendService\x12X\n" +
 	"\x11SendFriendRequest\x12 .friend.SendFriendRequestRequest\x1a!.friend.SendFriendRequestResponse\x12^\n" +
 	"\x13HandleFriendRequest\x12\".friend.HandleFriendRequestRequest\x1a#.friend.HandleFriendRequestResponse\x12v\n" +
@@ -1173,7 +1275,8 @@ const file_friend_proto_rawDesc = "" +
 	"\rGetFriendList\x12\x1c.friend.GetFriendListRequest\x1a\x1d.friend.GetFriendListResponse\x12I\n" +
 	"\fDeleteFriend\x12\x1b.friend.DeleteFriendRequest\x1a\x1c.friend.DeleteFriendResponse\x12[\n" +
 	"\x12UpdateFriendRemark\x12!.friend.UpdateFriendRemarkRequest\x1a\".friend.UpdateFriendRemarkResponse\x12F\n" +
-	"\vBlockFriend\x12\x1a.friend.BlockFriendRequest\x1a\x1b.friend.BlockFriendResponseB\n" +
+	"\vBlockFriend\x12\x1a.friend.BlockFriendRequest\x1a\x1b.friend.BlockFriendResponse\x12O\n" +
+	"\x0eGetBlockedList\x12\x1d.friend.GetBlockedListRequest\x1a\x1e.friend.GetBlockedListResponseB\n" +
 	"Z\b./friendb\x06proto3"
 
 var (
@@ -1188,7 +1291,7 @@ func file_friend_proto_rawDescGZIP() []byte {
 	return file_friend_proto_rawDescData
 }
 
-var file_friend_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_friend_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_friend_proto_goTypes = []any{
 	(*Friend)(nil),                              // 0: friend.Friend
 	(*FriendRequest)(nil),                       // 1: friend.FriendRequest
@@ -1206,33 +1309,39 @@ var file_friend_proto_goTypes = []any{
 	(*UpdateFriendRemarkResponse)(nil),          // 13: friend.UpdateFriendRemarkResponse
 	(*BlockFriendRequest)(nil),                  // 14: friend.BlockFriendRequest
 	(*BlockFriendResponse)(nil),                 // 15: friend.BlockFriendResponse
-	(*GetUnreadFriendRequestCountRequest)(nil),  // 16: friend.GetUnreadFriendRequestCountRequest
-	(*GetUnreadFriendRequestCountResponse)(nil), // 17: friend.GetUnreadFriendRequestCountResponse
+	(*GetBlockedListRequest)(nil),               // 16: friend.GetBlockedListRequest
+	(*GetBlockedListResponse)(nil),              // 17: friend.GetBlockedListResponse
+	(*GetUnreadFriendRequestCountRequest)(nil),  // 18: friend.GetUnreadFriendRequestCountRequest
+	(*GetUnreadFriendRequestCountResponse)(nil), // 19: friend.GetUnreadFriendRequestCountResponse
 }
 var file_friend_proto_depIdxs = []int32{
-	1,  // 0: friend.GetFriendRequestListResponse.requests:type_name -> friend.FriendRequest
-	0,  // 1: friend.GetFriendListResponse.friends:type_name -> friend.Friend
-	2,  // 2: friend.FriendService.SendFriendRequest:input_type -> friend.SendFriendRequestRequest
-	4,  // 3: friend.FriendService.HandleFriendRequest:input_type -> friend.HandleFriendRequestRequest
-	16, // 4: friend.FriendService.GetUnreadFriendRequestCount:input_type -> friend.GetUnreadFriendRequestCountRequest
-	6,  // 5: friend.FriendService.GetFriendRequestList:input_type -> friend.GetFriendRequestListRequest
-	8,  // 6: friend.FriendService.GetFriendList:input_type -> friend.GetFriendListRequest
-	10, // 7: friend.FriendService.DeleteFriend:input_type -> friend.DeleteFriendRequest
-	12, // 8: friend.FriendService.UpdateFriendRemark:input_type -> friend.UpdateFriendRemarkRequest
-	14, // 9: friend.FriendService.BlockFriend:input_type -> friend.BlockFriendRequest
-	3,  // 10: friend.FriendService.SendFriendRequest:output_type -> friend.SendFriendRequestResponse
-	5,  // 11: friend.FriendService.HandleFriendRequest:output_type -> friend.HandleFriendRequestResponse
-	17, // 12: friend.FriendService.GetUnreadFriendRequestCount:output_type -> friend.GetUnreadFriendRequestCountResponse
-	7,  // 13: friend.FriendService.GetFriendRequestList:output_type -> friend.GetFriendRequestListResponse
-	9,  // 14: friend.FriendService.GetFriendList:output_type -> friend.GetFriendListResponse
-	11, // 15: friend.FriendService.DeleteFriend:output_type -> friend.DeleteFriendResponse
-	13, // 16: friend.FriendService.UpdateFriendRemark:output_type -> friend.UpdateFriendRemarkResponse
-	15, // 17: friend.FriendService.BlockFriend:output_type -> friend.BlockFriendResponse
-	10, // [10:18] is the sub-list for method output_type
-	2,  // [2:10] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	1,  // 0: friend.HandleFriendRequestResponse.request_info:type_name -> friend.FriendRequest
+	1,  // 1: friend.GetFriendRequestListResponse.requests:type_name -> friend.FriendRequest
+	0,  // 2: friend.GetFriendListResponse.friends:type_name -> friend.Friend
+	0,  // 3: friend.GetBlockedListResponse.friends:type_name -> friend.Friend
+	2,  // 4: friend.FriendService.SendFriendRequest:input_type -> friend.SendFriendRequestRequest
+	4,  // 5: friend.FriendService.HandleFriendRequest:input_type -> friend.HandleFriendRequestRequest
+	18, // 6: friend.FriendService.GetUnreadFriendRequestCount:input_type -> friend.GetUnreadFriendRequestCountRequest
+	6,  // 7: friend.FriendService.GetFriendRequestList:input_type -> friend.GetFriendRequestListRequest
+	8,  // 8: friend.FriendService.GetFriendList:input_type -> friend.GetFriendListRequest
+	10, // 9: friend.FriendService.DeleteFriend:input_type -> friend.DeleteFriendRequest
+	12, // 10: friend.FriendService.UpdateFriendRemark:input_type -> friend.UpdateFriendRemarkRequest
+	14, // 11: friend.FriendService.BlockFriend:input_type -> friend.BlockFriendRequest
+	16, // 12: friend.FriendService.GetBlockedList:input_type -> friend.GetBlockedListRequest
+	3,  // 13: friend.FriendService.SendFriendRequest:output_type -> friend.SendFriendRequestResponse
+	5,  // 14: friend.FriendService.HandleFriendRequest:output_type -> friend.HandleFriendRequestResponse
+	19, // 15: friend.FriendService.GetUnreadFriendRequestCount:output_type -> friend.GetUnreadFriendRequestCountResponse
+	7,  // 16: friend.FriendService.GetFriendRequestList:output_type -> friend.GetFriendRequestListResponse
+	9,  // 17: friend.FriendService.GetFriendList:output_type -> friend.GetFriendListResponse
+	11, // 18: friend.FriendService.DeleteFriend:output_type -> friend.DeleteFriendResponse
+	13, // 19: friend.FriendService.UpdateFriendRemark:output_type -> friend.UpdateFriendRemarkResponse
+	15, // 20: friend.FriendService.BlockFriend:output_type -> friend.BlockFriendResponse
+	17, // 21: friend.FriendService.GetBlockedList:output_type -> friend.GetBlockedListResponse
+	13, // [13:22] is the sub-list for method output_type
+	4,  // [4:13] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_friend_proto_init() }
@@ -1246,7 +1355,7 @@ func file_friend_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_friend_proto_rawDesc), len(file_friend_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -7,7 +7,7 @@ type Config struct {
 	DataSource  string
 	CustomRedis struct {
 		Host     string
-		Port     string
+		Port     int
 		Password string
 		DB       int
 	}

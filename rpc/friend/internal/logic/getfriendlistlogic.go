@@ -31,13 +31,6 @@ func (l *GetFriendListLogic) GetFriendList(in *friend.GetFriendListRequest) (*fr
 		return &friend.GetFriendListResponse{}, nil
 	}
 
-	if in.Page <= 0 {
-		in.Page = 1
-	}
-	if in.PageSize <= 0 {
-		in.PageSize = 20
-	}
-
 	// 构建查询条件，只查询正常状态的好友
 	query := l.svcCtx.DB.Model(&model.Friends{}).Where("user_id = ? AND status = 1", in.UserId)
 
@@ -50,8 +43,7 @@ func (l *GetFriendListLogic) GetFriendList(in *friend.GetFriendListRequest) (*fr
 
 	// 获取列表数据
 	var friends []model.Friends
-	offset := (in.Page - 1) * in.PageSize
-	if err := query.Order("create_at DESC").Offset(int(offset)).Limit(int(in.PageSize)).Find(&friends).Error; err != nil {
+	if err := query.Order("create_at DESC").Find(&friends).Error; err != nil {
 		l.Logger.Errorf("获取好友列表失败: %v", err)
 		return &friend.GetFriendListResponse{}, nil
 	}

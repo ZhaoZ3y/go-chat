@@ -70,3 +70,9 @@ func (s *FriendServiceServer) BlockFriend(ctx context.Context, in *friend.BlockF
 	l := logic.NewBlockFriendLogic(ctx, s.svcCtx)
 	return l.BlockFriend(in)
 }
+
+// 获取拉黑列表
+func (s *FriendServiceServer) GetBlockedList(ctx context.Context, in *friend.GetBlockedListRequest) (*friend.GetBlockedListResponse, error) {
+	l := logic.NewGetBlockedListLogic(ctx, s.svcCtx)
+	return l.GetBlockedList(in)
+}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/zeromicro/go-zero/core/logx"
+	"strconv"
 	"time"
 )
 
@@ -70,14 +71,15 @@ func Login(c *gin.Context) {
 
 // GetUserInfo 获取用户信息
 func GetUserInfo(c *gin.Context) {
-	userIDAny, exists := c.Get("userID")
-	if !exists {
-		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录")
+	userId := c.Query("user_id")
+	if userId == "" {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID不能为空")
 		return
 	}
-	userId, ok := userIDAny.(int64)
-	if !ok {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID类型错误")
+	var userIdInt int64
+	userIdInt, err := strconv.ParseInt(userId, 10, 64)
+	if err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID格式错误: "+err.Error())
 		return
 	}
 
@@ -85,7 +87,7 @@ func GetUserInfo(c *gin.Context) {
 	defer cancel()
 
 	resp, err := rpc.UserClient.GetUserInfo(ctx, &user.GetUserInfoRequest{
-		UserId: userId,
+		UserId: userIdInt,
 	})
 
 	if err != nil {
