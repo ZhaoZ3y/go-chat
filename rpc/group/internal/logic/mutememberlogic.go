@@ -1,16 +1,13 @@
 package logic
 
 import (
-	"IM/pkg/model"
-	"IM/pkg/mq/notify"
-	"context"
-	"encoding/json"
-	"fmt"
-	"gorm.io/gorm"
-	"time"
-
+	"IM/pkg/model" // 仍然需要 model 来做权限验证
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/svc"
+	"context"
+	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -21,6 +18,11 @@ type MuteMemberLogic struct {
 	logx.Logger
 }
 
+// 定义 Redis 键的格式
+const (
+	redisGroupMuteKey = "group:mute:%d:%d"
+)
+
 func NewMuteMemberLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MuteMemberLogic {
 	return &MuteMemberLogic{
 		ctx:    ctx,
@@ -29,114 +31,110 @@ func NewMuteMemberLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MuteMe
 	}
 }
 
-// 禁言群组成员
+// MuteMember 禁言/解禁群组成员 (使用 Redis)
 func (l *MuteMemberLogic) MuteMember(in *group.MuteMemberRequest) (*group.MuteMemberResponse, error) {
-	// 1. 检查操作者权限
-	var operatorMember model.GroupMembers
-	if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ? AND role IN (1,2)",
-		in.GroupId, in.OperatorId).First(&operatorMember).Error; err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "无权限操作"}, nil
+	// 参数校验
+	if in.GroupId == 0 || in.OperatorId == 0 || in.UserId == 0 {
+		return &group.MuteMemberResponse{Success: false, Message: "参数错误"}, nil
+	}
+	if in.OperatorId == in.UserId {
+		return &group.MuteMemberResponse{Success: false, Message: "不能对自己进行操作"}, nil
+	}
+	// 禁言时长不能为负数
+	if !in.IsUnmute && in.Duration <= 0 {
+		return &group.MuteMemberResponse{Success: false, Message: "禁言时长必须大于0"}, nil
 	}
 
-	// 2. 检查目标用户
-	var targetMember model.GroupMembers
-	if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ?", in.GroupId, in.UserId).First(&targetMember).Error; err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "用户不在群组中"}, nil
+	// 查询操作员和目标成员权限
+	var members []model.GroupMembers
+	l.svcCtx.DB.Where("group_id = ? AND user_id IN ?", in.GroupId, []int64{in.OperatorId, in.UserId}).Find(&members)
+
+	var operatorMember, targetMember *model.GroupMembers
+	for i := range members {
+		if members[i].UserId == in.OperatorId {
+			operatorMember = &members[i]
+		}
+		if members[i].UserId == in.UserId {
+			targetMember = &members[i]
+		}
 	}
-	if targetMember.Role == 1 {
+	if operatorMember == nil {
+		return &group.MuteMemberResponse{Success: false, Message: "您不是该群成员，无权操作"}, nil
+	}
+	if targetMember == nil {
+		return &group.MuteMemberResponse{Success: false, Message: "目标用户不是该群成员"}, nil
+	}
+
+	isOperatorAdmin := operatorMember.Role == int64(group.MemberRole_ROLE_ADMIN)
+	isOperatorOwner := operatorMember.Role == int64(group.MemberRole_ROLE_OWNER)
+	if !isOperatorAdmin && !isOperatorOwner {
+		return &group.MuteMemberResponse{Success: false, Message: "权限不足，只有管理员或群主才能禁言"}, nil
+	}
+	if targetMember.Role == int64(group.MemberRole_ROLE_OWNER) {
 		return &group.MuteMemberResponse{Success: false, Message: "不能禁言群主"}, nil
 	}
-	if operatorMember.Role == 2 && targetMember.Role == 2 {
-		return &group.MuteMemberResponse{Success: false, Message: "管理员不能禁言其他管理员"}, nil
+	if isOperatorAdmin && targetMember.Role == int64(group.MemberRole_ROLE_ADMIN) {
+		return &group.MuteMemberResponse{Success: false, Message: "管理员之间不能互相禁言"}, nil
 	}
 
-	// 3. 获取用户和群信息
-	var (
-		operatorInfo   model.User
-		targetUserInfo model.User
-		groupInfo      model.Groups
-	)
-	if err := l.svcCtx.DB.Where("id = ?", in.OperatorId).First(&operatorInfo).Error; err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "操作者不存在"}, nil
-	}
-	if err := l.svcCtx.DB.Where("id = ?", in.UserId).First(&targetUserInfo).Error; err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "目标用户不存在"}, nil
-	}
-	if err := l.svcCtx.DB.Where("id = ?", in.GroupId).First(&groupInfo).Error; err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "群组不存在"}, nil
-	}
+	muteKey := fmt.Sprintf(redisGroupMuteKey, in.GroupId, in.UserId)
+	var responseMessage string
+	var notificationMessage string
 
-	// 4. 构造 Redis Key
-	muteKey := fmt.Sprintf("mute:group:%d:user:%d", in.GroupId, in.UserId)
-
-	// 5. 事务处理（数据库 + Redis）
-	err := l.svcCtx.DB.Transaction(func(tx *gorm.DB) error {
-		ctx := context.Background()
-
-		if in.Duration > 0 {
-			// 禁言逻辑
-			muteUntil := time.Now().Add(time.Duration(in.Duration) * time.Second)
-			if err := tx.Model(&model.GroupMembers{}).
-				Where("group_id = ? AND user_id = ?", in.GroupId, in.UserId).
-				Update("mute_until", muteUntil).Error; err != nil {
-				return err
-			}
-
-			muteData := map[string]interface{}{
-				"operator_id": in.OperatorId,
-				"username":    targetUserInfo.Username,
-				"duration":    in.Duration,
-			}
-			data, _ := json.Marshal(muteData)
-
-			if err := l.svcCtx.Redis.Set(ctx, muteKey, data, time.Duration(in.Duration)*time.Second).Err(); err != nil {
-				return err
-			}
-		} else {
-			// 手动解除禁言逻辑
-			if err := tx.Model(&model.GroupMembers{}).
-				Where("group_id = ? AND user_id = ?", in.GroupId, in.UserId).
-				Update("mute_until", time.Time{}).Error; err != nil {
-				return err
-			}
-			_ = l.svcCtx.Redis.Del(ctx, muteKey).Err()
+	if in.IsUnmute {
+		// 解禁逻辑：删除 Redis 键
+		_, err := l.svcCtx.Redis.Del(l.ctx, muteKey).Result()
+		if err != nil {
+			l.Logger.Errorf("MuteMember: redis del failed for key %s: %v", muteKey, err)
 		}
-
-		// 通知推送
-		notifyEvent := &notify.NotifyEvent{
-			Type:      notify.NotifyTypeMuteMember,
-			GroupID:   in.GroupId,
-			GroupName: groupInfo.Name,
-			Data: &notify.MuteMemberData{
-				OperatorID:   in.OperatorId,
-				OperatorName: operatorInfo.Username,
-				UserID:       in.UserId,
-				Username:     targetUserInfo.Username,
-				Duration:     in.Duration,
-			},
+		responseMessage = "已成功解除该成员的禁言"
+		notificationMessage = fmt.Sprintf("您已被管理员'%s'解除禁言", operatorMember.Nickname)
+	} else {
+		// 禁言逻辑：设置 Redis 键和过期时间
+		muteUntil := time.Now().Unix() + in.Duration
+		err := l.svcCtx.Redis.Set(
+			l.ctx,
+			muteKey,
+			strconv.FormatInt(muteUntil, 10),
+			time.Duration(in.Duration)*time.Second,
+		).Err()
+		if err != nil {
+			l.Logger.Errorf("MuteMember: redis set failed for key %s: %v", muteKey, err)
+			return &group.MuteMemberResponse{Success: false, Message: "设置禁言失败"}, nil
 		}
-
-		// 发送群内消息 - 通过WebSocket发送给所有群成员
-		if err := l.svcCtx.NotifyService.SendGroupMessage(notifyEvent); err != nil {
-			logx.Errorf("发送群内通知失败: %v", err)
-			// 继续执行，不因通知失败而回滚事务
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return &group.MuteMemberResponse{Success: false, Message: "操作失败"}, nil
+		durationStr := formatDuration(in.Duration)
+		responseMessage = fmt.Sprintf("已成功禁言该成员，时长：%s", durationStr)
+		notificationMessage = fmt.Sprintf("您已被管理员'%s'禁言，时长：%s", operatorMember.Nickname, durationStr)
 	}
 
-	// 成功返回
-	msg := "禁言成功"
-	if in.Duration == 0 {
-		msg = "解除禁言成功"
+	// 创建通知（不影响核心逻辑）
+	notification := &model.GroupNotification{
+		Type:         int64(group.NotificationType_NOTIFY_MEMBER_MUTED),
+		GroupId:      in.GroupId,
+		OperatorId:   in.OperatorId,
+		TargetUserId: in.UserId,
+		Message:      notificationMessage,
+	}
+	if err := l.svcCtx.DB.Create(notification).Error; err != nil {
+		l.Logger.Errorf("MuteMember: create notification failed, but mute status was set in Redis. Error: %v", err)
 	}
 
 	return &group.MuteMemberResponse{
 		Success: true,
-		Message: msg,
+		Message: responseMessage,
 	}, nil
+}
+
+// formatDuration 辅助函数 (保持不变)
+func formatDuration(seconds int64) string {
+	if seconds < 60 {
+		return fmt.Sprintf("%d秒", seconds)
+	}
+	if seconds < 3600 {
+		return fmt.Sprintf("%d分钟", seconds/60)
+	}
+	if seconds < 86400 {
+		return fmt.Sprintf("%d小时", seconds/3600)
+	}
+	return fmt.Sprintf("%d天", seconds/86400)
 }

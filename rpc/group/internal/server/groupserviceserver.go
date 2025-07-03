@@ -29,10 +29,22 @@ func (s *GroupServiceServer) CreateGroup(ctx context.Context, in *group.CreateGr
 	return l.CreateGroup(in)
 }
 
-// 加入群组
+// 申请加入群组
 func (s *GroupServiceServer) JoinGroup(ctx context.Context, in *group.JoinGroupRequest) (*group.JoinGroupResponse, error) {
 	l := logic.NewJoinGroupLogic(ctx, s.svcCtx)
 	return l.JoinGroup(in)
+}
+
+// 获取加入群组申请列表
+func (s *GroupServiceServer) GetJoinGroupApplications(ctx context.Context, in *group.GetJoinGroupApplicationsRequest) (*group.GetJoinGroupApplicationsResponse, error) {
+	l := logic.NewGetJoinGroupApplicationsLogic(ctx, s.svcCtx)
+	return l.GetJoinGroupApplications(in)
+}
+
+// 处理加入群组申请
+func (s *GroupServiceServer) HandleJoinGroupApplication(ctx context.Context, in *group.HandleJoinGroupApplicationRequest) (*group.HandleJoinGroupApplicationResponse, error) {
+	l := logic.NewHandleJoinGroupApplicationLogic(ctx, s.svcCtx)
+	return l.HandleJoinGroupApplication(in)
 }
 
 // 搜索群组
@@ -105,4 +117,28 @@ func (s *GroupServiceServer) DismissGroup(ctx context.Context, in *group.Dismiss
 func (s *GroupServiceServer) TransferGroup(ctx context.Context, in *group.TransferGroupRequest) (*group.TransferGroupResponse, error) {
 	l := logic.NewTransferGroupLogic(ctx, s.svcCtx)
 	return l.TransferGroup(in)
+}
+
+// 获取群组成员信息
+func (s *GroupServiceServer) GetGroupMemberInfo(ctx context.Context, in *group.GetGroupMemberInfoRequest) (*group.GetGroupMemberInfoResponse, error) {
+	l := logic.NewGetGroupMemberInfoLogic(ctx, s.svcCtx)
+	return l.GetGroupMemberInfo(in)
+}
+
+// 修改群组成员信息
+func (s *GroupServiceServer) UpdateGroupMemberInfo(ctx context.Context, in *group.UpdateGroupMemberInfoRequest) (*group.UpdateGroupMemberInfoResponse, error) {
+	l := logic.NewUpdateGroupMemberInfoLogic(ctx, s.svcCtx)
+	return l.UpdateGroupMemberInfo(in)
+}
+
+// 获取群组通知列表 (调用后，返回的通知在后端被标记为已读)
+func (s *GroupServiceServer) GetGroupNotifications(ctx context.Context, in *group.GetGroupNotificationsRequest) (*group.GetGroupNotificationsResponse, error) {
+	l := logic.NewGetGroupNotificationsLogic(ctx, s.svcCtx)
+	return l.GetGroupNotifications(in)
+}
+
+// 获取总的未读数
+func (s *GroupServiceServer) GetUnreadCount(ctx context.Context, in *group.GetUnreadCountRequest) (*group.GetUnreadCountResponse, error) {
+	l := logic.NewGetUnreadCountLogic(ctx, s.svcCtx)
+	return l.GetUnreadCount(in)
 }

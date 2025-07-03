@@ -55,7 +55,6 @@ func (l *SearchGroupLogic) SearchGroup(in *group.SearchGroupRequest) (*group.Sea
 		return nil, status.Error(codes.Internal, "搜索失败")
 	}
 
-	// 转换结果
 	groupList := make([]*group.Group, 0, len(groups))
 	for _, g := range groups {
 		groupList = append(groupList, &group.Group{
@@ -66,7 +65,7 @@ func (l *SearchGroupLogic) SearchGroup(in *group.SearchGroupRequest) (*group.Sea
 			OwnerId:        g.OwnerId,
 			MemberCount:    int32(g.MemberCount),
 			MaxMemberCount: int32(g.MaxMemberCount),
-			Status:         int32(g.Status),
+			Status:         group.GroupStatus(g.Status),
 			CreateAt:       g.CreateAt,
 			UpdateAt:       g.UpdateAt,
 		})

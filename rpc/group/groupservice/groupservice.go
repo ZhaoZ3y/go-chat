@@ -14,42 +14,62 @@ import (
 )
 
 type (
-	CreateGroupRequest         = group.CreateGroupRequest
-	CreateGroupResponse        = group.CreateGroupResponse
-	DismissGroupRequest        = group.DismissGroupRequest
-	DismissGroupResponse       = group.DismissGroupResponse
-	GetGroupInfoRequest        = group.GetGroupInfoRequest
-	GetGroupInfoResponse       = group.GetGroupInfoResponse
-	GetGroupListRequest        = group.GetGroupListRequest
-	GetGroupListResponse       = group.GetGroupListResponse
-	GetGroupMemberListRequest  = group.GetGroupMemberListRequest
-	GetGroupMemberListResponse = group.GetGroupMemberListResponse
-	Group                      = group.Group
-	GroupMember                = group.GroupMember
-	InviteToGroupRequest       = group.InviteToGroupRequest
-	InviteToGroupResponse      = group.InviteToGroupResponse
-	JoinGroupRequest           = group.JoinGroupRequest
-	JoinGroupResponse          = group.JoinGroupResponse
-	KickFromGroupRequest       = group.KickFromGroupRequest
-	KickFromGroupResponse      = group.KickFromGroupResponse
-	LeaveGroupRequest          = group.LeaveGroupRequest
-	LeaveGroupResponse         = group.LeaveGroupResponse
-	MuteMemberRequest          = group.MuteMemberRequest
-	MuteMemberResponse         = group.MuteMemberResponse
-	SearchGroupRequest         = group.SearchGroupRequest
-	SearchGroupResponse        = group.SearchGroupResponse
-	SetMemberRoleRequest       = group.SetMemberRoleRequest
-	SetMemberRoleResponse      = group.SetMemberRoleResponse
-	TransferGroupRequest       = group.TransferGroupRequest
-	TransferGroupResponse      = group.TransferGroupResponse
-	UpdateGroupInfoRequest     = group.UpdateGroupInfoRequest
-	UpdateGroupInfoResponse    = group.UpdateGroupInfoResponse
+	CreateGroupRequest                 = group.CreateGroupRequest
+	CreateGroupResponse                = group.CreateGroupResponse
+	DismissGroupRequest                = group.DismissGroupRequest
+	DismissGroupResponse               = group.DismissGroupResponse
+	GetGroupInfoRequest                = group.GetGroupInfoRequest
+	GetGroupInfoResponse               = group.GetGroupInfoResponse
+	GetGroupListRequest                = group.GetGroupListRequest
+	GetGroupListResponse               = group.GetGroupListResponse
+	GetGroupMemberInfoRequest          = group.GetGroupMemberInfoRequest
+	GetGroupMemberInfoResponse         = group.GetGroupMemberInfoResponse
+	GetGroupMemberListRequest          = group.GetGroupMemberListRequest
+	GetGroupMemberListResponse         = group.GetGroupMemberListResponse
+	GetGroupNotificationsRequest       = group.GetGroupNotificationsRequest
+	GetGroupNotificationsResponse      = group.GetGroupNotificationsResponse
+	GetJoinGroupApplicationsRequest    = group.GetJoinGroupApplicationsRequest
+	GetJoinGroupApplicationsResponse   = group.GetJoinGroupApplicationsResponse
+	GetUnreadCountRequest              = group.GetUnreadCountRequest
+	GetUnreadCountResponse             = group.GetUnreadCountResponse
+	Group                              = group.Group
+	GroupMember                        = group.GroupMember
+	GroupMemberInfo                    = group.GroupMemberInfo
+	GroupNotification                  = group.GroupNotification
+	HandleJoinGroupApplicationRequest  = group.HandleJoinGroupApplicationRequest
+	HandleJoinGroupApplicationResponse = group.HandleJoinGroupApplicationResponse
+	InviteToGroupRequest               = group.InviteToGroupRequest
+	InviteToGroupResponse              = group.InviteToGroupResponse
+	JoinGroupApplication               = group.JoinGroupApplication
+	JoinGroupRequest                   = group.JoinGroupRequest
+	JoinGroupResponse                  = group.JoinGroupResponse
+	KickFromGroupRequest               = group.KickFromGroupRequest
+	KickFromGroupResponse              = group.KickFromGroupResponse
+	LeaveGroupRequest                  = group.LeaveGroupRequest
+	LeaveGroupResponse                 = group.LeaveGroupResponse
+	MuteMemberRequest                  = group.MuteMemberRequest
+	MuteMemberResponse                 = group.MuteMemberResponse
+	SearchGroupRequest                 = group.SearchGroupRequest
+	SearchGroupResponse                = group.SearchGroupResponse
+	SetMemberRoleRequest               = group.SetMemberRoleRequest
+	SetMemberRoleResponse              = group.SetMemberRoleResponse
+	TransferGroupRequest               = group.TransferGroupRequest
+	TransferGroupResponse              = group.TransferGroupResponse
+	UpdateGroupInfoRequest             = group.UpdateGroupInfoRequest
+	UpdateGroupInfoResponse            = group.UpdateGroupInfoResponse
+	UpdateGroupMemberInfoRequest       = group.UpdateGroupMemberInfoRequest
+	UpdateGroupMemberInfoResponse      = group.UpdateGroupMemberInfoResponse
+	User                               = group.User
 
 	GroupService interface {
 		// 创建群组
 		CreateGroup(ctx context.Context, in *CreateGroupRequest, opts ...grpc.CallOption) (*CreateGroupResponse, error)
-		// 加入群组
+		// 申请加入群组
 		JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error)
+		// 获取加入群组申请列表
+		GetJoinGroupApplications(ctx context.Context, in *GetJoinGroupApplicationsRequest, opts ...grpc.CallOption) (*GetJoinGroupApplicationsResponse, error)
+		// 处理加入群组申请
+		HandleJoinGroupApplication(ctx context.Context, in *HandleJoinGroupApplicationRequest, opts ...grpc.CallOption) (*HandleJoinGroupApplicationResponse, error)
 		// 搜索群组
 		SearchGroup(ctx context.Context, in *SearchGroupRequest, opts ...grpc.CallOption) (*SearchGroupResponse, error)
 		// 邀请加入群组
@@ -74,6 +94,14 @@ type (
 		DismissGroup(ctx context.Context, in *DismissGroupRequest, opts ...grpc.CallOption) (*DismissGroupResponse, error)
 		// 转让群组
 		TransferGroup(ctx context.Context, in *TransferGroupRequest, opts ...grpc.CallOption) (*TransferGroupResponse, error)
+		// 获取群组成员信息
+		GetGroupMemberInfo(ctx context.Context, in *GetGroupMemberInfoRequest, opts ...grpc.CallOption) (*GetGroupMemberInfoResponse, error)
+		// 修改群组成员信息
+		UpdateGroupMemberInfo(ctx context.Context, in *UpdateGroupMemberInfoRequest, opts ...grpc.CallOption) (*UpdateGroupMemberInfoResponse, error)
+		// 获取群组通知列表 (调用后，返回的通知在后端被标记为已读)
+		GetGroupNotifications(ctx context.Context, in *GetGroupNotificationsRequest, opts ...grpc.CallOption) (*GetGroupNotificationsResponse, error)
+		// 获取总的未读数
+		GetUnreadCount(ctx context.Context, in *GetUnreadCountRequest, opts ...grpc.CallOption) (*GetUnreadCountResponse, error)
 	}
 
 	defaultGroupService struct {
@@ -93,10 +121,22 @@ func (m *defaultGroupService) CreateGroup(ctx context.Context, in *CreateGroupRe
 	return client.CreateGroup(ctx, in, opts...)
 }
 
-// 加入群组
+// 申请加入群组
 func (m *defaultGroupService) JoinGroup(ctx context.Context, in *JoinGroupRequest, opts ...grpc.CallOption) (*JoinGroupResponse, error) {
 	client := group.NewGroupServiceClient(m.cli.Conn())
 	return client.JoinGroup(ctx, in, opts...)
+}
+
+// 获取加入群组申请列表
+func (m *defaultGroupService) GetJoinGroupApplications(ctx context.Context, in *GetJoinGroupApplicationsRequest, opts ...grpc.CallOption) (*GetJoinGroupApplicationsResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.GetJoinGroupApplications(ctx, in, opts...)
+}
+
+// 处理加入群组申请
+func (m *defaultGroupService) HandleJoinGroupApplication(ctx context.Context, in *HandleJoinGroupApplicationRequest, opts ...grpc.CallOption) (*HandleJoinGroupApplicationResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.HandleJoinGroupApplication(ctx, in, opts...)
 }
 
 // 搜索群组
@@ -169,4 +209,28 @@ func (m *defaultGroupService) DismissGroup(ctx context.Context, in *DismissGroup
 func (m *defaultGroupService) TransferGroup(ctx context.Context, in *TransferGroupRequest, opts ...grpc.CallOption) (*TransferGroupResponse, error) {
 	client := group.NewGroupServiceClient(m.cli.Conn())
 	return client.TransferGroup(ctx, in, opts...)
+}
+
+// 获取群组成员信息
+func (m *defaultGroupService) GetGroupMemberInfo(ctx context.Context, in *GetGroupMemberInfoRequest, opts ...grpc.CallOption) (*GetGroupMemberInfoResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.GetGroupMemberInfo(ctx, in, opts...)
+}
+
+// 修改群组成员信息
+func (m *defaultGroupService) UpdateGroupMemberInfo(ctx context.Context, in *UpdateGroupMemberInfoRequest, opts ...grpc.CallOption) (*UpdateGroupMemberInfoResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.UpdateGroupMemberInfo(ctx, in, opts...)
+}
+
+// 获取群组通知列表 (调用后，返回的通知在后端被标记为已读)
+func (m *defaultGroupService) GetGroupNotifications(ctx context.Context, in *GetGroupNotificationsRequest, opts ...grpc.CallOption) (*GetGroupNotificationsResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.GetGroupNotifications(ctx, in, opts...)
+}
+
+// 获取总的未读数
+func (m *defaultGroupService) GetUnreadCount(ctx context.Context, in *GetUnreadCountRequest, opts ...grpc.CallOption) (*GetUnreadCountResponse, error) {
+	client := group.NewGroupServiceClient(m.cli.Conn())
+	return client.GetUnreadCount(ctx, in, opts...)
 }

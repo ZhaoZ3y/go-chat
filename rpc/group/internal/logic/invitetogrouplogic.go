@@ -2,13 +2,13 @@ package logic
 
 import (
 	"IM/pkg/model"
-	"IM/pkg/mq/notify"
-	"context"
-	"gorm.io/gorm"
-	"time"
-
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/svc"
+	"context"
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -29,115 +29,139 @@ func NewInviteToGroupLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Inv
 
 // 邀请加入群组
 func (l *InviteToGroupLogic) InviteToGroup(in *group.InviteToGroupRequest) (*group.InviteToGroupResponse, error) {
-	// 检查邀请者权限
+	// 1. 前置参数校验
+	if in.GroupId == 0 || in.InviterId == 0 || len(in.UserIds) == 0 {
+		return &group.InviteToGroupResponse{Success: false, Message: "参数错误：群组ID、邀请人ID和被邀请人列表不能为空"}, nil
+	}
+
+	var targetGroup model.Groups
+	if err := l.svcCtx.DB.Where("id = ? AND status = ?", in.GroupId, group.GroupStatus_GROUP_STATUS_NORMAL).First(&targetGroup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &group.InviteToGroupResponse{Success: false, Message: "群组不存在或已解散"}, nil
+		}
+		l.Logger.Errorf("InviteToGroup: find group failed, GroupID: %d, Error: %v", in.GroupId, err)
+		return &group.InviteToGroupResponse{Success: false, Message: "查询群组信息失败"}, nil
+	}
+
 	var inviterMember model.GroupMembers
-	if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ? AND role IN (1,2)",
-		in.GroupId, in.InviterId).First(&inviterMember).Error; err != nil {
-		return &group.InviteToGroupResponse{
-			Success: false,
-			Message: "无权限邀请",
-		}, nil
+	if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ?", in.GroupId, in.InviterId).First(&inviterMember).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &group.InviteToGroupResponse{Success: false, Message: "您不是该群成员，无法邀请他人"}, nil
+		}
+		l.Logger.Errorf("InviteToGroup: find inviter member info failed, Error: %v", err)
+		return &group.InviteToGroupResponse{Success: false, Message: "查询邀请人信息失败"}, nil
 	}
 
-	// 获取邀请者信息和群组信息
-	var inviterInfo model.User
-	var groupInfo model.Groups
-	if err := l.svcCtx.DB.Where("id = ?", in.InviterId).First(&inviterInfo).Error; err != nil {
-		return &group.InviteToGroupResponse{
-			Success: false,
-			Message: "邀请者不存在",
-		}, nil
-	}
-	if err := l.svcCtx.DB.Where("id = ?", in.GroupId).First(&groupInfo).Error; err != nil {
-		return &group.InviteToGroupResponse{
-			Success: false,
-			Message: "群组不存在",
-		}, nil
-	}
-
-	var failedUserIds []int64
-	var successUserIds []int64
-	var successUsernames []string
 	tx := l.svcCtx.DB.Begin()
-
-	for _, userId := range in.UserIds {
-		// 检查是否已经是成员
-		var existMember model.GroupMembers
-		if err := tx.Where("group_id = ? AND user_id = ?", in.GroupId, userId).First(&existMember).Error; err == nil {
-			failedUserIds = append(failedUserIds, userId)
-			continue
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
+	}()
 
-		// 获取被邀请用户信息
-		var userInfo model.User
-		if err := tx.Where("id = ?", userId).First(&userInfo).Error; err != nil {
-			failedUserIds = append(failedUserIds, userId)
-			continue
-		}
-
-		// 添加新成员
-		member := &model.GroupMembers{
-			GroupId:  in.GroupId,
-			UserId:   userId,
-			Role:     3,
-			Status:   1,
-			JoinTime: time.Now().Unix(),
-		}
-
-		if err := tx.Create(member).Error; err != nil {
-			failedUserIds = append(failedUserIds, userId)
-			continue
-		}
-
-		// 更新群成员数量
-		tx.Model(&model.Groups{}).Where("id = ?", in.GroupId).
-			Update("member_count", gorm.Expr("member_count + 1"))
-
-		successUserIds = append(successUserIds, userId)
-		successUsernames = append(successUsernames, userInfo.Username)
+	var existingMembers []model.GroupMembers
+	tx.Where("group_id = ? AND user_id IN ?", in.GroupId, in.UserIds).Find(&existingMembers)
+	existingMemberMap := make(map[int64]struct{})
+	for _, member := range existingMembers {
+		existingMemberMap[member.UserId] = struct{}{}
 	}
 
-	tx.Commit()
+	var pendingApplications []model.JoinGroupApplications
+	tx.Where("to_group_id = ? AND from_user_id IN ? AND status = ?", in.GroupId, in.UserIds, group.ApplicationStatus_PENDING).Find(&pendingApplications)
+	pendingApplicationMap := make(map[int64]struct{})
+	for _, app := range pendingApplications {
+		pendingApplicationMap[app.FromUserId] = struct{}{}
+	}
 
-	if len(successUserIds) > 0 {
-		// 发送站外通知给群主和管理员
-		adminNotifyEvent := &notify.NotifyEvent{
-			Type:      notify.NotifyTypeInviteToGroup,
-			GroupID:   in.GroupId,
-			GroupName: groupInfo.Name,
-			Data: &notify.InviteToGroupData{
-				InviterID:   in.InviterId,
-				InviterName: inviterInfo.Username,
-				UserIDs:     successUserIds,
-				Usernames:   successUsernames,
-			},
+	failedUserIDs := make([]int64, 0)
+	var message string
+
+	isInviterAdmin := inviterMember.Role == int64(group.MemberRole_ROLE_OWNER) || inviterMember.Role == int64(group.MemberRole_ROLE_ADMIN)
+
+	if isInviterAdmin {
+		// --- 场景一：管理员或群主邀请，直接入群 ---
+		membersToCreate := make([]*model.GroupMembers, 0)
+		for _, inviteeID := range in.UserIds {
+			if _, ok := existingMemberMap[inviteeID]; ok {
+				failedUserIDs = append(failedUserIDs, inviteeID)
+				continue
+			}
+			var user model.User
+			if err := tx.First(&user, inviteeID).Error; err != nil {
+				failedUserIDs = append(failedUserIDs, inviteeID)
+				continue
+			}
+
+			membersToCreate = append(membersToCreate, &model.GroupMembers{
+				GroupId:  in.GroupId,
+				UserId:   inviteeID,
+				Nickname: user.Nickname,
+				Role:     int64(group.MemberRole_ROLE_MEMBER),
+				Status:   int64(group.MemberStatus_MEMBER_STATUS_NORMAL),
+				JoinTime: time.Now().Unix(),
+			})
 		}
 
-		if err := l.svcCtx.NotifyService.SendNotifyToAdmins(adminNotifyEvent); err != nil {
-			logx.Errorf("发送邀请加入群聊通知失败: %v", err)
+		if len(membersToCreate) > 0 {
+			// 批量创建成员
+			if err := tx.Create(&membersToCreate).Error; err != nil {
+				tx.Rollback()
+				l.Logger.Errorf("InviteToGroup (Admin): batch create members failed: %v", err)
+				return &group.InviteToGroupResponse{Success: false, Message: "添加新成员失败"}, nil
+			}
+			// 批量更新群成员数
+			if err := tx.Model(&targetGroup).UpdateColumn("member_count", gorm.Expr("member_count + ?", len(membersToCreate))).Error; err != nil {
+				tx.Rollback()
+				l.Logger.Errorf("InviteToGroup (Admin): update member count failed: %v", err)
+				return &group.InviteToGroupResponse{Success: false, Message: "更新群成员数失败"}, nil
+			}
+		}
+		message = fmt.Sprintf("成功邀请 %d 人加入群组，%d 人失败或已在群组中。", len(membersToCreate), len(failedUserIDs))
+
+		// TODO：后续添加消息队列实现异步通知其他群主和管理员，该高级成员邀请用户进入群聊，类型为 NOTIFY_MEMBER_BE_INVITED
+		//
+	} else {
+		// --- 场景二：普通成员邀请，生成入群申请 ---
+		applicationsToCreate := make([]*model.JoinGroupApplications, 0)
+		for _, inviteeID := range in.UserIds {
+			if _, ok := existingMemberMap[inviteeID]; ok { // 已是成员
+				failedUserIDs = append(failedUserIDs, inviteeID)
+				continue
+			}
+			if _, ok := pendingApplicationMap[inviteeID]; ok { // 已有待处理申请
+				failedUserIDs = append(failedUserIDs, inviteeID)
+				continue
+			}
+
+			applicationsToCreate = append(applicationsToCreate, &model.JoinGroupApplications{
+				FromUserId: inviteeID,
+				ToGroupId:  in.GroupId,
+				Reason:     fmt.Sprintf("由成员 %s 邀请加入", inviterMember.Nickname),
+				InviterId:  in.InviterId,
+				Status:     int8(group.ApplicationStatus_PENDING),
+			})
 		}
 
-		// 发送群内消息通知 - 所有群成员都能看到
-		groupMessageEvent := &notify.NotifyEvent{
-			Type:      notify.NotifyTypeInviteToGroup,
-			GroupID:   in.GroupId,
-			GroupName: groupInfo.Name,
-			Data: &notify.InviteToGroupData{
-				InviterID:   in.InviterId,
-				InviterName: inviterInfo.Username,
-				UserIDs:     successUserIds,
-				Usernames:   successUsernames,
-			},
+		if len(applicationsToCreate) > 0 {
+			if err := tx.Create(&applicationsToCreate).Error; err != nil {
+				tx.Rollback()
+				l.Logger.Errorf("InviteToGroup (Member): batch create applications failed: %v", err)
+				return &group.InviteToGroupResponse{Success: false, Message: "创建入群申请失败"}, nil
+			}
 		}
+		message = fmt.Sprintf("已为 %d 人发送入群申请，等待管理员审核。%d 人失败或已有申请。", len(applicationsToCreate), len(failedUserIDs))
 
-		if err := l.svcCtx.NotifyService.SendGroupMessage(groupMessageEvent); err != nil {
-			logx.Errorf("发送群内邀请通知失败: %v", err)
-		}
+		//TODO：发送通知给管理员和群主，类型为 NOTIFY_MEMBER_APPLY_JOIN
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		l.Logger.Errorf("InviteToGroup: commit transaction failed: %v", err)
+		return &group.InviteToGroupResponse{Success: false, Message: "处理邀请失败"}, nil
 	}
 
 	return &group.InviteToGroupResponse{
 		Success:       true,
-		Message:       "邀请完成",
-		FailedUserIds: failedUserIds,
+		Message:       message,
+		FailedUserIds: failedUserIDs,
 	}, nil
 }

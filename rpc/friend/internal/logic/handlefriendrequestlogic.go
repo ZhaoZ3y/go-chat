@@ -29,7 +29,6 @@ func NewHandleFriendRequestLogic(ctx context.Context, svcCtx *svc.ServiceContext
 
 // 处理好友申请
 func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRequestRequest) (*friend.HandleFriendRequestResponse, error) {
-	// 1. 参数校验
 	if in.RequestId == 0 || in.UserId == 0 {
 		return &friend.HandleFriendRequestResponse{Success: false, Message: "参数错误：申请ID和用户ID不能为空"}, nil
 	}
@@ -38,13 +37,10 @@ func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRe
 		return &friend.HandleFriendRequestResponse{Success: false, Message: "操作类型错误，仅支持同意或拒绝"}, nil
 	}
 
-	// 2. 查找待处理的好友申请
 	var request model.FriendRequests
-	// 只查找属于当前用户(to_user_id)且状态为“待处理”的申请
 	err := l.svcCtx.DB.Where("id = ? AND to_user_id = ? AND status = ?", in.RequestId, in.UserId, _const.FriendRequestStatusPending).
 		First(&request).Error
 	if err != nil {
-		// 区分是“没找到”还是“数据库错误”
 		if err == gorm.ErrRecordNotFound {
 			return &friend.HandleFriendRequestResponse{Success: false, Message: "好友申请不存在或已被处理"}, nil
 		}
@@ -52,7 +48,6 @@ func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRe
 		return &friend.HandleFriendRequestResponse{Success: false, Message: "系统错误，请稍后再试"}, nil
 	}
 
-	// 3. 开启事务处理
 	tx := l.svcCtx.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -60,7 +55,6 @@ func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRe
 		}
 	}()
 
-	// 4. 更新申请状态，并标记为“已读”
 	updateData := map[string]interface{}{
 		"status":    in.Action,
 		"is_read":   true, // 无论同意或拒绝，都标记为已读
@@ -72,7 +66,7 @@ func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRe
 		return &friend.HandleFriendRequestResponse{Success: false, Message: "处理申请失败"}, nil
 	}
 
-	// 5. 如果同意申请，创建或更新双向好友关系
+	// 如果同意申请，创建或更新双向好友关系
 	if in.Action == _const.FriendRequestStatusAccepted {
 		// 使用 FirstOrCreate 保证幂等性，如果之前是好友后被删除，则可以恢复关系
 		// a. 创建 A -> B 的关系
@@ -92,19 +86,16 @@ func (l *HandleFriendRequestLogic) HandleFriendRequest(in *friend.HandleFriendRe
 		}
 	}
 
-	// 6. 提交事务
 	if err := tx.Commit().Error; err != nil {
 		l.Logger.Errorf("处理好友申请事务提交失败: %v", err)
 		return &friend.HandleFriendRequestResponse{Success: false, Message: "处理申请失败"}, nil
 	}
 
-	// 7. 构造成功的响应
 	message := "已拒绝好友申请"
 	if in.Action == _const.FriendRequestStatusAccepted {
 		message = "已同意好友申请，你们现在是好友了"
 	}
 
-	// 【重要修复】填充响应中的 RequestInfo 字段，供API层使用
 	return &friend.HandleFriendRequestResponse{
 		Success: true,
 		Message: message,

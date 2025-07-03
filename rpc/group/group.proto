@@ -4,6 +4,47 @@ package group;
 
 option go_package = "./group";
 
+// 群组状态
+enum GroupStatus {
+  GROUP_STATUS_NORMAL = 0;  // 正常
+  GROUP_STATUS_DISABLED = 1; // 禁用
+  GROUP_STATUS_DELETED = 2;  // 已解散
+}
+
+// 群组成员状态
+enum MemberStatus {
+  MEMBER_STATUS_NORMAL = 0;   // 正常
+  MEMBER_STATUS_MUTED = 1;    // 禁言
+}
+
+// 群组成员角色
+enum MemberRole {
+  ROLE_MEMBER = 0;    // 普通成员
+  ROLE_ADMIN = 1;     // 管理员
+  ROLE_OWNER = 2;     // 群主
+
+}
+
+// 申请状态
+enum ApplicationStatus {
+  PENDING = 0;   // 待处理
+  APPROVED = 1;  // 已同意
+  REJECTED = 2;  // 已拒绝
+}
+
+// 通知类型
+enum NotificationType {
+  NOTIFY_MEMBER_JOIN = 0;          // 成员加入群组
+  NOTIFY_MEMBER_LEAVE = 1;         // 成员退出群组
+  NOTIFY_MEMBER_KICKED = 2;        // 成员被踢出
+  NOTIFY_MEMBER_ROLE_CHANGED = 3;  // 成员角色变更
+  NOTIFY_MEMBER_MUTED = 4;         // 成员被禁言
+  NOTIFY_MEMBER_BE_INVITED = 5;    // 成员被邀请加入群组
+  NOTIFY_MEMBER_APPLY_JOIN = 6;    // 成员申请加入群组
+  NOTIFY_GROUP_DISMISSED = 7;      // 群组被解散
+  NOTIFY_GROUP_TRANSFERRED = 8;    // 群组被转让
+}
+
 // 群组信息
 message Group {
   int64 id = 1;
@@ -13,21 +54,33 @@ message Group {
   int64 owner_id = 5;
   int32 member_count = 6;
   int32 max_member_count = 7;
-  int32 status = 8; // 1:正常 2:禁用
+  GroupStatus status = 8;
   int64 create_at = 9;
   int64 update_at = 10;
 }
 
-// 群组成员
+// 群组成员信息
 message GroupMember {
   int64 id = 1;
   int64 group_id = 2;
   int64 user_id = 3;
-  int32 role = 4; // 1:群主 2:管理员 3:普通成员
-  string nickname = 5; // 群昵称
-  int32 status = 6; // 1:正常 2:禁言
+  MemberRole role = 4;
+  string nickname = 5;
+  MemberStatus status = 6;
   int64 join_time = 7;
   int64 update_at = 8;
+}
+
+message User {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+  string nickname = 4;
+  string avatar = 5;
+  string phone = 6;
+  int32 status = 7; // 1:正常 2:禁用
+  int64 create_at = 8;
+  int64 update_at = 9;
 }
 
 // 创建群组请求
@@ -46,11 +99,11 @@ message CreateGroupResponse {
   string message = 3;
 }
 
-// 加入群组请求
+// 加入群组请求 (主动申请)
 message JoinGroupRequest {
   int64 group_id = 1;
   int64 user_id = 2;
-  string reason = 3; // 申请理由
+  string reason = 3;
 }
 
 // 加入群组响应
@@ -59,15 +112,52 @@ message JoinGroupResponse {
   string message = 2;
 }
 
+
+// 群组成员加入申请
+message JoinGroupApplication {
+  int64 id = 1;
+  int64 group_id = 2;
+  int64 user_id = 3;
+  string reason = 4;
+  int64 apply_time = 5;
+  int64 inviter_id = 6;       // 邀请人ID (0 表示主动申请)
+  ApplicationStatus status = 7;
+}
+
+// 获取加入群组申请列表请求
+message GetJoinGroupApplicationsRequest {
+  int64 group_id = 1;
+  int64 operator_id = 2;
+}
+
+// 获取加入群组申请列表响应
+message GetJoinGroupApplicationsResponse {
+  repeated JoinGroupApplication applications = 1;
+}
+
+
+// 处理加入群组申请请求
+message HandleJoinGroupApplicationRequest {
+  int64 application_id = 1;
+  bool approve = 2;
+  int64 operator_id = 3;
+}
+
+// 处理加入群组申请响应
+message HandleJoinGroupApplicationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 // 搜索群组请求
 message SearchGroupRequest {
-   string keyword = 1; // 搜索关键词
+  string keyword = 1;
 }
 
 // 搜索群组响应
 message SearchGroupResponse {
-  repeated Group groups = 1; // 匹配的群组列表
-  int64 total = 2; // 总数
+  repeated Group groups = 1;
+  int64 total = 2;
 }
 
 // 邀请加入群组请求
@@ -118,7 +208,6 @@ message GetGroupInfoRequest {
 // 获取群组信息响应
 message GetGroupInfoResponse {
   Group group_info = 1;
-  GroupMember user_member_info = 2;
 }
 
 // 获取群组列表请求
@@ -135,7 +224,7 @@ message GetGroupListResponse {
 // 获取群组成员列表请求
 message GetGroupMemberListRequest {
   int64 group_id = 1;
-  int64 user_id = 2; // 请求者ID，用于权限验证
+  int64 user_id = 2;
 }
 
 // 获取群组成员列表响应
@@ -164,7 +253,7 @@ message SetMemberRoleRequest {
   int64 group_id = 1;
   int64 operator_id = 2;
   int64 user_id = 3;
-  int32 role = 4; // 2:管理员 3:普通成员
+  MemberRole role = 4;
 }
 
 // 设置群组成员角色响应
@@ -178,7 +267,8 @@ message MuteMemberRequest {
   int64 group_id = 1;
   int64 operator_id = 2;
   int64 user_id = 3;
-  int64 duration = 4; // 禁言时长(秒)，0表示取消禁言
+  int64 duration = 4;
+  bool is_unmute = 5;      // 是否解除禁言，true表示解禁，忽略duration字段
 }
 
 // 禁言群组成员响应
@@ -212,12 +302,78 @@ message TransferGroupResponse {
   string message = 2;
 }
 
+// 群组通知
+message GroupNotification {
+  int64 id = 1;
+  NotificationType type = 2;
+  int64 group_id = 3;
+  int64 operator_id = 4;
+  int64 target_user_id = 5;
+  string message = 6;
+  int64 timestamp = 7;
+  bool is_read = 8;
+}
+
+// 获取群组通知列表请求
+message GetGroupNotificationsRequest {
+  int64 user_id = 1;
+}
+
+// 获取群组通知列表响应
+message GetGroupNotificationsResponse {
+  repeated GroupNotification notifications = 1;
+}
+
+// 获取未读总数请求
+message GetUnreadCountRequest {
+  int64 user_id = 1; // 请求未读数的用户ID
+}
+
+// 获取未读总数响应
+message GetUnreadCountResponse {
+  int32 total_unread_count = 1;
+}
+
+// 查看群成员信息请求
+message GetGroupMemberInfoRequest {
+  int64 group_id = 1;
+  int64 user_id = 2; // 要查看的成员ID
+}
+
+// 查看群成员信息响应
+message GetGroupMemberInfoResponse {
+  GroupMemberInfo Info = 1;
+}
+
+message GroupMemberInfo {
+  GroupMember member_info = 1; // 成员信息
+  User user_info = 2;          // 用户信息
+}
+
+
+// 修改群成员信息请求
+message UpdateGroupMemberInfoRequest {
+  int64 group_id = 1;
+  int64 user_id = 2; // 要修改的成员ID
+  string nickname = 3; // 新昵称
+}
+
+// 修改群成员信息响应
+message UpdateGroupMemberInfoResponse {
+  bool success = 1; // 是否成功
+  string message = 2; // 响应消息
+}
+
 // 群组服务
 service GroupService {
   // 创建群组
   rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
-  // 加入群组
+  // 申请加入群组
   rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse);
+  // 获取加入群组申请列表
+  rpc GetJoinGroupApplications(GetJoinGroupApplicationsRequest) returns (GetJoinGroupApplicationsResponse);
+  // 处理加入群组申请
+  rpc HandleJoinGroupApplication(HandleJoinGroupApplicationRequest) returns (HandleJoinGroupApplicationResponse);
   // 搜索群组
   rpc SearchGroup(SearchGroupRequest) returns (SearchGroupResponse);
   // 邀请加入群组
@@ -242,4 +398,12 @@ service GroupService {
   rpc DismissGroup(DismissGroupRequest) returns (DismissGroupResponse);
   // 转让群组
   rpc TransferGroup(TransferGroupRequest) returns (TransferGroupResponse);
+  // 获取群组成员信息
+  rpc GetGroupMemberInfo(GetGroupMemberInfoRequest) returns (GetGroupMemberInfoResponse);
+  // 修改群组成员信息
+  rpc UpdateGroupMemberInfo(UpdateGroupMemberInfoRequest) returns (UpdateGroupMemberInfoResponse);
+  // 获取群组通知列表 (调用后，返回的通知在后端被标记为已读)
+  rpc GetGroupNotifications(GetGroupNotificationsRequest) returns (GetGroupNotificationsResponse);
+  // 获取总的未读数
+  rpc GetUnreadCount(GetUnreadCountRequest) returns (GetUnreadCountResponse);
 }
