@@ -57,7 +57,7 @@ func (l *DismissGroupLogic) DismissGroup(in *group.DismissGroupRequest) (*group.
 	}
 
 	// 删除所有相关的入群申请
-	if err := tx.Where("group_id = ?", in.GroupId).Delete(&model.JoinGroupApplications{}).Error; err != nil {
+	if err := tx.Where("to_group_id = ?", in.GroupId).Delete(&model.JoinGroupApplications{}).Error; err != nil {
 		logx.Errorf("DismissGroup: delete join applications failed, group_id: %d, error: %v", in.GroupId, err)
 		return &group.DismissGroupResponse{Success: false, Message: "清理入群申请失败"}, nil
 	}

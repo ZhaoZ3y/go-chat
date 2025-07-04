@@ -12,7 +12,7 @@ import (
 // CreateGroup 创建群组
 func CreateGroup(c *gin.Context) {
 	// 从JWT中获取用户ID
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -43,19 +43,20 @@ func CreateGroup(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c, gin.H{
-		"message": resp.Message,
+		"message":  resp.Message,
+		"group_id": resp.GroupId,
 	})
 }
 
 // GetGroupInfo 获取群组信息
 func GetGroupInfo(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
 	}
 
-	groupIdStr := c.Param("group_id")
+	groupIdStr := c.Query("group_id")
 	groupId, err := strconv.ParseInt(groupIdStr, 10, 64)
 	if err != nil {
 		response.ClientErrorResponse(c, response.ParamErrorCode, "群组ID格式错误")
@@ -73,19 +74,18 @@ func GetGroupInfo(c *gin.Context) {
 	}
 
 	if resp.GroupInfo == nil {
-		response.ClientErrorResponse(c, response.RPCClientErrorCode, "群组不存在")
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, "群组不存在或您不是成员")
 		return
 	}
 
 	response.SuccessResponse(c, gin.H{
-		"group_info":       resp.GroupInfo,
-		"user_member_info": resp.UserMemberInfo,
+		"group_info": resp.GroupInfo,
 	})
 }
 
 // GetGroupList 获取群组列表
 func GetGroupList(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -108,12 +108,13 @@ func GetGroupList(c *gin.Context) {
 
 // GetGroupMemberList 获取群组成员列表
 func GetGroupMemberList(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
 	}
 
-	groupIdStr := c.Param("group_id")
+	groupIdStr := c.Query("group_id")
 	groupId, err := strconv.ParseInt(groupIdStr, 10, 64)
 	if err != nil {
 		response.ClientErrorResponse(c, response.ParamErrorCode, "群组ID格式错误")
@@ -130,21 +131,15 @@ func GetGroupMemberList(c *gin.Context) {
 		return
 	}
 
-	if len(resp.Members) == 0 {
-		response.ClientErrorResponse(c, response.RPCClientErrorCode, "群组不存在或无成员")
-		return
-	}
-
 	response.SuccessResponse(c, gin.H{
 		"members": resp.Members,
 		"total":   resp.Total,
 	})
-
 }
 
 // UpdateGroupInfo 更新群组信息
 func UpdateGroupInfo(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -181,9 +176,10 @@ func UpdateGroupInfo(c *gin.Context) {
 
 // SetMemberRole 设置群组成员角色
 func SetMemberRole(c *gin.Context) {
-	operatorId, exists := c.Get("user_id")
+	operatorId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
 	}
 
 	var req request.SetMemberRoleRequest
@@ -213,9 +209,9 @@ func SetMemberRole(c *gin.Context) {
 	})
 }
 
-// MuteMember 禁言群成员
+// MuteMember 禁言/解禁群成员
 func MuteMember(c *gin.Context) {
-	operatorId, exists := c.Get("user_id")
+	operatorId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -232,6 +228,7 @@ func MuteMember(c *gin.Context) {
 		OperatorId: operatorId.(int64),
 		UserId:     req.UserId,
 		Duration:   req.Duration,
+		IsUnmute:   req.IsUnmute,
 	})
 
 	if err != nil {
@@ -251,7 +248,7 @@ func MuteMember(c *gin.Context) {
 
 // InviteToGroup 邀请进群
 func InviteToGroup(c *gin.Context) {
-	inviterId, exists := c.Get("user_id")
+	inviterId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -287,7 +284,7 @@ func InviteToGroup(c *gin.Context) {
 
 // JoinGroup 加入群组
 func JoinGroup(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -322,7 +319,7 @@ func JoinGroup(c *gin.Context) {
 
 // KickFromGroup 踢出群成员
 func KickFromGroup(c *gin.Context) {
-	operatorId, exists := c.Get("user_id")
+	operatorId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -357,7 +354,7 @@ func KickFromGroup(c *gin.Context) {
 
 // LeaveGroup 退出群组
 func LeaveGroup(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -391,7 +388,7 @@ func LeaveGroup(c *gin.Context) {
 
 // DismissGroup 解散群组
 func DismissGroup(c *gin.Context) {
-	ownerId, exists := c.Get("user_id")
+	ownerId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -425,7 +422,7 @@ func DismissGroup(c *gin.Context) {
 
 // TransferGroup 转让群组
 func TransferGroup(c *gin.Context) {
-	ownerId, exists := c.Get("user_id")
+	ownerId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -441,6 +438,112 @@ func TransferGroup(c *gin.Context) {
 		GroupId:    req.GroupId,
 		OwnerId:    ownerId.(int64),
 		NewOwnerId: req.NewOwnerId,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// GetGroupMemberInfo 获取指定群组成员信息
+func GetGroupMemberInfo(c *gin.Context) {
+	groupIdStr := c.Query("group_id")
+	groupId, err := strconv.ParseInt(groupIdStr, 10, 64)
+	if err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "群组ID格式错误")
+		return
+	}
+
+	memberIdStr := c.Query("user_id")
+	memberId, err := strconv.ParseInt(memberIdStr, 10, 64)
+	if err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID格式错误")
+		return
+	}
+
+	resp, err := rpc.GroupClient.GetGroupMemberInfo(c.Request.Context(), &group.GetGroupMemberInfoRequest{
+		GroupId: groupId,
+		UserId:  memberId,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if resp.Info == nil {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, "未找到该成员信息")
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"member_info": resp.Info,
+	})
+}
+
+// UpdateGroupMemberInfo 更新自己的群昵称
+func UpdateGroupMemberInfo(c *gin.Context) {
+	userId, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.UpdateGroupMemberInfoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.UpdateGroupMemberInfo(c.Request.Context(), &group.UpdateGroupMemberInfoRequest{
+		GroupId:  req.GroupId,
+		UserId:   userId.(int64),
+		Nickname: req.Nickname,
+	})
+
+	if err != nil {
+		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
+		return
+	}
+
+	if !resp.Success {
+		response.ClientErrorResponse(c, response.RPCClientErrorCode, resp.Message)
+		return
+	}
+
+	response.SuccessResponse(c, gin.H{
+		"message": resp.Message,
+	})
+}
+
+// HandleJoinGroupApplication 处理入群申请
+func HandleJoinGroupApplication(c *gin.Context) {
+	operatorId, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	var req request.HandleJoinGroupApplicationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+		return
+	}
+
+	resp, err := rpc.GroupClient.HandleJoinGroupApplication(c.Request.Context(), &group.HandleJoinGroupApplicationRequest{
+		ApplicationId: req.ApplicationId,
+		OperatorId:    operatorId.(int64),
+		Approve:       req.Approve,
 	})
 
 	if err != nil {

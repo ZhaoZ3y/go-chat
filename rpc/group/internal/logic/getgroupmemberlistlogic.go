@@ -46,7 +46,7 @@ func (l *GetGroupMemberListLogic) GetGroupMemberList(in *group.GetGroupMemberLis
 	// 推荐排序：按角色降序（群主、管理员、成员），然后按加入时间升序
 	err = l.svcCtx.DB.
 		Where("group_id = ?", in.GroupId).
-		Order("role DESC, CONVERT(nick_name USING gbk) ASC").
+		Order("role DESC, CONVERT(nickname USING gbk) ASC").
 		Find(&memberModels).Error
 
 	if err != nil {

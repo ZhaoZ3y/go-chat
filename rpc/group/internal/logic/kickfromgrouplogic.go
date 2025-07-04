@@ -5,8 +5,8 @@ import (
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/svc"
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"

@@ -4,6 +4,7 @@ import (
 	"IM/api/rpc"
 	"IM/pkg/model/request"
 	"IM/pkg/utils/response"
+	"IM/rpc/group/group"
 	"IM/rpc/user/user"
 	"context"
 	"github.com/gin-gonic/gin"
@@ -31,19 +32,19 @@ func Search(c *gin.Context) {
 		return
 	}
 
-	//GroupResp, err := rpc.GroupClient.SearchGroup(ctx, &group.SearchGroupRequest{
-	//	Keyword: req.Keyword,
-	//})
-	//if err != nil {
-	//	logx.Errorf("搜索群组失败: %v", err)
-	//	response.ClientErrorResponse(c, response.ParamErrorCode, "搜索群组失败: "+err.Error())
-	//	return
-	//}
+	GroupResp, err := rpc.GroupClient.SearchGroup(ctx, &group.SearchGroupRequest{
+		Keyword: req.Keyword,
+	})
+	if err != nil {
+		logx.Errorf("搜索群组失败: %v", err)
+		response.ClientErrorResponse(c, response.ParamErrorCode, "搜索群组失败: "+err.Error())
+		return
+	}
 
 	response.SuccessResponse(c, gin.H{
-		"users": UserResp.Users,
-		//"groups":      GroupResp.Groups,
-		"totalUsers": UserResp.Total,
-		//"totalGroups": GroupResp.Total,
+		"users":       UserResp.Users,
+		"groups":      GroupResp.Groups,
+		"totalUsers":  UserResp.Total,
+		"totalGroups": GroupResp.Total,
 	})
 }

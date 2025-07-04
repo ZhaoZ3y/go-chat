@@ -27,7 +27,6 @@ func getAndParseUserID(c *gin.Context) (int64, bool) {
 }
 
 // SendFriendRequest 发送好友申请
-// @Router /friend/request/send [post]
 func SendFriendRequest(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -65,7 +64,6 @@ func SendFriendRequest(c *gin.Context) {
 }
 
 // HandleFriendRequest 处理好友申请
-// @Router /friend/request/handle [post]
 func HandleFriendRequest(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -108,7 +106,6 @@ func HandleFriendRequest(c *gin.Context) {
 }
 
 // GetFriendList 获取当前用户的好友列表
-// @Router /friend/list [get]
 func GetFriendList(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -130,63 +127,7 @@ func GetFriendList(c *gin.Context) {
 	response.SuccessResponse(c, rpcResp)
 }
 
-// GetFriendRequestList 获取收到的好友申请列表
-// @Router /friend/request/list [get]
-func GetFriendRequestList(c *gin.Context) {
-	userID, ok := getAndParseUserID(c)
-	if !ok {
-		return
-	}
-
-	var req request.GetFriendRequestListReq
-	if err := c.ShouldBindQuery(&req); err != nil {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
-		return
-	}
-
-	rpcCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	rpcResp, err := rpc.FriendClient.GetFriendRequestList(rpcCtx, &friend.GetFriendRequestListRequest{
-		UserId: userID,
-		Status: req.Status,
-	})
-	if err != nil {
-		logx.Errorf("RPC GetFriendRequestList failed: %v", err)
-		response.ServerErrorResponse(c, "获取申请列表失败")
-		return
-	}
-
-	response.SuccessResponse(c, rpcResp)
-}
-
-// GetUnreadFriendRequestCount 获取未读好友申请数量
-// @Router /friend/request/unread-count [get]
-func GetUnreadFriendRequestCount(c *gin.Context) {
-	userID, ok := getAndParseUserID(c)
-	if !ok {
-		return
-	}
-
-	rpcCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	rpcResp, err := rpc.FriendClient.GetUnreadFriendRequestCount(rpcCtx, &friend.GetUnreadFriendRequestCountRequest{
-		UserId: userID,
-	})
-	if err != nil {
-		logx.Errorf("RPC GetUnreadFriendRequestCount failed: %v", err)
-		response.ServerErrorResponse(c, "获取未读数量失败")
-		return
-	}
-
-	response.SuccessResponse(c, gin.H{
-		"count": rpcResp.Count,
-	})
-}
-
 // DeleteFriend 删除好友
-// @Router /friend/delete [post]
 func DeleteFriend(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -222,7 +163,6 @@ func DeleteFriend(c *gin.Context) {
 }
 
 // BlockFriend 拉黑或取消拉黑好友 (toggle)
-// @Router /friend/block [post]
 func BlockFriend(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -259,7 +199,6 @@ func BlockFriend(c *gin.Context) {
 }
 
 // UpdateFriendRemark 更新好友备注
-// @Router /friend/remark [put]
 func UpdateFriendRemark(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {
@@ -296,7 +235,6 @@ func UpdateFriendRemark(c *gin.Context) {
 }
 
 // GetBlockedFriendList 获取黑名单列表
-// @Router /friend/blocked-list [get]
 func GetBlockedFriendList(c *gin.Context) {
 	userID, ok := getAndParseUserID(c)
 	if !ok {

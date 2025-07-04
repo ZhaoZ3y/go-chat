@@ -3,8 +3,8 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"IM/rpc/group/group"

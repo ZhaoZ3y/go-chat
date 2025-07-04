@@ -27,7 +27,6 @@ func NewBlockFriendLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Block
 }
 
 // 拉黑好友
-// BlockFriend 拉黑或取消拉黑好友 (切换逻辑)
 func (l *BlockFriendLogic) BlockFriend(in *friend.BlockFriendRequest) (*friend.BlockFriendResponse, error) {
 	if in.UserId == 0 || in.FriendId == 0 {
 		return &friend.BlockFriendResponse{Success: false, Message: "用户ID和好友ID不能为空"}, nil
