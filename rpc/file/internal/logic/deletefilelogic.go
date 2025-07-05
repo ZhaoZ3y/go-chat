@@ -3,8 +3,10 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"time"
 
 	"IM/rpc/file/file"
 	"IM/rpc/file/internal/svc"
@@ -28,62 +30,30 @@ func NewDeleteFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Delete
 
 // 删除文件
 func (l *DeleteFileLogic) DeleteFile(in *file.DeleteFileRequest) (*file.DeleteFileResponse, error) {
-	// 1. 获取文件记录
-	var fileRecord model.Files
-	// 确保检查 UserId 以进行权限控制
-	if err := l.svcCtx.DB.Where("id = ? AND user_id = ? AND status = ?", in.FileId, in.UserId, 1).First(&fileRecord).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &file.DeleteFileResponse{
-				Success: false,
-				Message: "文件不存在或已被删除，或无权操作",
-			}, nil
+	// 1. 先查找文件记录，以便进行权限校验
+	var fileRecord model.FileRecord
+	result := l.svcCtx.DB.WithContext(l.ctx).Where("file_id = ?", in.FileId).First(&fileRecord)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// 文件不存在，也认为删除成功，保证幂等性
+			return &file.DeleteFileResponse{Success: true}, nil
 		}
-		l.Logger.Errorf("查询待删除文件记录失败: %v, FileID: %d, UserID: %d", err, in.FileId, in.UserId)
-		return &file.DeleteFileResponse{
-			Success: false,
-			Message: "查询文件信息失败",
-		}, nil
+		l.Logger.Errorf("查找待删除文件记录失败: %v", result.Error)
+		return nil, status.Errorf(codes.Internal, "数据库错误")
 	}
 
-	// 2. 软删除数据库记录
-	tx := l.svcCtx.DB.Begin()
-	if tx.Error != nil {
-		l.Logger.Errorf("开启数据库事务失败 (DeleteFile): %v", tx.Error)
-		return &file.DeleteFileResponse{Success: false, Message: "删除操作失败"}, nil
+	// 2. 权限校验：确保是文件所有者在执行删除操作
+	if fileRecord.UserID != in.UserId {
+		return nil, status.Errorf(codes.PermissionDenied, "无权删除此文件")
 	}
 
-	// 更新 Status 和 DeletedAt
-	updateData := map[string]interface{}{
-		"status":     2, // 标记为已删除
-		"deleted_at": gorm.DeletedAt{Time: time.Now(), Valid: true},
-		"update_at":  time.Now().Unix(),
-	}
-	if err := tx.Model(&model.Files{}).Where("id = ?", fileRecord.Id).Updates(updateData).Error; err != nil {
-		tx.Rollback()
-		l.Logger.Errorf("软删除数据库文件记录失败: %v, FileID: %d", err, fileRecord.Id)
-		return &file.DeleteFileResponse{
-			Success: false,
-			Message: "更新文件状态失败",
-		}, nil
+	// 3. 执行软删除
+	delResult := l.svcCtx.DB.WithContext(l.ctx).Where("file_id = ?", in.FileId).Delete(&model.FileRecord{})
+	if delResult.Error != nil {
+		l.Logger.Errorf("从数据库软删除文件记录失败: %v", delResult.Error)
+		return nil, status.Errorf(codes.Internal, "删除文件失败")
 	}
 
-	// 3. 从MinIO删除文件对象
-	if err := l.svcCtx.Minio.DeleteFile(l.ctx, fileRecord.FilePath); err != nil {
-		tx.Rollback()
-		l.Logger.Errorf("从 MinIO 删除文件对象 %s 失败: %v。数据库操作已回滚。", fileRecord.FilePath, err)
-		return &file.DeleteFileResponse{
-			Success: false,
-			Message: "从存储服务删除文件失败",
-		}, nil
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		l.Logger.Errorf("提交数据库事务失败 (DeleteFile): %v", err)
-		return &file.DeleteFileResponse{Success: false, Message: "删除操作最终确认失败"}, nil
-	}
-
-	return &file.DeleteFileResponse{
-		Success: true,
-		Message: "删除成功",
-	}, nil
+	l.Logger.Infof("已软删除文件记录，ID: %s", in.FileId)
+	return &file.DeleteFileResponse{Success: true}, nil
 }

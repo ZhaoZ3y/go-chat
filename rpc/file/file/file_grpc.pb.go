@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.19.4
-// source: file.proto
+// source: fileutil.proto
 
 package file
 
@@ -13,44 +13,30 @@ import (
 	status "google.golang.org/grpc/status"
 )
 
-// This is a compile-time assertion to ensure that this generated file
+// This is a compile-time assertion to ensure that this generated fileutil
 // is compatible with the grpc package it is being compiled against.
 // Requires gRPC-Go v1.64.0 or later.
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FileService_UploadFile_FullMethodName           = "/file.FileService/UploadFile"
-	FileService_DownloadFile_FullMethodName         = "/file.FileService/DownloadFile"
-	FileService_GetFileInfo_FullMethodName          = "/file.FileService/GetFileInfo"
-	FileService_GetFileList_FullMethodName          = "/file.FileService/GetFileList"
-	FileService_DeleteFile_FullMethodName           = "/file.FileService/DeleteFile"
-	FileService_GeneratePresignedUrl_FullMethodName = "/file.FileService/GeneratePresignedUrl"
-	FileService_ConfirmUpload_FullMethodName        = "/file.FileService/ConfirmUpload"
-	FileService_CompressImage_FullMethodName        = "/file.FileService/CompressImage"
+	FileService_UploadFile_FullMethodName   = "/fileutil.FileService/UploadFile"
+	FileService_DownloadFile_FullMethodName = "/fileutil.FileService/DownloadFile"
+	FileService_DeleteFile_FullMethodName   = "/fileutil.FileService/DeleteFile"
+	FileService_GetFileInfo_FullMethodName  = "/fileutil.FileService/GetFileInfo"
 )
 
 // FileServiceClient is the client API for FileService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// 文件服务
 type FileServiceClient interface {
-	// 服务端直接上传文件
+	// 上传文件
 	UploadFile(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
 	// 下载文件
 	DownloadFile(ctx context.Context, in *DownloadFileRequest, opts ...grpc.CallOption) (*DownloadFileResponse, error)
-	// 获取文件信息
-	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
-	// 获取文件列表
-	GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error)
 	// 删除文件
 	DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error)
-	// 生成预签名上传URL
-	GeneratePresignedUrl(ctx context.Context, in *GeneratePresignedUrlRequest, opts ...grpc.CallOption) (*GeneratePresignedUrlResponse, error)
-	// 确认上传 (配合预签名URL使用)
-	ConfirmUpload(ctx context.Context, in *ConfirmUploadRequest, opts ...grpc.CallOption) (*ConfirmUploadResponse, error)
-	// 图片压缩
-	CompressImage(ctx context.Context, in *CompressImageRequest, opts ...grpc.CallOption) (*CompressImageResponse, error)
+	// 获取文件信息
+	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 }
 
 type fileServiceClient struct {
@@ -81,26 +67,6 @@ func (c *fileServiceClient) DownloadFile(ctx context.Context, in *DownloadFileRe
 	return out, nil
 }
 
-func (c *fileServiceClient) GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetFileInfoResponse)
-	err := c.cc.Invoke(ctx, FileService_GetFileInfo_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) GetFileList(ctx context.Context, in *GetFileListRequest, opts ...grpc.CallOption) (*GetFileListResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetFileListResponse)
-	err := c.cc.Invoke(ctx, FileService_GetFileList_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *fileServiceClient) DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteFileResponse)
@@ -111,30 +77,10 @@ func (c *fileServiceClient) DeleteFile(ctx context.Context, in *DeleteFileReques
 	return out, nil
 }
 
-func (c *fileServiceClient) GeneratePresignedUrl(ctx context.Context, in *GeneratePresignedUrlRequest, opts ...grpc.CallOption) (*GeneratePresignedUrlResponse, error) {
+func (c *fileServiceClient) GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GeneratePresignedUrlResponse)
-	err := c.cc.Invoke(ctx, FileService_GeneratePresignedUrl_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) ConfirmUpload(ctx context.Context, in *ConfirmUploadRequest, opts ...grpc.CallOption) (*ConfirmUploadResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ConfirmUploadResponse)
-	err := c.cc.Invoke(ctx, FileService_ConfirmUpload_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileServiceClient) CompressImage(ctx context.Context, in *CompressImageRequest, opts ...grpc.CallOption) (*CompressImageResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CompressImageResponse)
-	err := c.cc.Invoke(ctx, FileService_CompressImage_FullMethodName, in, out, cOpts...)
+	out := new(GetFileInfoResponse)
+	err := c.cc.Invoke(ctx, FileService_GetFileInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -144,25 +90,15 @@ func (c *fileServiceClient) CompressImage(ctx context.Context, in *CompressImage
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility.
-//
-// 文件服务
 type FileServiceServer interface {
-	// 服务端直接上传文件
+	// 上传文件
 	UploadFile(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
 	// 下载文件
 	DownloadFile(context.Context, *DownloadFileRequest) (*DownloadFileResponse, error)
-	// 获取文件信息
-	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
-	// 获取文件列表
-	GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error)
 	// 删除文件
 	DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error)
-	// 生成预签名上传URL
-	GeneratePresignedUrl(context.Context, *GeneratePresignedUrlRequest) (*GeneratePresignedUrlResponse, error)
-	// 确认上传 (配合预签名URL使用)
-	ConfirmUpload(context.Context, *ConfirmUploadRequest) (*ConfirmUploadResponse, error)
-	// 图片压缩
-	CompressImage(context.Context, *CompressImageRequest) (*CompressImageResponse, error)
+	// 获取文件信息
+	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -179,23 +115,11 @@ func (UnimplementedFileServiceServer) UploadFile(context.Context, *UploadFileReq
 func (UnimplementedFileServiceServer) DownloadFile(context.Context, *DownloadFileRequest) (*DownloadFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DownloadFile not implemented")
 }
-func (UnimplementedFileServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFileInfo not implemented")
-}
-func (UnimplementedFileServiceServer) GetFileList(context.Context, *GetFileListRequest) (*GetFileListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFileList not implemented")
-}
 func (UnimplementedFileServiceServer) DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
 }
-func (UnimplementedFileServiceServer) GeneratePresignedUrl(context.Context, *GeneratePresignedUrlRequest) (*GeneratePresignedUrlResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GeneratePresignedUrl not implemented")
-}
-func (UnimplementedFileServiceServer) ConfirmUpload(context.Context, *ConfirmUploadRequest) (*ConfirmUploadResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfirmUpload not implemented")
-}
-func (UnimplementedFileServiceServer) CompressImage(context.Context, *CompressImageRequest) (*CompressImageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CompressImage not implemented")
+func (UnimplementedFileServiceServer) GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFileInfo not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 func (UnimplementedFileServiceServer) testEmbeddedByValue()                     {}
@@ -254,42 +178,6 @@ func _FileService_DownloadFile_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FileService_GetFileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFileInfoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).GetFileInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_GetFileInfo_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).GetFileInfo(ctx, req.(*GetFileInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_GetFileList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFileListRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).GetFileList(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_GetFileList_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).GetFileList(ctx, req.(*GetFileListRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _FileService_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteFileRequest)
 	if err := dec(in); err != nil {
@@ -308,56 +196,20 @@ func _FileService_DeleteFile_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FileService_GeneratePresignedUrl_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GeneratePresignedUrlRequest)
+func _FileService_GetFileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFileInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FileServiceServer).GeneratePresignedUrl(ctx, in)
+		return srv.(FileServiceServer).GetFileInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: FileService_GeneratePresignedUrl_FullMethodName,
+		FullMethod: FileService_GetFileInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).GeneratePresignedUrl(ctx, req.(*GeneratePresignedUrlRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_ConfirmUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfirmUploadRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).ConfirmUpload(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_ConfirmUpload_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).ConfirmUpload(ctx, req.(*ConfirmUploadRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FileService_CompressImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompressImageRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServiceServer).CompressImage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FileService_CompressImage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServiceServer).CompressImage(ctx, req.(*CompressImageRequest))
+		return srv.(FileServiceServer).GetFileInfo(ctx, req.(*GetFileInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -366,7 +218,7 @@ func _FileService_CompressImage_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FileService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "file.FileService",
+	ServiceName: "fileutil.FileService",
 	HandlerType: (*FileServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -378,30 +230,14 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _FileService_DownloadFile_Handler,
 		},
 		{
-			MethodName: "GetFileInfo",
-			Handler:    _FileService_GetFileInfo_Handler,
-		},
-		{
-			MethodName: "GetFileList",
-			Handler:    _FileService_GetFileList_Handler,
-		},
-		{
 			MethodName: "DeleteFile",
 			Handler:    _FileService_DeleteFile_Handler,
 		},
 		{
-			MethodName: "GeneratePresignedUrl",
-			Handler:    _FileService_GeneratePresignedUrl_Handler,
-		},
-		{
-			MethodName: "ConfirmUpload",
-			Handler:    _FileService_ConfirmUpload_Handler,
-		},
-		{
-			MethodName: "CompressImage",
-			Handler:    _FileService_CompressImage_Handler,
+			MethodName: "GetFileInfo",
+			Handler:    _FileService_GetFileInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "file.proto",
+	Metadata: "fileutil.proto",
 }

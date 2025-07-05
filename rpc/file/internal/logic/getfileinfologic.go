@@ -3,7 +3,11 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"time"
 
 	"IM/rpc/file/file"
 	"IM/rpc/file/internal/svc"
@@ -27,43 +31,31 @@ func NewGetFileInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetFi
 
 // 获取文件信息
 func (l *GetFileInfoLogic) GetFileInfo(in *file.GetFileInfoRequest) (*file.GetFileInfoResponse, error) {
-	var fileRecord model.Files
-	query := l.svcCtx.DB.Where("id = ? AND status = ?", in.FileId, 1) // Status 1 表示正常
-	if in.UserId > 0 {                                                // 假设 UserId > 0 时表示需要用户权限校验
-		query = query.Where("user_id = ?", in.UserId)
-	}
+	var fileRecord model.FileRecord
+	result := l.svcCtx.DB.WithContext(l.ctx).Where("file_id = ?", in.FileId).First(&fileRecord)
 
-	if err := query.First(&fileRecord).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &file.GetFileInfoResponse{
-				Success: false,
-				Message: "文件不存在、已被删除或无权查看",
-			}, nil
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "文件未找到")
 		}
-		l.Logger.Errorf("查询文件信息失败: %v, FileID: %d, UserID: %d", err, in.FileId, in.UserId)
-		return &file.GetFileInfoResponse{
-			Success: false,
-			Message: "查询文件信息时发生错误",
-		}, nil
+		l.Logger.Errorf("从数据库查询文件信息失败: %v", result.Error)
+		return nil, status.Errorf(codes.Internal, "数据库错误")
 	}
 
+	// 动态计算 is_expired 字段
+	isExpired := time.Now().Unix() > fileRecord.ExpireAt
+
+	// 组装响应
 	return &file.GetFileInfoResponse{
-		FileInfo: &file.FileInfo{
-			Id:           fileRecord.Id,
-			Filename:     fileRecord.Filename,     // MinIO中的实际文件名
-			OriginalName: fileRecord.OriginalName, // 用户上传的原始文件名
-			FilePath:     fileRecord.FilePath,     // MinIO Object Key
-			FileUrl:      fileRecord.FileUrl,      // 访问URL
-			FileType:     fileRecord.FileType,
-			FileSize:     fileRecord.FileSize,
-			MimeType:     fileRecord.MimeType,
-			Hash:         fileRecord.Hash,
-			UserId:       fileRecord.UserId,
-			Status:       int32(fileRecord.Status),
-			CreateAt:     fileRecord.CreateAt,
-			UpdateAt:     fileRecord.UpdateAt,
-		},
-		Success: true,
-		Message: "获取成功",
+		FileId:      fileRecord.FileID,
+		FileName:    fileRecord.FileName,
+		FileSize:    fileRecord.FileSize,
+		ContentType: fileRecord.ContentType,
+		UserId:      int64(fileRecord.UserID), // 注意: proto中是int64, model中是uint64, 需要转换
+		CreatedAt:   fileRecord.CreateAt,
+		ExpireAt:    fileRecord.ExpireAt,
+		IsExpired:   isExpired,
+		Etag:        fileRecord.ETag,
+		FileType:    fileRecord.FileType,
 	}, nil
 }

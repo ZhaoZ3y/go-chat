@@ -3,6 +3,9 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	"io"
 
@@ -28,51 +31,39 @@ func NewDownloadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Down
 
 // 下载文件
 func (l *DownloadFileLogic) DownloadFile(in *file.DownloadFileRequest) (*file.DownloadFileResponse, error) {
-	// 1. 获取文件记录
-	var fileRecord model.Files
-	query := l.svcCtx.DB.Where("id = ? AND status = ?", in.FileId, 1) // Status 1 表示正常
-	if in.UserId > 0 {                                                // 假设 UserId > 0 时表示需要用户权限校验
-		query = query.Where("user_id = ?", in.UserId)
-	}
-
-	if err := query.First(&fileRecord).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return &file.DownloadFileResponse{
-				Success: false,
-				Message: "文件不存在、已被删除或无权访问",
-			}, nil
+	// 1. 查找数据库记录
+	var fileRecord model.FileRecord
+	result := l.svcCtx.DB.WithContext(l.ctx).Where("file_id = ?", in.FileId).First(&fileRecord)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "文件未找到")
 		}
-		l.Logger.Errorf("查询待下载文件记录失败: %v, FileID: %d, UserID: %d", err, in.FileId, in.UserId)
-		return &file.DownloadFileResponse{
-			Success: false,
-			Message: "查询文件信息失败",
-		}, nil
+		l.Logger.Errorf("从数据库查询文件信息失败: %v", result.Error)
+		return nil, status.Errorf(codes.Internal, "数据库错误")
 	}
 
-	object, err := l.svcCtx.Minio.DownloadFile(l.ctx, fileRecord.FilePath)
+	// 2. 从MinIO下载文件对象
+	// 警告：直接在服务中流式传输大文件会消耗大量内存和带宽
+	l.Logger.Infof("正在为文件 %s (大小: %d) 提供直接下载服务", fileRecord.ObjectName, fileRecord.FileSize)
+	object, err := l.svcCtx.MinioClient.DownloadFile(l.ctx, fileRecord.ObjectName)
 	if err != nil {
-		l.Logger.Errorf("从 MinIO 下载文件 %s 失败: %v", fileRecord.FilePath, err)
-		return &file.DownloadFileResponse{
-			Success: false,
-			Message: "下载文件失败: " + err.Error(),
-		}, nil
+		l.Logger.Errorf("从MinIO下载对象 %s 失败: %v", fileRecord.ObjectName, err)
+		return nil, status.Errorf(codes.Internal, "下载文件失败")
 	}
 	defer object.Close()
 
+	// 3. 将文件内容读取到字节切片中
 	fileData, err := io.ReadAll(object)
 	if err != nil {
-		l.Logger.Errorf("读取 MinIO 对象 %s 数据流失败: %v", fileRecord.FilePath, err)
-		return &file.DownloadFileResponse{
-			Success: false,
-			Message: "读取文件数据失败: " + err.Error(),
-		}, nil
+		l.Logger.Errorf("读取对象 %s 的数据流失败: %v", fileRecord.ObjectName, err)
+		return nil, status.Errorf(codes.Internal, "读取文件数据失败")
 	}
 
+	// 4. 返回响应
 	return &file.DownloadFileResponse{
-		FileData: fileData,
-		Filename: fileRecord.OriginalName, // 返回原始文件名，方便客户端保存
-		MimeType: fileRecord.MimeType,
-		Success:  true,
-		Message:  "下载成功",
+		FileData:    fileData,
+		FileName:    fileRecord.FileName,
+		FileSize:    fileRecord.FileSize,
+		ContentType: fileRecord.ContentType,
 	}, nil
 }

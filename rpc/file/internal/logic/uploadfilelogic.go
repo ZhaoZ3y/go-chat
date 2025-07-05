@@ -1,14 +1,13 @@
 package logic
 
 import (
-	pkgminio "IM/pkg/minio"
 	"IM/pkg/model"
+	"IM/pkg/utils/fileutil"
 	"bytes"
 	"context"
-	"crypto/md5"
-	"fmt"
-	"path/filepath"
-	"strings"
+	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 
 	"IM/rpc/file/file"
@@ -16,6 +15,8 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
+
+const fileExpireDays = 7
 
 type UploadFileLogic struct {
 	ctx    context.Context
@@ -31,97 +32,51 @@ func NewUploadFileLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Upload
 	}
 }
 
-// 服务端直接上传文件
+// 上传文件
 func (l *UploadFileLogic) UploadFile(in *file.UploadFileRequest) (*file.UploadFileResponse, error) {
-	// 1. 计算文件哈希
-	hash := fmt.Sprintf("%x", md5.Sum(in.FileData))
-
-	// 2. 检查文件是否已存在 (秒传逻辑)
-	// 注意：这里的秒传是基于用户ID的，如果需要全局秒传，移除 UserID 条件
-	var existingFile model.Files
-	if err := l.svcCtx.DB.Where("hash = ? AND user_id = ?", hash, in.UserId).First(&existingFile).Error; err == nil {
-		return &file.UploadFileResponse{
-			FileId:  existingFile.Id,
-			FileUrl: existingFile.FileUrl, // 数据库中已存正确的 MinIO URL
-			Success: true,
-			Message: "文件已存在，秒传成功",
-		}, nil
-	}
-
-	// 3. 生成 MinIO 对象名称
-	// in.Filename 是客户端的原始文件名, in.FileType 是文件分类 (如 "image", "video")
-	objectName := pkgminio.GenerateObjectName(in.UserId, in.FileType, in.Filename)
-
-	// 4. 上传文件到 MinIO
+	fileID := uuid.NewString()
+	objectName := fileID // 使用UUID作为对象名保证唯一性
 	reader := bytes.NewReader(in.FileData)
-	err := l.svcCtx.Minio.UploadFile(l.ctx, objectName, reader, int64(len(in.FileData)), in.MimeType)
+
+	// 上传文件到MinIO并获取ETag
+	uploadInfo, err := l.svcCtx.MinioClient.UploadFile(l.ctx, objectName, reader, in.FileSize, in.ContentType)
 	if err != nil {
-		l.Logger.Errorf("上传文件到 MinIO 失败: %v, 对象名: %s", err, objectName)
-		return &file.UploadFileResponse{
-			Success: false,
-			Message: "上传文件到存储服务失败: " + err.Error(),
-		}, nil
+		l.Logger.Errorf("上传文件到MinIO失败: %v", err)
+		return nil, status.Errorf(codes.Internal, "上传文件失败")
 	}
 
-	// 5. 生成文件访问 URL
-	fileURL := l.buildMinioFileUrl(objectName)
+	// 获取文件类型
+	fileType := fileutil.GetFileTypeFromName(in.FileName)
 
-	// 6. 保存文件记录到数据库
-	fileRecord := model.Files{
-		Filename:     filepath.Base(objectName), // 存储 MinIO 中的实际文件名 (通常是 time+random.ext)
-		OriginalName: in.Filename,               // 存储用户上传的原始文件名
-		FilePath:     objectName,                // 存储完整的 MinIO Object Key
-		FileUrl:      fileURL,
-		FileType:     in.FileType,
-		FileSize:     int64(len(in.FileData)),
-		MimeType:     in.MimeType,
-		Hash:         hash,
-		UserId:       in.UserId,
-		Status:       1, // 1 表示正常
-		CreateAt:     time.Now().Unix(),
-		UpdateAt:     time.Now().Unix(),
+	// 准备数据库记录
+	expireAt := time.Now().Add(fileExpireDays * 24 * time.Hour).Unix()
+	fileRecord := &model.FileRecord{
+		FileID:      fileID,
+		FileName:    in.FileName,
+		FileType:    fileType,
+		FileSize:    in.FileSize,
+		ContentType: in.ContentType,
+		ETag:        uploadInfo.ETag,
+		ObjectName:  objectName,
+		UserID:      in.UserId,
+		Status:      1,
+		ExpireAt:    expireAt,
 	}
 
-	if err := l.svcCtx.DB.Create(&fileRecord).Error; err != nil {
-		l.Logger.Errorf("保存文件记录到数据库失败: %v, 文件信息: %+v", err, fileRecord)
-		// 如果数据库保存失败，尝试删除已上传到 MinIO 的文件，尽力回滚
-		if delErr := l.svcCtx.Minio.DeleteFile(l.ctx, objectName); delErr != nil {
-			l.Logger.Errorf("数据库保存失败后，删除 MinIO 对象 %s 也失败: %v", objectName, delErr)
-		}
-		return &file.UploadFileResponse{
-			Success: false,
-			Message: "保存文件信息失败: " + err.Error(),
-		}, nil
+	// 写入数据库
+	result := l.svcCtx.DB.WithContext(l.ctx).Create(fileRecord)
+	if result.Error != nil {
+		l.Logger.Errorf("在数据库中创建文件记录失败: %v", result.Error)
+		// 尽力清理已上传的孤儿文件
+		_ = l.svcCtx.MinioClient.DeleteFile(context.Background(), objectName)
+		return nil, status.Errorf(codes.Internal, "保存文件元数据失败")
 	}
 
+	// 返回符合proto定义的响应
 	return &file.UploadFileResponse{
-		FileId:  fileRecord.Id,
-		FileUrl: fileRecord.FileUrl,
-		Success: true,
-		Message: "上传成功",
+		FileId:   fileRecord.FileID,
+		FileName: fileRecord.FileName,
+		FileSize: fileRecord.FileSize,
+		ExpireAt: fileRecord.ExpireAt,
 	}, nil
-}
-
-// 构建 MinIO 文件 URL 的辅助函数
-func (l *UploadFileLogic) buildMinioFileUrl(objectName string) string {
-	cfgMinio := l.svcCtx.Config.MinIO
-	cfgStorage := l.svcCtx.Config.FileStorage
-
-	// 优先使用 FileStorage.BaseURL (通常是CDN或反向代理地址)
-	if cfgStorage.BaseURL != "" {
-		return fmt.Sprintf("%s/%s/%s",
-			strings.TrimSuffix(cfgStorage.BaseURL, "/"),
-			cfgMinio.BucketName,
-			objectName)
-	}
-	// 否则，直接使用 MinIO 端点
-	scheme := "http"
-	if cfgMinio.UseSSL {
-		scheme = "https"
-	}
-	return fmt.Sprintf("%s://%s/%s/%s",
-		scheme,
-		cfgMinio.Endpoint,
-		cfgMinio.BucketName,
-		objectName)
 }

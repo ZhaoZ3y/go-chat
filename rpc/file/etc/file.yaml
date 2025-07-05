@@ -1,10 +1,10 @@
-Name: file.rpc
+Name: fileutil.rpc
 ListenOn: 0.0.0.0:10004
 
 Etcd:
   Hosts:
   - etcd:2379
-  Key: file.rpc
+  Key: fileutil.rpc
 
 DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 

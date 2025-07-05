@@ -1,8 +1,8 @@
 package logic
 
 import (
-	_const "IM/pkg/const"
 	"IM/pkg/model"
+	"IM/pkg/utils/const"
 	"context"
 
 	"IM/rpc/friend/friend"

@@ -5,21 +5,23 @@ import "github.com/zeromicro/go-zero/zrpc"
 type Config struct {
 	zrpc.RpcServerConf
 	DataSource  string
-	CustomRedis struct {
-		Host     string
-		Port     int
-		Password string
-		DB       int
-	}
-	MinIO struct {
-		Endpoint        string
-		AccessKeyID     string
-		SecretAccessKey string
-		UseSSL          bool
-		BucketName      string
-	}
-	FileStorage struct {
-		BaseURL string // 文件存储的基础URL，通常是CDN或反向代理地址
+	CustomRedis RedisConfig
+	MinIO       MinIOConfig
+}
 
-	}
+// RedisConfig 对应 YAML 中的 CustomRedis 部分
+type RedisConfig struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
+}
+
+// MinIOConfig 对应 YAML 中的 MinIO 部分
+type MinIOConfig struct {
+	Endpoint        string
+	AccessKeyID     string
+	SecretAccessKey string
+	UseSSL          bool
+	BucketName      string
 }
