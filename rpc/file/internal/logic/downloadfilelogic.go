@@ -3,7 +3,7 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
-	"github.com/pkg/errors"
+	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"

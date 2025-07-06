@@ -3,7 +3,7 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
-	"github.com/pkg/errors"
+	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -42,7 +42,6 @@ func (l *GetFileInfoLogic) GetFileInfo(in *file.GetFileInfoRequest) (*file.GetFi
 		return nil, status.Errorf(codes.Internal, "数据库错误")
 	}
 
-	// 动态计算 is_expired 字段
 	isExpired := time.Now().Unix() > fileRecord.ExpireAt
 
 	// 组装响应
@@ -51,7 +50,7 @@ func (l *GetFileInfoLogic) GetFileInfo(in *file.GetFileInfoRequest) (*file.GetFi
 		FileName:    fileRecord.FileName,
 		FileSize:    fileRecord.FileSize,
 		ContentType: fileRecord.ContentType,
-		UserId:      int64(fileRecord.UserID), // 注意: proto中是int64, model中是uint64, 需要转换
+		UserId:      fileRecord.UserID,
 		CreatedAt:   fileRecord.CreateAt,
 		ExpireAt:    fileRecord.ExpireAt,
 		IsExpired:   isExpired,

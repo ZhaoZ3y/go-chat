@@ -1,10 +1,10 @@
-Name: fileutil.rpc
+Name: file.rpc
 ListenOn: 0.0.0.0:10004
 
 Etcd:
   Hosts:
   - etcd:2379
-  Key: fileutil.rpc
+  Key: file.rpc
 
 DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
 
@@ -19,4 +19,4 @@ MinIO:
   AccessKeyID: minioadmin
   SecretAccessKey: minioadmin
   UseSSL: false
-  BucketName: IM
+  BucketName: im-file

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.19.4
-// source: fileutil.proto
+// source: file.proto
 
 package file
 
@@ -26,7 +26,7 @@ type UploadFileRequest struct {
 	FileName      string                 `protobuf:"bytes,1,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	FileSize      int64                  `protobuf:"varint,2,opt,name=file_size,json=fileSize,proto3" json:"file_size,omitempty"`
 	ContentType   string                 `protobuf:"bytes,3,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	UserId        uint64                 `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,4,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	FileData      []byte                 `protobuf:"bytes,5,opt,name=file_data,json=fileData,proto3" json:"file_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -83,7 +83,7 @@ func (x *UploadFileRequest) GetContentType() string {
 	return ""
 }
 
-func (x *UploadFileRequest) GetUserId() uint64 {
+func (x *UploadFileRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
@@ -280,7 +280,7 @@ func (x *DownloadFileResponse) GetContentType() string {
 type DeleteFileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FileId        string                 `protobuf:"bytes,1,opt,name=file_id,json=fileId,proto3" json:"file_id,omitempty"`
-	UserId        uint64                 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -322,7 +322,7 @@ func (x *DeleteFileRequest) GetFileId() string {
 	return ""
 }
 
-func (x *DeleteFileRequest) GetUserId() uint64 {
+func (x *DeleteFileRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
@@ -533,17 +533,105 @@ func (x *GetFileInfoResponse) GetFileType() string {
 	return ""
 }
 
+type GetFileRecordReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFileRecordReq) Reset() {
+	*x = GetFileRecordReq{}
+	mi := &file_file_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFileRecordReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFileRecordReq) ProtoMessage() {}
+
+func (x *GetFileRecordReq) ProtoReflect() protoreflect.Message {
+	mi := &file_file_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFileRecordReq.ProtoReflect.Descriptor instead.
+func (*GetFileRecordReq) Descriptor() ([]byte, []int) {
+	return file_file_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetFileRecordReq) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+type GetFileRecordResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FileRecords   []*GetFileInfoResponse `protobuf:"bytes,1,rep,name=file_records,json=fileRecords,proto3" json:"file_records,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetFileRecordResp) Reset() {
+	*x = GetFileRecordResp{}
+	mi := &file_file_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetFileRecordResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetFileRecordResp) ProtoMessage() {}
+
+func (x *GetFileRecordResp) ProtoReflect() protoreflect.Message {
+	mi := &file_file_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetFileRecordResp.ProtoReflect.Descriptor instead.
+func (*GetFileRecordResp) Descriptor() ([]byte, []int) {
+	return file_file_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetFileRecordResp) GetFileRecords() []*GetFileInfoResponse {
+	if x != nil {
+		return x.FileRecords
+	}
+	return nil
+}
+
 var File_file_proto protoreflect.FileDescriptor
 
 const file_file_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"fileutil.proto\x12\x04file\"\xa6\x01\n" +
+	"file.proto\x12\x04file\"\xa6\x01\n" +
 	"\x11UploadFileRequest\x12\x1b\n" +
 	"\tfile_name\x18\x01 \x01(\tR\bfileName\x12\x1b\n" +
 	"\tfile_size\x18\x02 \x01(\x03R\bfileSize\x12!\n" +
 	"\fcontent_type\x18\x03 \x01(\tR\vcontentType\x12\x17\n" +
-	"\auser_id\x18\x04 \x01(\x04R\x06userId\x12\x1b\n" +
+	"\auser_id\x18\x04 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\tfile_data\x18\x05 \x01(\fR\bfileData\"\x84\x01\n" +
 	"\x12UploadFileResponse\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x1b\n" +
@@ -559,7 +647,7 @@ const file_file_proto_rawDesc = "" +
 	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\"E\n" +
 	"\x11DeleteFileRequest\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x04R\x06userId\".\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\".\n" +
 	"\x12DeleteFileResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"-\n" +
 	"\x12GetFileInfoRequest\x12\x17\n" +
@@ -577,14 +665,19 @@ const file_file_proto_rawDesc = "" +
 	"is_expired\x18\b \x01(\bR\tisExpired\x12\x12\n" +
 	"\x04etag\x18\t \x01(\tR\x04etag\x12\x1b\n" +
 	"\tfile_type\x18\n" +
-	" \x01(\tR\bfileType2\x9a\x02\n" +
+	" \x01(\tR\bfileType\"+\n" +
+	"\x10GetFileRecordReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"Q\n" +
+	"\x11GetFileRecordResp\x12<\n" +
+	"\ffile_records\x18\x01 \x03(\v2\x19.file.GetFileInfoResponseR\vfileRecords2\xdc\x02\n" +
 	"\vFileService\x12?\n" +
 	"\n" +
-	"UploadFile\x12\x17.fileutil.UploadFileRequest\x1a\x18.fileutil.UploadFileResponse\x12E\n" +
-	"\fDownloadFile\x12\x19.fileutil.DownloadFileRequest\x1a\x1a.fileutil.DownloadFileResponse\x12?\n" +
+	"UploadFile\x12\x17.file.UploadFileRequest\x1a\x18.file.UploadFileResponse\x12E\n" +
+	"\fDownloadFile\x12\x19.file.DownloadFileRequest\x1a\x1a.file.DownloadFileResponse\x12?\n" +
 	"\n" +
-	"DeleteFile\x12\x17.fileutil.DeleteFileRequest\x1a\x18.fileutil.DeleteFileResponse\x12B\n" +
-	"\vGetFileInfo\x12\x18.fileutil.GetFileInfoRequest\x1a\x19.fileutil.GetFileInfoResponseB\bZ\x06./fileb\x06proto3"
+	"DeleteFile\x12\x17.file.DeleteFileRequest\x1a\x18.file.DeleteFileResponse\x12B\n" +
+	"\vGetFileInfo\x12\x18.file.GetFileInfoRequest\x1a\x19.file.GetFileInfoResponse\x12@\n" +
+	"\rGetFileRecord\x12\x16.file.GetFileRecordReq\x1a\x17.file.GetFileRecordRespB\bZ\x06./fileb\x06proto3"
 
 var (
 	file_file_proto_rawDescOnce sync.Once
@@ -598,31 +691,36 @@ func file_file_proto_rawDescGZIP() []byte {
 	return file_file_proto_rawDescData
 }
 
-var file_file_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_file_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_file_proto_goTypes = []any{
-	(*UploadFileRequest)(nil),    // 0: fileutil.UploadFileRequest
-	(*UploadFileResponse)(nil),   // 1: fileutil.UploadFileResponse
-	(*DownloadFileRequest)(nil),  // 2: fileutil.DownloadFileRequest
-	(*DownloadFileResponse)(nil), // 3: fileutil.DownloadFileResponse
-	(*DeleteFileRequest)(nil),    // 4: fileutil.DeleteFileRequest
-	(*DeleteFileResponse)(nil),   // 5: fileutil.DeleteFileResponse
-	(*GetFileInfoRequest)(nil),   // 6: fileutil.GetFileInfoRequest
-	(*GetFileInfoResponse)(nil),  // 7: fileutil.GetFileInfoResponse
+	(*UploadFileRequest)(nil),    // 0: file.UploadFileRequest
+	(*UploadFileResponse)(nil),   // 1: file.UploadFileResponse
+	(*DownloadFileRequest)(nil),  // 2: file.DownloadFileRequest
+	(*DownloadFileResponse)(nil), // 3: file.DownloadFileResponse
+	(*DeleteFileRequest)(nil),    // 4: file.DeleteFileRequest
+	(*DeleteFileResponse)(nil),   // 5: file.DeleteFileResponse
+	(*GetFileInfoRequest)(nil),   // 6: file.GetFileInfoRequest
+	(*GetFileInfoResponse)(nil),  // 7: file.GetFileInfoResponse
+	(*GetFileRecordReq)(nil),     // 8: file.GetFileRecordReq
+	(*GetFileRecordResp)(nil),    // 9: file.GetFileRecordResp
 }
 var file_file_proto_depIdxs = []int32{
-	0, // 0: fileutil.FileService.UploadFile:input_type -> fileutil.UploadFileRequest
-	2, // 1: fileutil.FileService.DownloadFile:input_type -> fileutil.DownloadFileRequest
-	4, // 2: fileutil.FileService.DeleteFile:input_type -> fileutil.DeleteFileRequest
-	6, // 3: fileutil.FileService.GetFileInfo:input_type -> fileutil.GetFileInfoRequest
-	1, // 4: fileutil.FileService.UploadFile:output_type -> fileutil.UploadFileResponse
-	3, // 5: fileutil.FileService.DownloadFile:output_type -> fileutil.DownloadFileResponse
-	5, // 6: fileutil.FileService.DeleteFile:output_type -> fileutil.DeleteFileResponse
-	7, // 7: fileutil.FileService.GetFileInfo:output_type -> fileutil.GetFileInfoResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	7, // 0: file.GetFileRecordResp.file_records:type_name -> file.GetFileInfoResponse
+	0, // 1: file.FileService.UploadFile:input_type -> file.UploadFileRequest
+	2, // 2: file.FileService.DownloadFile:input_type -> file.DownloadFileRequest
+	4, // 3: file.FileService.DeleteFile:input_type -> file.DeleteFileRequest
+	6, // 4: file.FileService.GetFileInfo:input_type -> file.GetFileInfoRequest
+	8, // 5: file.FileService.GetFileRecord:input_type -> file.GetFileRecordReq
+	1, // 6: file.FileService.UploadFile:output_type -> file.UploadFileResponse
+	3, // 7: file.FileService.DownloadFile:output_type -> file.DownloadFileResponse
+	5, // 8: file.FileService.DeleteFile:output_type -> file.DeleteFileResponse
+	7, // 9: file.FileService.GetFileInfo:output_type -> file.GetFileInfoResponse
+	9, // 10: file.FileService.GetFileRecord:output_type -> file.GetFileRecordResp
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_file_proto_init() }
@@ -636,7 +734,7 @@ func file_file_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_file_proto_rawDesc), len(file_file_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -10,7 +10,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log" // 使用标准 log 包，因为 go-zero 的 logx 在此阶段可能尚未完全初始化
+	"log"
 )
 
 type ServiceContext struct {

@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package file;
 
-option go_package = "./fileutil";
+option go_package = "./file";
 
 message UploadFileRequest {
   string file_name = 1;
   int64 file_size = 2;
   string content_type = 3;
-  uint64 user_id = 4;
+  int64 user_id = 4;
   bytes file_data = 5;
 }
 
@@ -32,7 +32,7 @@ message DownloadFileResponse {
 
 message DeleteFileRequest {
   string file_id = 1;
-  uint64 user_id = 2;
+  int64 user_id = 2;
 }
 
 message DeleteFileResponse {
@@ -56,6 +56,14 @@ message GetFileInfoResponse {
   string file_type = 10;
 }
 
+message GetFileRecordReq {
+  int64 user_id = 1;
+}
+
+message GetFileRecordResp {
+  repeated GetFileInfoResponse file_records = 1;
+}
+
 service FileService {
   // 上传文件
   rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
@@ -65,4 +73,6 @@ service FileService {
   rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
   // 获取文件信息
   rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
+  // 获取用户文件记录
+  rpc GetFileRecord(GetFileRecordReq) returns (GetFileRecordResp);
 }

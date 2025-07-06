@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"IM/rpc/file/file"
 	"IM/rpc/friend/friend"
 	"IM/rpc/group/group"
 	"IM/rpc/user/user"
@@ -13,12 +14,14 @@ var (
 	UserClient   user.UserServiceClient
 	GroupClient  group.GroupServiceClient
 	FriendClient friend.FriendServiceClient
+	FileClient   file.FileServiceClient
 )
 
 func init() {
 	InitUserClient()
 	InitGroupClient()
 	InitFriendClient()
+	InitFileClient()
 }
 
 func InitUserClient() {
@@ -49,4 +52,14 @@ func InitFriendClient() {
 		},
 	})
 	FriendClient = friend.NewFriendServiceClient(client.Conn())
+}
+
+func InitFileClient() {
+	client := zrpc.MustNewClient(zrpc.RpcClientConf{
+		Etcd: discov.EtcdConf{
+			Hosts: EtcdHost,
+			Key:   "file.rpc",
+		},
+	})
+	FileClient = file.NewFileServiceClient(client.Conn())
 }

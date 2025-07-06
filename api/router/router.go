@@ -70,5 +70,15 @@ func SetRouter(hub *websocket.Hub) *gin.Engine {
 		notification.GET("/request/group", controller.GetJoinGroupApplications)                  // 获取入群申请列表
 		notification.GET("/request/group/unread-count", controller.GetGroupUnreadCount)          // 获取未读入群申请数量
 	}
+
+	file := r.Group("/file")
+	file.Use(middleware.AuthMiddleware())
+	{
+		file.POST("/upload", controller.UploadFile)    // 上传文件
+		file.GET("/download", controller.DownloadFile) // 下载文件
+		file.DELETE("/delete", controller.DeleteFile)  // 删除文件
+		file.GET("/info", controller.GetFileInfo)      // 获取文件信息
+		file.GET("/record", controller.GetFileRecord)  // 获取用户文件记录
+	}
 	return r
 }
