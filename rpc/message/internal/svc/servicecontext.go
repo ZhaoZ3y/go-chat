@@ -25,7 +25,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	}
 
 	// 自动迁移表结构
-	db.AutoMigrate(&model.Messages{}, &model.Conversations{})
+	db.AutoMigrate(&model.Messages{}, &model.Conversations{}, &model.MessageReadReceipts{}, &model.OfflineMessages{}, &model.MessageUserStates{})
 
 	// 初始化Redis
 	rdb := redis.NewClient(&redis.Options{

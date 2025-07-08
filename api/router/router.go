@@ -80,5 +80,30 @@ func SetRouter(hub *websocket.Hub) *gin.Engine {
 		file.GET("/info", controller.GetFileInfo)      // 获取文件信息
 		file.GET("/record", controller.GetFileRecord)  // 获取用户文件记录
 	}
+
+	chat := r.Group("/chat")
+	chat.Use(middleware.AuthMiddleware()) // 需要身份验证的中间件
+	{
+		// 消息操作
+		chat.POST("/send", controller.SendMessage)         // 发送消息 (POST /chat/send)
+		chat.GET("/history", controller.GetMessageHistory) // 获取历史消息 (GET /chat/history)
+		chat.POST("/read", controller.MarkMessageRead)     // 标记消息已读 (POST /chat/read)
+
+		// 消息管理 (放在 /message 子路径下，更清晰)
+		message := chat.Group("/message")
+		{
+			message.POST("/recall", controller.RecallMessage) // 撤回消息 (POST /chat/message/recall)
+			message.POST("/delete", controller.DeleteMessage) // 删除消息 (POST /chat/message/delete)
+		}
+
+		// 会话操作 (放在 /conversation 子路径下)
+		conversation := chat.Group("/conversation")
+		{
+			conversation.GET("/list", controller.GetConversationList)   // 获取会话列表 (GET /chat/conversation/list)
+			conversation.POST("/delete", controller.DeleteConversation) // 删除会话 (POST /chat/conversation/delete)
+			conversation.POST("/pin", controller.PinConversation)       // 置顶/取消置顶会话 (POST /chat/conversation/pin)
+		}
+	}
+
 	return r
 }

@@ -2,9 +2,11 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/utils/chat_service"
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/svc"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -36,6 +38,7 @@ func (l *KickFromGroupLogic) KickFromGroup(in *group.KickFromGroupRequest) (*gro
 		return &group.KickFromGroupResponse{Success: false, Message: "不能将自己踢出群组"}, nil
 	}
 
+	// 获取群组信息
 	var targetGroup model.Groups
 	if err := l.svcCtx.DB.First(&targetGroup, in.GroupId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -45,7 +48,7 @@ func (l *KickFromGroupLogic) KickFromGroup(in *group.KickFromGroupRequest) (*gro
 		return &group.KickFromGroupResponse{Success: false, Message: "查询群组信息失败"}, nil
 	}
 
-	// 3. 获取操作者和被踢用户的成员信息，用于权限判断
+	// 获取操作者和被踢用户的成员信息
 	var members []model.GroupMembers
 	l.svcCtx.DB.Where("group_id = ? AND user_id IN ?", in.GroupId, []int64{in.OperatorId, in.UserId}).Find(&members)
 
@@ -66,12 +69,14 @@ func (l *KickFromGroupLogic) KickFromGroup(in *group.KickFromGroupRequest) (*gro
 		return &group.KickFromGroupResponse{Success: false, Message: "目标用户不是该群成员"}, nil
 	}
 
-	// 规则：群主可以踢任何人；管理员可以踢普通成员；不能踢比自己等级高或同级的人。
-	if operatorMember.Role <= targetMember.Role && operatorMember.Role != int64(group.MemberRole_ROLE_OWNER) {
-		return &group.KickFromGroupResponse{Success: false, Message: "权限不足，无法踢出该成员"}, nil
-	}
 	if targetMember.Role == int64(group.MemberRole_ROLE_OWNER) {
 		return &group.KickFromGroupResponse{Success: false, Message: "不能将群主踢出群组"}, nil
+	}
+	if operatorMember.Role == int64(group.MemberRole_ROLE_ADMIN) && targetMember.Role != int64(group.MemberRole_ROLE_MEMBER) {
+		return &group.KickFromGroupResponse{Success: false, Message: "权限不足，管理员只能移出普通成员"}, nil
+	}
+	if operatorMember.Role == int64(group.MemberRole_ROLE_MEMBER) {
+		return &group.KickFromGroupResponse{Success: false, Message: "权限不足，普通成员无法移出他人"}, nil
 	}
 
 	tx := l.svcCtx.DB.Begin()
@@ -95,30 +100,75 @@ func (l *KickFromGroupLogic) KickFromGroup(in *group.KickFromGroupRequest) (*gro
 		return &group.KickFromGroupResponse{Success: false, Message: "更新群成员数失败"}, nil
 	}
 
-	// 创建一条通知给被踢出的用户
-	notificationMessage := fmt.Sprintf("您已被管理员'%s'移出群聊 '%s'", operatorMember.Nickname, targetGroup.Name)
-	notification := &model.GroupNotification{
-		Type:         int64(group.NotificationType_NOTIFY_MEMBER_KICKED),
-		GroupId:      in.GroupId,
-		OperatorId:   in.OperatorId,
-		TargetUserId: in.UserId, // 通知发给被踢的用户
-		Message:      notificationMessage,
-	}
-	if err := tx.Create(notification).Error; err != nil {
-		tx.Rollback()
-		l.Logger.Errorf("KickFromGroup: create notification failed: %v", err)
-		return &group.KickFromGroupResponse{Success: false, Message: "创建移除通知失败"}, nil
-	}
-
 	if err := tx.Commit().Error; err != nil {
 		l.Logger.Errorf("KickFromGroup: commit transaction failed: %v", err)
 		return &group.KickFromGroupResponse{Success: false, Message: "处理失败"}, nil
 	}
 
-	//TODO：异步发送给群主和管理员，该用户被该高级成员踢出群聊， 类型：NOTIFY_MEMBER_KICKED
+	go l.notifyKickedUser(targetMember.UserId, &targetGroup, operatorMember)
+	go l.notifyAdminsOfKickingEvent(&targetGroup, operatorMember, targetMember)
 
 	return &group.KickFromGroupResponse{
 		Success: true,
 		Message: "已成功将该成员移出群组",
 	}, nil
+}
+
+// notifyKickedUser 异步发送一个独立的系统通知给被踢出的用户
+func (l *KickFromGroupLogic) notifyKickedUser(kickedUserID int64, groupInfo *model.Groups, operatorInfo *model.GroupMembers) {
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	title := "您已被移出群聊"
+	content := fmt.Sprintf("您已被管理员 '%s' 从群聊 '%s' 中移出。", operatorInfo.Nickname, groupInfo.Name)
+
+	extraData := map[string]interface{}{
+		"notification_type": group.NotificationType_NOTIFY_MEMBER_KICKED.String(),
+		"group_id":          groupInfo.Id,
+		"group_name":        groupInfo.Name,
+		"operator_id":       operatorInfo.UserId,
+		"operator_nickname": operatorInfo.Nickname,
+	}
+	extraJSON, _ := json.Marshal(extraData)
+
+	// 只给被踢的用户发送
+	err := notificationSvc.SendSystemNotification(kickedUserID, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("KickFromGroup-Notify: 发送被踢通知失败, UserID: %d, GroupID: %d, Error: %v", kickedUserID, groupInfo.Id, err)
+	}
+}
+
+// notifyAdminsOfKickingEvent 异步通知管理员发生了踢人事件
+func (l *KickFromGroupLogic) notifyAdminsOfKickingEvent(groupInfo *model.Groups, operatorInfo, kickedMemberInfo *model.GroupMembers) {
+	// 1. 查找所有群主和管理员的ID
+	var adminAndOwnerIDs []int64
+	err := l.svcCtx.DB.Model(&model.GroupMembers{}).
+		Where("group_id = ? AND role IN (?)", groupInfo.Id, []int64{int64(group.MemberRole_ROLE_OWNER), int64(group.MemberRole_ROLE_ADMIN)}).
+		Pluck("user_id", &adminAndOwnerIDs).Error
+	if err != nil {
+		l.Logger.Errorf("KickFromGroup-AdminNotify: 查找管理员列表失败, groupID: %d, err: %v", groupInfo.Id, err)
+		return
+	}
+
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	title := "群成员移除通知"
+	content := fmt.Sprintf("在群聊 '%s' 中，管理员 '%s' 将成员 '%s' 移出。", groupInfo.Name, operatorInfo.Nickname, kickedMemberInfo.Nickname)
+
+	extraData := map[string]interface{}{
+		"notification_type": group.NotificationType_NOTIFY_MEMBER_KICKED.String(),
+		"group_id":          groupInfo.Id,
+		"group_name":        groupInfo.Name,
+		"operator_id":       operatorInfo.UserId,
+		"operator_nickname": operatorInfo.Nickname,
+		"kicked_user_id":    kickedMemberInfo.UserId,
+		"kicked_nickname":   kickedMemberInfo.Nickname,
+	}
+	extraJSON, _ := json.Marshal(extraData)
+
+	err = notificationSvc.SendBatchNotification(adminAndOwnerIDs, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("KickFromGroup-AdminNotify: 批量发送管理员通知失败: %v", err)
+	} else {
+		l.Logger.Infof("KickFromGroup-AdminNotify: 已成功向群 %d 的 %d 位管理员发送成员移除通知。", groupInfo.Id, len(adminAndOwnerIDs))
+	}
 }

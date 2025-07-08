@@ -4,17 +4,19 @@ import (
 	"IM/rpc/file/file"
 	"IM/rpc/friend/friend"
 	"IM/rpc/group/group"
+	"IM/rpc/message/chat"
 	"IM/rpc/user/user"
 	"github.com/zeromicro/go-zero/core/discov"
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
 var (
-	EtcdHost     = []string{"etcd:2379"}
-	UserClient   user.UserServiceClient
-	GroupClient  group.GroupServiceClient
-	FriendClient friend.FriendServiceClient
-	FileClient   file.FileServiceClient
+	EtcdHost      = []string{"etcd:2379"}
+	UserClient    user.UserServiceClient
+	GroupClient   group.GroupServiceClient
+	FriendClient  friend.FriendServiceClient
+	FileClient    file.FileServiceClient
+	MessageClient chat.ChatServiceClient
 )
 
 func init() {
@@ -22,6 +24,7 @@ func init() {
 	InitGroupClient()
 	InitFriendClient()
 	InitFileClient()
+	InitMessageClient()
 }
 
 func InitUserClient() {
@@ -62,4 +65,14 @@ func InitFileClient() {
 		},
 	})
 	FileClient = file.NewFileServiceClient(client.Conn())
+}
+
+func InitMessageClient() {
+	client := zrpc.MustNewClient(zrpc.RpcClientConf{
+		Etcd: discov.EtcdConf{
+			Hosts: EtcdHost,
+			Key:   "message.rpc",
+		},
+	})
+	MessageClient = chat.NewChatServiceClient(client.Conn())
 }

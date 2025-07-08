@@ -1,3 +1,4 @@
+# 第一阶段：构建阶段
 FROM golang:1.23 AS builder
 
 WORKDIR /app
@@ -17,6 +18,8 @@ FROM alpine:3.18
 WORKDIR /app
 
 COPY --from=builder /app/web-api .
+
+COPY ./pkg/config/config.yaml ./pkg/config/config.yaml
 
 EXPOSE 8080
 

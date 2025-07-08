@@ -96,6 +96,25 @@ services:
       - KAFKA_BROKERS=kafka:29092
     restart: unless-stopped
 
+  message-rpc:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.message
+    container_name: message-rpc
+    ports:
+      - "10001:10001"
+    depends_on:
+      - mysql
+      - redis
+      - etcd
+      - kafka
+    environment:
+      - ETCD_ADDR=etcd:2379
+      - MYSQL_DSN=root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+      - KAFKA_BROKERS=kafka:29092
+    restart: unless-stopped
+
   group-rpc:
     build:
       context: .
@@ -163,6 +182,7 @@ services:
       - "8080:8080"
     depends_on:
       - user-rpc
+      - message-rpc
       - group-rpc
       - friend-rpc
       - file-rpc

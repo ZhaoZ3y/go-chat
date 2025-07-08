@@ -14,7 +14,6 @@ import (
 )
 
 type (
-	ConnectRequest              = chat.ConnectRequest
 	Conversation                = chat.Conversation
 	DeleteConversationRequest   = chat.DeleteConversationRequest
 	DeleteConversationResponse  = chat.DeleteConversationResponse
@@ -27,7 +26,8 @@ type (
 	MarkMessageReadRequest      = chat.MarkMessageReadRequest
 	MarkMessageReadResponse     = chat.MarkMessageReadResponse
 	Message                     = chat.Message
-	PushMessage                 = chat.PushMessage
+	PinConversationRequest      = chat.PinConversationRequest
+	PinConversationResponse     = chat.PinConversationResponse
 	RecallMessageRequest        = chat.RecallMessageRequest
 	RecallMessageResponse       = chat.RecallMessageResponse
 	SendMessageRequest          = chat.SendMessageRequest
@@ -48,6 +48,8 @@ type (
 		DeleteMessage(ctx context.Context, in *DeleteMessageRequest, opts ...grpc.CallOption) (*DeleteMessageResponse, error)
 		// 撤回消息
 		RecallMessage(ctx context.Context, in *RecallMessageRequest, opts ...grpc.CallOption) (*RecallMessageResponse, error)
+		// 设置会话置顶状态
+		PinConversation(ctx context.Context, in *PinConversationRequest, opts ...grpc.CallOption) (*PinConversationResponse, error)
 	}
 
 	defaultChatService struct {
@@ -101,4 +103,10 @@ func (m *defaultChatService) DeleteMessage(ctx context.Context, in *DeleteMessag
 func (m *defaultChatService) RecallMessage(ctx context.Context, in *RecallMessageRequest, opts ...grpc.CallOption) (*RecallMessageResponse, error) {
 	client := chat.NewChatServiceClient(m.cli.Conn())
 	return client.RecallMessage(ctx, in, opts...)
+}
+
+// 设置会话置顶状态
+func (m *defaultChatService) PinConversation(ctx context.Context, in *PinConversationRequest, opts ...grpc.CallOption) (*PinConversationResponse, error) {
+	client := chat.NewChatServiceClient(m.cli.Conn())
+	return client.PinConversation(ctx, in, opts...)
 }

@@ -26,17 +26,16 @@ func NewDeleteConversationLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 
 // 删除会话
 func (l *DeleteConversationLogic) DeleteConversation(in *chat.DeleteConversationRequest) (*chat.DeleteConversationResponse, error) {
-	// 执行软删除操作
-	err := l.svcCtx.DB.Model(&model.Conversations{}).
+	result := l.svcCtx.DB.
 		Where("user_id = ? AND target_id = ? AND type = ?", in.UserId, in.TargetId, int8(in.ChatType)).
-		Update("deleted", true).Error
+		Delete(&model.Conversations{})
 
-	if err != nil {
-		l.Logger.Errorf("删除会话失败: %v", err)
+	if result.Error != nil {
+		l.Logger.Errorf("软删除会话失败: user_id=%d, target_id=%d, error=%v", in.UserId, in.TargetId, result.Error)
 		return &chat.DeleteConversationResponse{
 			Success: false,
 			Message: "删除会话失败",
-		}, nil
+		}, result.Error // 返回原始错误以便调试
 	}
 
 	return &chat.DeleteConversationResponse{

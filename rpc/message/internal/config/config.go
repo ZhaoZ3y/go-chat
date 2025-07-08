@@ -12,9 +12,7 @@ type Config struct {
 }
 
 type KafkaConf struct {
-	Brokers       []string
-	ProducerGroup string
-	ConsumerGroup string
+	Brokers []string
 }
 type RedisConfig struct {
 	Host     string

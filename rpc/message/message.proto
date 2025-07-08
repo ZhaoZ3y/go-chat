@@ -39,11 +39,13 @@ message Conversation {
   int64 user_id = 2;
   int64 target_id = 3; // 对方用户ID或群组ID
   ChatType type = 4;
-  string last_message = 5;
-  int64 last_message_time = 6;
-  int32 unread_count = 7;
-  int64 create_at = 8;
-  int64 update_at = 9;
+  int64 last_message_id = 5;       // 最后一条消息的ID
+  string last_message = 6;
+  int64 last_message_time = 7;
+  int32 unread_count = 8;
+  bool is_pinned = 9;
+  int64 create_at = 10;
+  int64 update_at = 11;
 }
 
 // 发送消息请求
@@ -67,10 +69,11 @@ message SendMessageResponse {
 // 获取消息历史请求
 message GetMessageHistoryRequest {
   int64 user_id = 1;
-  int64 target_id = 2; // 对方用户ID或群组ID
+  int64 target_id = 2;
   ChatType chat_type = 3;
-  int64 last_message_id = 4; // 用于分页，获取此消息之前的消息
-  int32 limit = 5;
+  int64 limit = 4;
+  int64 date = 5; // 时间戳，获取当天的消息历史
+  int64 last_message_id = 6; // 用于分页，获取大于此ID的消息
 }
 
 // 获取消息历史响应
@@ -82,22 +85,20 @@ message GetMessageHistoryResponse {
 // 获取会话列表请求
 message GetConversationListRequest {
   int64 user_id = 1;
-  int32 page = 2;
-  int32 page_size = 3;
 }
 
 // 获取会话列表响应
 message GetConversationListResponse {
   repeated Conversation conversations = 1;
-  int64 total = 2;
 }
 
 // 删除会话请求
 message DeleteConversationRequest {
   int64 user_id = 1;
-  int64 target_id = 2; // 对方用户ID或群组ID
+  int64 target_id = 2;
   ChatType chat_type = 3;
 }
+
 // 删除会话响应
 message DeleteConversationResponse {
   bool success = 1;
@@ -107,7 +108,7 @@ message DeleteConversationResponse {
 // 标记消息已读请求
 message MarkMessageReadRequest {
   int64 user_id = 1;
-  int64 target_id = 2; // 对方用户ID或群组ID
+  int64 target_id = 2;
   ChatType chat_type = 3;
   int64 last_read_message_id = 4;
 }
@@ -142,16 +143,18 @@ message RecallMessageResponse {
   string message = 2;
 }
 
-// WebSocket连接请求
-message ConnectRequest {
+// 设置会话置顶状态请求
+message PinConversationRequest {
   int64 user_id = 1;
-  string token = 2;
+  int64 target_id = 2;
+  ChatType chat_type = 3;
+  bool is_pinned = 4; // true 为置顶, false 为取消置顶
 }
 
-// WebSocket消息推送
-message PushMessage {
-  string type = 1; // message, notification, etc.
-  string data = 2; // JSON格式的数据
+// 设置会话置顶状态响应
+message PinConversationResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // 聊天服务
@@ -170,4 +173,6 @@ service ChatService {
   rpc DeleteMessage(DeleteMessageRequest) returns (DeleteMessageResponse);
   // 撤回消息
   rpc RecallMessage(RecallMessageRequest) returns (RecallMessageResponse);
+  // 设置会话置顶状态
+  rpc PinConversation(PinConversationRequest) returns (PinConversationResponse);
 }

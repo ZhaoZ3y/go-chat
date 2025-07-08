@@ -2,7 +2,9 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/utils/chat_service"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"IM/rpc/group/group"
@@ -37,6 +39,7 @@ func (l *SetMemberRoleLogic) SetMemberRole(in *group.SetMemberRoleRequest) (*gro
 		return &group.SetMemberRoleResponse{Success: false, Message: "只能将成员设置为管理员或普通成员"}, nil
 	}
 
+	// 获取操作员和目标成员信息
 	var members []model.GroupMembers
 	l.svcCtx.DB.Where("group_id = ? AND user_id IN ?", in.GroupId, []int64{in.OperatorId, in.UserId}).Find(&members)
 
@@ -57,6 +60,9 @@ func (l *SetMemberRoleLogic) SetMemberRole(in *group.SetMemberRoleRequest) (*gro
 		return &group.SetMemberRoleResponse{Success: false, Message: "目标用户不是该群成员"}, nil
 	}
 
+	var targetGroup model.Groups
+	l.svcCtx.DB.First(&targetGroup, in.GroupId)
+
 	if operatorMember.Role != int64(group.MemberRole_ROLE_OWNER) {
 		return &group.SetMemberRoleResponse{Success: false, Message: "只有群主才能设置管理员"}, nil
 	}
@@ -67,7 +73,6 @@ func (l *SetMemberRoleLogic) SetMemberRole(in *group.SetMemberRoleRequest) (*gro
 		return &group.SetMemberRoleResponse{Success: true, Message: "角色未发生变化"}, nil
 	}
 
-	// 新增：如果要设置角色为管理员，先检查当前管理员数量是否超过20
 	if in.Role == group.MemberRole_ROLE_ADMIN {
 		var adminCount int64
 		err := l.svcCtx.DB.Model(&model.GroupMembers{}).
@@ -83,36 +88,12 @@ func (l *SetMemberRoleLogic) SetMemberRole(in *group.SetMemberRoleRequest) (*gro
 	}
 
 	tx := l.svcCtx.DB.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+	defer tx.Rollback()
 
-	// 更新目标成员的角色
 	if err := tx.Model(&model.GroupMembers{}).Where("id = ?", targetMember.Id).Update("role", in.Role).Error; err != nil {
 		tx.Rollback()
 		l.Logger.Errorf("SetMemberRole: update member role failed: %v", err)
 		return &group.SetMemberRoleResponse{Success: false, Message: "更新角色失败"}, nil
-	}
-
-	roleName := "普通成员"
-	if in.Role == group.MemberRole_ROLE_ADMIN {
-		roleName = "管理员"
-	}
-	notificationMessage := fmt.Sprintf("您在该群的角色已被群主'%s'设置为'%s'", operatorMember.Nickname, roleName)
-
-	notification := &model.GroupNotification{
-		Type:         int64(group.NotificationType_NOTIFY_MEMBER_ROLE_CHANGED),
-		GroupId:      in.GroupId,
-		OperatorId:   in.OperatorId,
-		TargetUserId: in.UserId,
-		Message:      notificationMessage,
-	}
-	if err := tx.Create(notification).Error; err != nil {
-		tx.Rollback()
-		l.Logger.Errorf("SetMemberRole: create notification failed: %v", err)
-		return &group.SetMemberRoleResponse{Success: false, Message: "创建通知失败"}, nil
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -120,10 +101,81 @@ func (l *SetMemberRoleLogic) SetMemberRole(in *group.SetMemberRoleRequest) (*gro
 		return &group.SetMemberRoleResponse{Success: false, Message: "处理失败"}, nil
 	}
 
-	// TODO： 异步通知群主和管理员，类型为 NOTIFY_MEMBER_ROLE_CHANGED
+	go l.notifyTargetUser(targetMember, operatorMember, &targetGroup, in.Role)
+	go l.notifyAdminsOfRoleChange(targetMember, operatorMember, &targetGroup, in.Role)
 
 	return &group.SetMemberRoleResponse{
 		Success: true,
 		Message: "成员角色设置成功",
 	}, nil
+}
+
+// notifyTargetUser 异步通知被操作的用户角色已变更
+func (l *SetMemberRoleLogic) notifyTargetUser(target *model.GroupMembers, operator *model.GroupMembers, groupInfo *model.Groups, newRole group.MemberRole) {
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	roleName := "普通成员"
+	if newRole == group.MemberRole_ROLE_ADMIN {
+		roleName = "管理员"
+	}
+
+	title := "群内角色变更通知"
+	content := fmt.Sprintf("在群聊 '%s' 中，您的角色已被群主 '%s' 设置为 '%s'。", groupInfo.Name, operator.Nickname, roleName)
+
+	extraData := map[string]interface{}{
+		"notification_type": group.NotificationType_NOTIFY_MEMBER_ROLE_CHANGED.String(),
+		"group_id":          groupInfo.Id,
+		"group_name":        groupInfo.Name,
+		"operator_id":       operator.UserId,
+		"operator_nickname": operator.Nickname,
+		"new_role":          newRole,
+	}
+	extraJSON, _ := json.Marshal(extraData)
+
+	err := notificationSvc.SendSystemNotification(target.UserId, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("SetMemberRole-Notify: 发送角色变更通知给目标用户失败, UserID: %d, GroupID: %d, Error: %v", target.UserId, groupInfo.Id, err)
+	}
+}
+
+// notifyAdminsOfRoleChange 异步通知群主和其他管理员角色变更事件
+func (l *SetMemberRoleLogic) notifyAdminsOfRoleChange(target *model.GroupMembers, operator *model.GroupMembers, groupInfo *model.Groups, newRole group.MemberRole) {
+	var adminIDs []int64
+	err := l.svcCtx.DB.Model(&model.GroupMembers{}).
+		Where("group_id = ? AND role = ?", groupInfo.Id, int64(group.MemberRole_ROLE_ADMIN)).
+		Pluck("user_id", &adminIDs).Error
+	if err != nil {
+		l.Logger.Errorf("SetMemberRole-AdminNotify: 查找管理员列表失败, groupID: %d, err: %v", groupInfo.Id, err)
+		return
+	}
+
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	roleName := "普通成员"
+	if newRole == group.MemberRole_ROLE_ADMIN {
+		roleName = "管理员"
+	}
+
+	title := "群成员角色变更"
+	content := fmt.Sprintf("在群聊 '%s' 中，群主 '%s' 将成员 '%s' 的角色设置为了 '%s'。", groupInfo.Name, operator.Nickname, target.Nickname, roleName)
+
+	extraData := map[string]interface{}{
+		"notification_type": group.NotificationType_NOTIFY_MEMBER_ROLE_CHANGED.String(),
+		"group_id":          groupInfo.Id,
+		"group_name":        groupInfo.Name,
+		"operator_id":       operator.UserId,
+		"operator_nickname": operator.Nickname,
+		"target_user_id":    target.UserId,
+		"target_nickname":   target.Nickname,
+		"new_role":          newRole,
+	}
+	extraJSON, _ := json.Marshal(extraData)
+
+	// 3. 批量发送
+	err = notificationSvc.SendBatchNotification(adminIDs, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("SetMemberRole-AdminNotify: 批量发送管理员通知失败: %v", err)
+	} else {
+		l.Logger.Infof("SetMemberRole-AdminNotify: 已成功向群 %d 的 %d 位管理员发送角色变更通知。", groupInfo.Id, len(adminIDs))
+	}
 }

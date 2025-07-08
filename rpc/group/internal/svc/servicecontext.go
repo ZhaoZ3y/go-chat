@@ -2,6 +2,7 @@ package svc
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/mq"
 	"IM/pkg/utils/scheduler"
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/config"
@@ -20,6 +21,7 @@ type ServiceContext struct {
 	DB            *gorm.DB
 	Redis         *redis.Client
 	MuteScheduler *scheduler.MuteScheduler
+	Kafka         *mq.KafkaClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -39,11 +41,17 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		DB:       c.CustomRedis.DB,
 	})
 
+	kafka, err := mq.NewKafkaClient(c.Kafka.Brokers)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to Kafka: %v", err))
+	}
+
 	svc := &ServiceContext{
 		Config:        c,
 		DB:            db,
 		Redis:         rdb,
 		MuteScheduler: scheduler.NewMuteScheduler(),
+		Kafka:         kafka,
 	}
 
 	svc.initMuteSchedulers()

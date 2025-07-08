@@ -2,9 +2,11 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/utils/chat_service"
 	"IM/rpc/group/group"
 	"IM/rpc/group/internal/svc"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -32,7 +34,7 @@ func (l *LeaveGroupLogic) LeaveGroup(in *group.LeaveGroupRequest) (*group.LeaveG
 		return &group.LeaveGroupResponse{Success: false, Message: "参数错误"}, nil
 	}
 
-	// 获取要退出的成员信息，用于后续判断
+	// 获取要退出的成员信息和群组信息
 	var leavingMember model.GroupMembers
 	err := l.svcCtx.DB.Where("group_id = ? AND user_id = ?", in.GroupId, in.UserId).First(&leavingMember).Error
 	if err != nil {
@@ -41,6 +43,12 @@ func (l *LeaveGroupLogic) LeaveGroup(in *group.LeaveGroupRequest) (*group.LeaveG
 		}
 		l.Logger.Errorf("LeaveGroup: find member failed, UserID: %d, GroupID: %d, Error: %v", in.UserId, in.GroupId, err)
 		return &group.LeaveGroupResponse{Success: false, Message: "查询成员信息失败"}, nil
+	}
+
+	var targetGroup model.Groups
+	if err := l.svcCtx.DB.First(&targetGroup, in.GroupId).Error; err != nil {
+		l.Logger.Errorf("LeaveGroup: find group failed, GroupID: %d, Error: %v", in.GroupId, err)
+		return &group.LeaveGroupResponse{Success: false, Message: "查询群组信息失败"}, nil
 	}
 
 	if leavingMember.Role == int64(group.MemberRole_ROLE_OWNER) {
@@ -68,33 +76,48 @@ func (l *LeaveGroupLogic) LeaveGroup(in *group.LeaveGroupRequest) (*group.LeaveG
 		return &group.LeaveGroupResponse{Success: false, Message: "更新群成员数失败"}, nil
 	}
 
-	// 查找所有群主和管理员
-	var adminsToNotify []model.GroupMembers
-	roles := []int64{int64(group.MemberRole_ROLE_OWNER), int64(group.MemberRole_ROLE_ADMIN)}
-	tx.Where("group_id = ? AND role IN ?", in.GroupId, roles).Find(&adminsToNotify)
-
-	notificationsToCreate := make([]*model.GroupNotification, 0)
-	notificationMessage := fmt.Sprintf("成员'%s'已退出群聊", leavingMember.Nickname)
-
-	for _, admin := range adminsToNotify {
-		notificationsToCreate = append(notificationsToCreate, &model.GroupNotification{
-			Type:         int64(group.NotificationType_NOTIFY_MEMBER_LEAVE),
-			GroupId:      in.GroupId,
-			OperatorId:   in.UserId,    // 操作者是退出者本人
-			TargetUserId: admin.UserId, // 通知发给管理员
-			Message:      notificationMessage,
-		})
-	}
-
 	if err := tx.Commit().Error; err != nil {
 		l.Logger.Errorf("LeaveGroup: commit transaction failed: %v", err)
 		return &group.LeaveGroupResponse{Success: false, Message: "处理失败"}, nil
 	}
 
-	// TODO： 在这里可以添加逻辑，将退出通知 (NOTIFY_MEMBER_LEAVE) 推送给所有管理员和群主。
+	go l.notifyAdminsOfLeaveEvent(&targetGroup, &leavingMember)
 
 	return &group.LeaveGroupResponse{
 		Success: true,
 		Message: "已成功退出群组",
 	}, nil
+}
+
+// notifyAdminsOfLeaveEvent 异步通知管理员有成员退出了群组
+func (l *LeaveGroupLogic) notifyAdminsOfLeaveEvent(groupInfo *model.Groups, leavingMemberInfo *model.GroupMembers) {
+	var adminAndOwnerIDs []int64
+	err := l.svcCtx.DB.Model(&model.GroupMembers{}).
+		Where("group_id = ? AND role IN (?)", groupInfo.Id, []int64{int64(group.MemberRole_ROLE_OWNER), int64(group.MemberRole_ROLE_ADMIN)}).
+		Pluck("user_id", &adminAndOwnerIDs).Error
+	if err != nil {
+		l.Logger.Errorf("LeaveGroup-Notify: 查找管理员列表失败, groupID: %d, err: %v", groupInfo.Id, err)
+		return
+	}
+
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	title := "群成员退出通知"
+	content := fmt.Sprintf("成员 '%s' 已主动退出群聊 '%s'。", leavingMemberInfo.Nickname, groupInfo.Name)
+
+	extraData := map[string]interface{}{
+		"notification_type": group.NotificationType_NOTIFY_MEMBER_LEAVE.String(), // "NOTIFY_MEMBER_LEAVE"
+		"group_id":          groupInfo.Id,
+		"group_name":        groupInfo.Name,
+		"leaving_user_id":   leavingMemberInfo.UserId,
+		"leaving_nickname":  leavingMemberInfo.Nickname,
+	}
+	extraJSON, _ := json.Marshal(extraData)
+
+	err = notificationSvc.SendBatchNotification(adminAndOwnerIDs, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("LeaveGroup-Notify: 批量发送管理员通知失败: %v", err)
+	} else {
+		l.Logger.Infof("LeaveGroup-Notify: 已成功向群 %d 的 %d 位管理员发送成员退出通知。", groupInfo.Id, len(adminAndOwnerIDs))
+	}
 }

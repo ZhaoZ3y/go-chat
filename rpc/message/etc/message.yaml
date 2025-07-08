@@ -16,5 +16,3 @@ CustomRedis:
 Kafka:
   Brokers:
     - kafka:9092
-  ProducerGroup: im_producer_group
-  ConsumerGroup: im_consumer_group

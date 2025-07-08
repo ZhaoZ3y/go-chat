@@ -3,5 +3,9 @@ DataSource: root:123456@tcp(mysql:3306)/im_db?charset=utf8mb4&parseTime=True&loc
 Kafka:
   Brokers:
     - kafka:9092
-  ProducerGroup: im_producer_group
-  ConsumerGroup: im_consumer_group
+
+Redis:
+  Host: redis
+  Port: 6379
+  Password: ""
+  DB: 0

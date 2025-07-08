@@ -64,3 +64,9 @@ func (s *ChatServiceServer) RecallMessage(ctx context.Context, in *chat.RecallMe
 	l := logic.NewRecallMessageLogic(ctx, s.svcCtx)
 	return l.RecallMessage(in)
 }
+
+// 设置会话置顶状态
+func (s *ChatServiceServer) PinConversation(ctx context.Context, in *chat.PinConversationRequest) (*chat.PinConversationResponse, error) {
+	l := logic.NewPinConversationLogic(ctx, s.svcCtx)
+	return l.PinConversation(in)
+}

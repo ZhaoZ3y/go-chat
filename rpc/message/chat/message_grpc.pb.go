@@ -26,6 +26,7 @@ const (
 	ChatService_MarkMessageRead_FullMethodName     = "/chat.ChatService/MarkMessageRead"
 	ChatService_DeleteMessage_FullMethodName       = "/chat.ChatService/DeleteMessage"
 	ChatService_RecallMessage_FullMethodName       = "/chat.ChatService/RecallMessage"
+	ChatService_PinConversation_FullMethodName     = "/chat.ChatService/PinConversation"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -48,6 +49,8 @@ type ChatServiceClient interface {
 	DeleteMessage(ctx context.Context, in *DeleteMessageRequest, opts ...grpc.CallOption) (*DeleteMessageResponse, error)
 	// 撤回消息
 	RecallMessage(ctx context.Context, in *RecallMessageRequest, opts ...grpc.CallOption) (*RecallMessageResponse, error)
+	// 设置会话置顶状态
+	PinConversation(ctx context.Context, in *PinConversationRequest, opts ...grpc.CallOption) (*PinConversationResponse, error)
 }
 
 type chatServiceClient struct {
@@ -128,6 +131,16 @@ func (c *chatServiceClient) RecallMessage(ctx context.Context, in *RecallMessage
 	return out, nil
 }
 
+func (c *chatServiceClient) PinConversation(ctx context.Context, in *PinConversationRequest, opts ...grpc.CallOption) (*PinConversationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PinConversationResponse)
+	err := c.cc.Invoke(ctx, ChatService_PinConversation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -148,6 +161,8 @@ type ChatServiceServer interface {
 	DeleteMessage(context.Context, *DeleteMessageRequest) (*DeleteMessageResponse, error)
 	// 撤回消息
 	RecallMessage(context.Context, *RecallMessageRequest) (*RecallMessageResponse, error)
+	// 设置会话置顶状态
+	PinConversation(context.Context, *PinConversationRequest) (*PinConversationResponse, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -178,6 +193,9 @@ func (UnimplementedChatServiceServer) DeleteMessage(context.Context, *DeleteMess
 }
 func (UnimplementedChatServiceServer) RecallMessage(context.Context, *RecallMessageRequest) (*RecallMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RecallMessage not implemented")
+}
+func (UnimplementedChatServiceServer) PinConversation(context.Context, *PinConversationRequest) (*PinConversationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PinConversation not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -326,6 +344,24 @@ func _ChatService_RecallMessage_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_PinConversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PinConversationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).PinConversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_PinConversation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).PinConversation(ctx, req.(*PinConversationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -360,6 +396,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RecallMessage",
 			Handler:    _ChatService_RecallMessage_Handler,
+		},
+		{
+			MethodName: "PinConversation",
+			Handler:    _ChatService_PinConversation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

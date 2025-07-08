@@ -31,6 +31,7 @@ type Friend struct {
 	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"` // 1:正常 2:拉黑
 	CreateAt      int64                  `protobuf:"varint,6,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
 	UpdateAt      int64                  `protobuf:"varint,7,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
+	OnlineStatus  int64                  `protobuf:"varint,8,opt,name=online_status,json=onlineStatus,proto3" json:"online_status,omitempty"` // 在线状态 0:离线 1:在线
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,6 +111,13 @@ func (x *Friend) GetCreateAt() int64 {
 func (x *Friend) GetUpdateAt() int64 {
 	if x != nil {
 		return x.UpdateAt
+	}
+	return 0
+}
+
+func (x *Friend) GetOnlineStatus() int64 {
+	if x != nil {
+		return x.OnlineStatus
 	}
 	return 0
 }
@@ -1187,7 +1195,7 @@ var File_friend_proto protoreflect.FileDescriptor
 
 const file_friend_proto_rawDesc = "" +
 	"\n" +
-	"\ffriend.proto\x12\x06friend\"\xb8\x01\n" +
+	"\ffriend.proto\x12\x06friend\"\xdd\x01\n" +
 	"\x06Friend\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
@@ -1195,7 +1203,8 @@ const file_friend_proto_rawDesc = "" +
 	"\x06remark\x18\x04 \x01(\tR\x06remark\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1b\n" +
 	"\tcreate_at\x18\x06 \x01(\x03R\bcreateAt\x12\x1b\n" +
-	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\"\xcb\x01\n" +
+	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\x12#\n" +
+	"\ronline_status\x18\b \x01(\x03R\fonlineStatus\"\xcb\x01\n" +
 	"\rFriendRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12 \n" +
 	"\ffrom_user_id\x18\x02 \x01(\x03R\n" +

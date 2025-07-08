@@ -2,8 +2,11 @@ package logic
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/utils/chat_service"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 
 	"IM/rpc/group/group"
@@ -50,6 +53,12 @@ func (l *DismissGroupLogic) DismissGroup(in *group.DismissGroupRequest) (*group.
 		return &group.DismissGroupResponse{Success: false, Message: "无权解散群组，操作者非群主"}, nil
 	}
 
+	// 在删除成员之前，获取所有成员的ID用于后续通知
+	var memberIDs []int64
+	if err := tx.Model(&model.GroupMembers{}).Where("group_id = ?", in.GroupId).Pluck("user_id", &memberIDs).Error; err != nil {
+		logx.Errorf("DismissGroup: find group members for notification failed, group_id: %d, error: %v", in.GroupId, err)
+	}
+
 	// 删除所有群组成员
 	if err := tx.Where("group_id = ?", in.GroupId).Delete(&model.GroupMembers{}).Error; err != nil {
 		logx.Errorf("DismissGroup: delete group members failed, group_id: %d, error: %v", in.GroupId, err)
@@ -68,19 +77,46 @@ func (l *DismissGroupLogic) DismissGroup(in *group.DismissGroupRequest) (*group.
 		return &group.DismissGroupResponse{Success: false, Message: "删除群组记录失败"}, nil
 	}
 
-	//
-	// TODO: 在这里可以添加逻辑，将解散通知 (NOTIFY_GROUP_DISMISSED) 推送给所有原成员。
-	// 最好在事务提交后异步处理，以确保操作最终成功。
-	// 可以先查询出所有成员ID，然后在事务提交后，通过消息队列分发通知任务。
-	//
-
+	// 提交事务
 	if err := tx.Commit().Error; err != nil {
 		logx.Errorf("DismissGroup: commit transaction failed, group_id: %d, error: %v", in.GroupId, err)
 		return &group.DismissGroupResponse{Success: false, Message: "解散群组事务提交失败"}, nil
+	}
+
+	// 【新增】事务提交成功后，异步发送群组解散通知
+	if len(memberIDs) > 0 {
+		go l.sendDismissalNotification(memberIDs, &groupModel)
 	}
 
 	return &group.DismissGroupResponse{
 		Success: true,
 		Message: "群组已成功解散",
 	}, nil
+}
+
+func (l *DismissGroupLogic) sendDismissalNotification(userIDs []int64, groupInfo *model.Groups) {
+	notificationSvc := chat_service.NewNotificationService(l.svcCtx.DB, l.svcCtx.Kafka)
+
+	title := "群组通知"
+	content := fmt.Sprintf("您所在的群组 '%s' 已被群主解散。", groupInfo.Name)
+
+	extraData := map[string]interface{}{
+		"type":        group.NotificationType_NOTIFY_GROUP_DISMISSED.String(),
+		"group_id":    groupInfo.Id,
+		"group_name":  groupInfo.Name,
+		"operator_id": groupInfo.OwnerId,
+	}
+	extraJSON, err := json.Marshal(extraData)
+	if err != nil {
+		l.Logger.Errorf("sendDismissalNotification: failed to marshal extra data for group %d: %v", groupInfo.Id, err)
+		return
+	}
+
+	// 调用批量发送接口
+	err = notificationSvc.SendBatchNotification(userIDs, title, content, string(extraJSON))
+	if err != nil {
+		l.Logger.Errorf("sendDismissalNotification: failed to send notifications for dismissed group %d: %v", groupInfo.Id, err)
+	} else {
+		l.Logger.Infof("sendDismissalNotification: successfully queued dismissal notification for group %d to %d members.", groupInfo.Id, len(userIDs))
+	}
 }

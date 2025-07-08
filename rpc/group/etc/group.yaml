@@ -12,3 +12,8 @@ CustomRedis:
   Port: 6379
   Password: ""
   DB: 0
+
+Kafka:
+  Brokers:
+  - kafka:9092
+  Topic: group

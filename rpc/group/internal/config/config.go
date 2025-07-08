@@ -11,4 +11,7 @@ type Config struct {
 		Password string
 		DB       int
 	}
+	Kafka struct {
+		Brokers []string
+	}
 }

@@ -2,6 +2,7 @@ package svc
 
 import (
 	"IM/pkg/model"
+	"IM/pkg/utils/chat_service"
 	"IM/rpc/friend/internal/config"
 	"fmt"
 	"github.com/redis/go-redis/v9"
@@ -10,9 +11,10 @@ import (
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *gorm.DB
-	Redis  *redis.Client
+	Config        config.Config
+	DB            *gorm.DB
+	Redis         *redis.Client
+	UserStatusSvc *chat_service.UserStatusService
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -33,8 +35,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	})
 
 	return &ServiceContext{
-		Config: c,
-		DB:     db,
-		Redis:  rdb,
+		Config:        c,
+		DB:            db,
+		Redis:         rdb,
+		UserStatusSvc: chat_service.NewUserStatusService(rdb),
 	}
 }

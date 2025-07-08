@@ -243,11 +243,13 @@ type Conversation struct {
 	UserId          int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	TargetId        int64                  `protobuf:"varint,3,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // 对方用户ID或群组ID
 	Type            ChatType               `protobuf:"varint,4,opt,name=type,proto3,enum=chat.ChatType" json:"type,omitempty"`
-	LastMessage     string                 `protobuf:"bytes,5,opt,name=last_message,json=lastMessage,proto3" json:"last_message,omitempty"`
-	LastMessageTime int64                  `protobuf:"varint,6,opt,name=last_message_time,json=lastMessageTime,proto3" json:"last_message_time,omitempty"`
-	UnreadCount     int32                  `protobuf:"varint,7,opt,name=unread_count,json=unreadCount,proto3" json:"unread_count,omitempty"`
-	CreateAt        int64                  `protobuf:"varint,8,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
-	UpdateAt        int64                  `protobuf:"varint,9,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
+	LastMessageId   int64                  `protobuf:"varint,5,opt,name=last_message_id,json=lastMessageId,proto3" json:"last_message_id,omitempty"` // 最后一条消息的ID
+	LastMessage     string                 `protobuf:"bytes,6,opt,name=last_message,json=lastMessage,proto3" json:"last_message,omitempty"`
+	LastMessageTime int64                  `protobuf:"varint,7,opt,name=last_message_time,json=lastMessageTime,proto3" json:"last_message_time,omitempty"`
+	UnreadCount     int32                  `protobuf:"varint,8,opt,name=unread_count,json=unreadCount,proto3" json:"unread_count,omitempty"`
+	IsPinned        bool                   `protobuf:"varint,9,opt,name=is_pinned,json=isPinned,proto3" json:"is_pinned,omitempty"`
+	CreateAt        int64                  `protobuf:"varint,10,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
+	UpdateAt        int64                  `protobuf:"varint,11,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -310,6 +312,13 @@ func (x *Conversation) GetType() ChatType {
 	return ChatType_PRIVATE
 }
 
+func (x *Conversation) GetLastMessageId() int64 {
+	if x != nil {
+		return x.LastMessageId
+	}
+	return 0
+}
+
 func (x *Conversation) GetLastMessage() string {
 	if x != nil {
 		return x.LastMessage
@@ -329,6 +338,13 @@ func (x *Conversation) GetUnreadCount() int32 {
 		return x.UnreadCount
 	}
 	return 0
+}
+
+func (x *Conversation) GetIsPinned() bool {
+	if x != nil {
+		return x.IsPinned
+	}
+	return false
 }
 
 func (x *Conversation) GetCreateAt() int64 {
@@ -503,10 +519,11 @@ func (x *SendMessageResponse) GetMessage() string {
 type GetMessageHistoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	TargetId      int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // 对方用户ID或群组ID
+	TargetId      int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
 	ChatType      ChatType               `protobuf:"varint,3,opt,name=chat_type,json=chatType,proto3,enum=chat.ChatType" json:"chat_type,omitempty"`
-	LastMessageId int64                  `protobuf:"varint,4,opt,name=last_message_id,json=lastMessageId,proto3" json:"last_message_id,omitempty"` // 用于分页，获取此消息之前的消息
-	Limit         int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	Limit         int64                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	Date          int64                  `protobuf:"varint,5,opt,name=date,proto3" json:"date,omitempty"`                                          // 时间戳，获取当天的消息历史
+	LastMessageId int64                  `protobuf:"varint,6,opt,name=last_message_id,json=lastMessageId,proto3" json:"last_message_id,omitempty"` // 用于分页，获取大于此ID的消息
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -562,16 +579,23 @@ func (x *GetMessageHistoryRequest) GetChatType() ChatType {
 	return ChatType_PRIVATE
 }
 
-func (x *GetMessageHistoryRequest) GetLastMessageId() int64 {
+func (x *GetMessageHistoryRequest) GetLimit() int64 {
 	if x != nil {
-		return x.LastMessageId
+		return x.Limit
 	}
 	return 0
 }
 
-func (x *GetMessageHistoryRequest) GetLimit() int32 {
+func (x *GetMessageHistoryRequest) GetDate() int64 {
 	if x != nil {
-		return x.Limit
+		return x.Date
+	}
+	return 0
+}
+
+func (x *GetMessageHistoryRequest) GetLastMessageId() int64 {
+	if x != nil {
+		return x.LastMessageId
 	}
 	return 0
 }
@@ -633,8 +657,6 @@ func (x *GetMessageHistoryResponse) GetHasMore() bool {
 type GetConversationListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Page          int32                  `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -676,25 +698,10 @@ func (x *GetConversationListRequest) GetUserId() int64 {
 	return 0
 }
 
-func (x *GetConversationListRequest) GetPage() int32 {
-	if x != nil {
-		return x.Page
-	}
-	return 0
-}
-
-func (x *GetConversationListRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
 // 获取会话列表响应
 type GetConversationListResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Conversations []*Conversation        `protobuf:"bytes,1,rep,name=conversations,proto3" json:"conversations,omitempty"`
-	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -736,18 +743,11 @@ func (x *GetConversationListResponse) GetConversations() []*Conversation {
 	return nil
 }
 
-func (x *GetConversationListResponse) GetTotal() int64 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
 // 删除会话请求
 type DeleteConversationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	TargetId      int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // 对方用户ID或群组ID
+	TargetId      int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
 	ChatType      ChatType               `protobuf:"varint,3,opt,name=chat_type,json=chatType,proto3,enum=chat.ChatType" json:"chat_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -861,7 +861,7 @@ func (x *DeleteConversationResponse) GetMessage() string {
 type MarkMessageReadRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	UserId            int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	TargetId          int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"` // 对方用户ID或群组ID
+	TargetId          int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
 	ChatType          ChatType               `protobuf:"varint,3,opt,name=chat_type,json=chatType,proto3,enum=chat.ChatType" json:"chat_type,omitempty"`
 	LastReadMessageId int64                  `protobuf:"varint,4,opt,name=last_read_message_id,json=lastReadMessageId,proto3" json:"last_read_message_id,omitempty"`
 	unknownFields     protoimpl.UnknownFields
@@ -1191,29 +1191,31 @@ func (x *RecallMessageResponse) GetMessage() string {
 	return ""
 }
 
-// WebSocket连接请求
-type ConnectRequest struct {
+// 设置会话置顶状态请求
+type PinConversationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	TargetId      int64                  `protobuf:"varint,2,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	ChatType      ChatType               `protobuf:"varint,3,opt,name=chat_type,json=chatType,proto3,enum=chat.ChatType" json:"chat_type,omitempty"`
+	IsPinned      bool                   `protobuf:"varint,4,opt,name=is_pinned,json=isPinned,proto3" json:"is_pinned,omitempty"` // true 为置顶, false 为取消置顶
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConnectRequest) Reset() {
-	*x = ConnectRequest{}
+func (x *PinConversationRequest) Reset() {
+	*x = PinConversationRequest{}
 	mi := &file_message_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConnectRequest) String() string {
+func (x *PinConversationRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConnectRequest) ProtoMessage() {}
+func (*PinConversationRequest) ProtoMessage() {}
 
-func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
+func (x *PinConversationRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_message_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1225,48 +1227,62 @@ func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConnectRequest.ProtoReflect.Descriptor instead.
-func (*ConnectRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PinConversationRequest.ProtoReflect.Descriptor instead.
+func (*PinConversationRequest) Descriptor() ([]byte, []int) {
 	return file_message_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *ConnectRequest) GetUserId() int64 {
+func (x *PinConversationRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
 	return 0
 }
 
-func (x *ConnectRequest) GetToken() string {
+func (x *PinConversationRequest) GetTargetId() int64 {
 	if x != nil {
-		return x.Token
+		return x.TargetId
 	}
-	return ""
+	return 0
 }
 
-// WebSocket消息推送
-type PushMessage struct {
+func (x *PinConversationRequest) GetChatType() ChatType {
+	if x != nil {
+		return x.ChatType
+	}
+	return ChatType_PRIVATE
+}
+
+func (x *PinConversationRequest) GetIsPinned() bool {
+	if x != nil {
+		return x.IsPinned
+	}
+	return false
+}
+
+// 设置会话置顶状态响应
+type PinConversationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // message, notification, etc.
-	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"` // JSON格式的数据
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PushMessage) Reset() {
-	*x = PushMessage{}
+func (x *PinConversationResponse) Reset() {
+	*x = PinConversationResponse{}
 	mi := &file_message_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PushMessage) String() string {
+func (x *PinConversationResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PushMessage) ProtoMessage() {}
+func (*PinConversationResponse) ProtoMessage() {}
 
-func (x *PushMessage) ProtoReflect() protoreflect.Message {
+func (x *PinConversationResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_message_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1278,21 +1294,21 @@ func (x *PushMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PushMessage.ProtoReflect.Descriptor instead.
-func (*PushMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use PinConversationResponse.ProtoReflect.Descriptor instead.
+func (*PinConversationResponse) Descriptor() ([]byte, []int) {
 	return file_message_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *PushMessage) GetType() string {
+func (x *PinConversationResponse) GetSuccess() bool {
 	if x != nil {
-		return x.Type
+		return x.Success
 	}
-	return ""
+	return false
 }
 
-func (x *PushMessage) GetData() string {
+func (x *PinConversationResponse) GetMessage() string {
 	if x != nil {
-		return x.Data
+		return x.Message
 	}
 	return ""
 }
@@ -1313,17 +1329,20 @@ const file_message_proto_rawDesc = "" +
 	"\acontent\x18\x06 \x01(\tR\acontent\x12\x14\n" +
 	"\x05extra\x18\a \x01(\tR\x05extra\x12\x1b\n" +
 	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12+\n" +
-	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xa4\x02\n" +
+	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xe9\x02\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\ttarget_id\x18\x03 \x01(\x03R\btargetId\x12\"\n" +
-	"\x04type\x18\x04 \x01(\x0e2\x0e.chat.ChatTypeR\x04type\x12!\n" +
-	"\flast_message\x18\x05 \x01(\tR\vlastMessage\x12*\n" +
-	"\x11last_message_time\x18\x06 \x01(\x03R\x0flastMessageTime\x12!\n" +
-	"\funread_count\x18\a \x01(\x05R\vunreadCount\x12\x1b\n" +
-	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12\x1b\n" +
-	"\tupdate_at\x18\t \x01(\x03R\bupdateAt\"\xf3\x01\n" +
+	"\x04type\x18\x04 \x01(\x0e2\x0e.chat.ChatTypeR\x04type\x12&\n" +
+	"\x0flast_message_id\x18\x05 \x01(\x03R\rlastMessageId\x12!\n" +
+	"\flast_message\x18\x06 \x01(\tR\vlastMessage\x12*\n" +
+	"\x11last_message_time\x18\a \x01(\x03R\x0flastMessageTime\x12!\n" +
+	"\funread_count\x18\b \x01(\x05R\vunreadCount\x12\x1b\n" +
+	"\tis_pinned\x18\t \x01(\bR\bisPinned\x12\x1b\n" +
+	"\tcreate_at\x18\n" +
+	" \x01(\x03R\bcreateAt\x12\x1b\n" +
+	"\tupdate_at\x18\v \x01(\x03R\bupdateAt\"\xf3\x01\n" +
 	"\x12SendMessageRequest\x12 \n" +
 	"\ffrom_user_id\x18\x01 \x01(\x03R\n" +
 	"fromUserId\x12\x1c\n" +
@@ -1338,23 +1357,21 @@ const file_message_proto_rawDesc = "" +
 	"\n" +
 	"message_id\x18\x01 \x01(\x03R\tmessageId\x12\x18\n" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\"\xbb\x01\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"\xcf\x01\n" +
 	"\x18GetMessageHistoryRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\ttarget_id\x18\x02 \x01(\x03R\btargetId\x12+\n" +
-	"\tchat_type\x18\x03 \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\x12&\n" +
-	"\x0flast_message_id\x18\x04 \x01(\x03R\rlastMessageId\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\x05R\x05limit\"a\n" +
+	"\tchat_type\x18\x03 \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x03R\x05limit\x12\x12\n" +
+	"\x04date\x18\x05 \x01(\x03R\x04date\x12&\n" +
+	"\x0flast_message_id\x18\x06 \x01(\x03R\rlastMessageId\"a\n" +
 	"\x19GetMessageHistoryResponse\x12)\n" +
 	"\bmessages\x18\x01 \x03(\v2\r.chat.MessageR\bmessages\x12\x19\n" +
-	"\bhas_more\x18\x02 \x01(\bR\ahasMore\"f\n" +
+	"\bhas_more\x18\x02 \x01(\bR\ahasMore\"5\n" +
 	"\x1aGetConversationListRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"m\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"W\n" +
 	"\x1bGetConversationListResponse\x128\n" +
-	"\rconversations\x18\x01 \x03(\v2\x12.chat.ConversationR\rconversations\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"~\n" +
+	"\rconversations\x18\x01 \x03(\v2\x12.chat.ConversationR\rconversations\"~\n" +
 	"\x19DeleteConversationRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\ttarget_id\x18\x02 \x01(\x03R\btargetId\x12+\n" +
@@ -1383,13 +1400,15 @@ const file_message_proto_rawDesc = "" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\"K\n" +
 	"\x15RecallMessageResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"?\n" +
-	"\x0eConnectRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"5\n" +
-	"\vPushMessage\x12\x12\n" +
-	"\x04type\x18\x01 \x01(\tR\x04type\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\tR\x04data*N\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x98\x01\n" +
+	"\x16PinConversationRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
+	"\ttarget_id\x18\x02 \x01(\x03R\btargetId\x12+\n" +
+	"\tchat_type\x18\x03 \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\x12\x1b\n" +
+	"\tis_pinned\x18\x04 \x01(\bR\bisPinned\"M\n" +
+	"\x17PinConversationResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage*N\n" +
 	"\vMessageType\x12\b\n" +
 	"\x04TEXT\x10\x00\x12\t\n" +
 	"\x05IMAGE\x10\x01\x12\b\n" +
@@ -1400,7 +1419,7 @@ const file_message_proto_rawDesc = "" +
 	"\x06SYSTEM\x10\x05*\"\n" +
 	"\bChatType\x12\v\n" +
 	"\aPRIVATE\x10\x00\x12\t\n" +
-	"\x05GROUP\x10\x012\xc0\x04\n" +
+	"\x05GROUP\x10\x012\x90\x05\n" +
 	"\vChatService\x12B\n" +
 	"\vSendMessage\x12\x18.chat.SendMessageRequest\x1a\x19.chat.SendMessageResponse\x12T\n" +
 	"\x11GetMessageHistory\x12\x1e.chat.GetMessageHistoryRequest\x1a\x1f.chat.GetMessageHistoryResponse\x12Z\n" +
@@ -1408,7 +1427,8 @@ const file_message_proto_rawDesc = "" +
 	"\x12DeleteConversation\x12\x1f.chat.DeleteConversationRequest\x1a .chat.DeleteConversationResponse\x12N\n" +
 	"\x0fMarkMessageRead\x12\x1c.chat.MarkMessageReadRequest\x1a\x1d.chat.MarkMessageReadResponse\x12H\n" +
 	"\rDeleteMessage\x12\x1a.chat.DeleteMessageRequest\x1a\x1b.chat.DeleteMessageResponse\x12H\n" +
-	"\rRecallMessage\x12\x1a.chat.RecallMessageRequest\x1a\x1b.chat.RecallMessageResponseB\bZ\x06./chatb\x06proto3"
+	"\rRecallMessage\x12\x1a.chat.RecallMessageRequest\x1a\x1b.chat.RecallMessageResponse\x12N\n" +
+	"\x0fPinConversation\x12\x1c.chat.PinConversationRequest\x1a\x1d.chat.PinConversationResponseB\bZ\x06./chatb\x06proto3"
 
 var (
 	file_message_proto_rawDescOnce sync.Once
@@ -1443,8 +1463,8 @@ var file_message_proto_goTypes = []any{
 	(*DeleteMessageResponse)(nil),       // 15: chat.DeleteMessageResponse
 	(*RecallMessageRequest)(nil),        // 16: chat.RecallMessageRequest
 	(*RecallMessageResponse)(nil),       // 17: chat.RecallMessageResponse
-	(*ConnectRequest)(nil),              // 18: chat.ConnectRequest
-	(*PushMessage)(nil),                 // 19: chat.PushMessage
+	(*PinConversationRequest)(nil),      // 18: chat.PinConversationRequest
+	(*PinConversationResponse)(nil),     // 19: chat.PinConversationResponse
 }
 var file_message_proto_depIdxs = []int32{
 	0,  // 0: chat.Message.type:type_name -> chat.MessageType
@@ -1457,25 +1477,28 @@ var file_message_proto_depIdxs = []int32{
 	3,  // 7: chat.GetConversationListResponse.conversations:type_name -> chat.Conversation
 	1,  // 8: chat.DeleteConversationRequest.chat_type:type_name -> chat.ChatType
 	1,  // 9: chat.MarkMessageReadRequest.chat_type:type_name -> chat.ChatType
-	4,  // 10: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
-	6,  // 11: chat.ChatService.GetMessageHistory:input_type -> chat.GetMessageHistoryRequest
-	8,  // 12: chat.ChatService.GetConversationList:input_type -> chat.GetConversationListRequest
-	10, // 13: chat.ChatService.DeleteConversation:input_type -> chat.DeleteConversationRequest
-	12, // 14: chat.ChatService.MarkMessageRead:input_type -> chat.MarkMessageReadRequest
-	14, // 15: chat.ChatService.DeleteMessage:input_type -> chat.DeleteMessageRequest
-	16, // 16: chat.ChatService.RecallMessage:input_type -> chat.RecallMessageRequest
-	5,  // 17: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
-	7,  // 18: chat.ChatService.GetMessageHistory:output_type -> chat.GetMessageHistoryResponse
-	9,  // 19: chat.ChatService.GetConversationList:output_type -> chat.GetConversationListResponse
-	11, // 20: chat.ChatService.DeleteConversation:output_type -> chat.DeleteConversationResponse
-	13, // 21: chat.ChatService.MarkMessageRead:output_type -> chat.MarkMessageReadResponse
-	15, // 22: chat.ChatService.DeleteMessage:output_type -> chat.DeleteMessageResponse
-	17, // 23: chat.ChatService.RecallMessage:output_type -> chat.RecallMessageResponse
-	17, // [17:24] is the sub-list for method output_type
-	10, // [10:17] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	1,  // 10: chat.PinConversationRequest.chat_type:type_name -> chat.ChatType
+	4,  // 11: chat.ChatService.SendMessage:input_type -> chat.SendMessageRequest
+	6,  // 12: chat.ChatService.GetMessageHistory:input_type -> chat.GetMessageHistoryRequest
+	8,  // 13: chat.ChatService.GetConversationList:input_type -> chat.GetConversationListRequest
+	10, // 14: chat.ChatService.DeleteConversation:input_type -> chat.DeleteConversationRequest
+	12, // 15: chat.ChatService.MarkMessageRead:input_type -> chat.MarkMessageReadRequest
+	14, // 16: chat.ChatService.DeleteMessage:input_type -> chat.DeleteMessageRequest
+	16, // 17: chat.ChatService.RecallMessage:input_type -> chat.RecallMessageRequest
+	18, // 18: chat.ChatService.PinConversation:input_type -> chat.PinConversationRequest
+	5,  // 19: chat.ChatService.SendMessage:output_type -> chat.SendMessageResponse
+	7,  // 20: chat.ChatService.GetMessageHistory:output_type -> chat.GetMessageHistoryResponse
+	9,  // 21: chat.ChatService.GetConversationList:output_type -> chat.GetConversationListResponse
+	11, // 22: chat.ChatService.DeleteConversation:output_type -> chat.DeleteConversationResponse
+	13, // 23: chat.ChatService.MarkMessageRead:output_type -> chat.MarkMessageReadResponse
+	15, // 24: chat.ChatService.DeleteMessage:output_type -> chat.DeleteMessageResponse
+	17, // 25: chat.ChatService.RecallMessage:output_type -> chat.RecallMessageResponse
+	19, // 26: chat.ChatService.PinConversation:output_type -> chat.PinConversationResponse
+	19, // [19:27] is the sub-list for method output_type
+	11, // [11:19] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_message_proto_init() }

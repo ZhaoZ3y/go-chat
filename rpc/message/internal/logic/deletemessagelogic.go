@@ -3,6 +3,7 @@ package logic
 import (
 	"IM/pkg/model"
 	"context"
+	"gorm.io/gorm/clause"
 
 	"IM/rpc/message/chat"
 	"IM/rpc/message/internal/svc"
@@ -26,26 +27,26 @@ func NewDeleteMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Del
 
 // 删除消息
 func (l *DeleteMessageLogic) DeleteMessage(in *chat.DeleteMessageRequest) (*chat.DeleteMessageResponse, error) {
-	// 检查消息是否存在且属于当前用户
-	var message model.Messages
-	err := l.svcCtx.DB.Where("id = ? AND from_user_id = ?", in.MessageId, in.UserId).First(&message).Error
-	if err != nil {
-		l.Logger.Errorf("消息不存在或无权限删除: %v", err)
-		return &chat.DeleteMessageResponse{
-			Success: false,
-			Message: "消息不存在或无权限删除",
-		}, nil
+	state := model.MessageUserStates{
+		MessageId: in.MessageId,
+		UserId:    in.UserId,
+		IsDeleted: true,
 	}
 
-	// 软删除消息
-	err = l.svcCtx.DB.Delete(&message).Error
+	err := l.svcCtx.DB.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "message_id"}, {Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"is_deleted"}),
+	}).Create(&state).Error
+
 	if err != nil {
-		l.Logger.Errorf("删除消息失败: %v", err)
+		l.Logger.Errorf("为用户 %d 设置消息 %d 为已删除状态失败: %v", in.UserId, in.MessageId, err)
 		return &chat.DeleteMessageResponse{
 			Success: false,
-			Message: "删除消息失败",
-		}, nil
+			Message: "操作失败",
+		}, err
 	}
+
+	l.Logger.Infof("用户 %d 成功将消息 %d 从其视图中删除", in.UserId, in.MessageId)
 
 	return &chat.DeleteMessageResponse{
 		Success: true,
