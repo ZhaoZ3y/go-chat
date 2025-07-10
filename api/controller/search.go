@@ -14,6 +14,12 @@ import (
 
 // Search 搜索用户和群组
 func Search(c *gin.Context) {
+	userId, _ := getAndParseUserID(c)
+	if userId <= 0 {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录或ID无效")
+		return
+	}
+
 	var req request.SearchRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
@@ -24,7 +30,8 @@ func Search(c *gin.Context) {
 	defer cancel()
 
 	UserResp, err := rpc.UserClient.SearchUser(ctx, &user.SearchUserRequest{
-		Keyword: req.Keyword,
+		Keyword:       req.Keyword,
+		CurrentUserId: userId,
 	})
 	if err != nil {
 		logx.Errorf("搜索用户失败: %v", err)

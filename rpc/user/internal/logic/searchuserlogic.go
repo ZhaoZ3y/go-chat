@@ -33,21 +33,26 @@ func (l *SearchUserLogic) SearchUser(in *user.SearchUserRequest) (*user.SearchUs
 	}
 
 	// 构建查询条件
-	query := l.svcCtx.DB.Model(&model.User{}).Where("deleted_at IS NULL AND status = 1")
-	query = query.Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?",
-		"%"+in.Keyword+"%", "%"+in.Keyword+"%", "%"+in.Keyword+"%")
+	query := l.svcCtx.DB.Model(&model.User{}).
+		Where("deleted_at IS NULL AND status = 1").
+		Where("username LIKE ? OR nickname LIKE ? OR email LIKE ?",
+			"%"+in.Keyword+"%", "%"+in.Keyword+"%", "%"+in.Keyword+"%")
+
+	// 如果传了当前用户 ID，排除自己
+	if in.CurrentUserId > 0 {
+		query = query.Where("id != ?", in.CurrentUserId)
+	}
 
 	// 获取总数
 	var total int64
-	err := query.Count(&total).Error
-	if err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		l.Logger.Errorf("统计用户数量失败: %v", err)
 		return nil, status.Error(codes.Internal, "搜索失败")
 	}
 
 	// 获取用户列表
 	var users []model.User
-	err = query.Select("id, username, nickname, avatar, email, status, create_at, update_at").
+	err := query.Select("id, username, nickname, avatar, email, status, create_at, update_at").
 		Order("create_at DESC").
 		Find(&users).Error
 	if err != nil {

@@ -69,6 +69,7 @@ message UpdateUserInfoResponse {
 // 搜索用户请求
 message SearchUserRequest {
   string keyword = 1;
+  int64 currentUserId = 2;
 }
 
 // 搜索用户响应

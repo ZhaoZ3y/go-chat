@@ -11,6 +11,13 @@ func SetRouter(hub *websocket.Hub) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware()) // 跨域中间件
 
+	wsGroup := r.Group("/")
+	wsGroup.Use(middleware.AuthMiddleware()) // 非常重要：保护 WebSocket 端点
+	{
+		// 处理器现在直接使用 hub 实例的方法
+		wsGroup.GET("/ws", hub.HandleWebSocket)
+	}
+
 	r.POST("/register", controller.Register)          // 用户注册
 	r.POST("/login", controller.Login)                // 用户登录
 	r.POST("/refresh_token", controller.RefreshToken) // 刷新用户令牌
@@ -19,12 +26,13 @@ func SetRouter(hub *websocket.Hub) *gin.Engine {
 	user := r.Group("/user")
 	user.Use(middleware.AuthMiddleware()) // 需要身份验证的中间件
 	{
+		user.GET("/profile", controller.GetUserProfile)         // 获取用户个人资料
 		user.GET("/info", controller.GetUserInfo)               // 获取用户信息
 		user.PUT("/update/info", controller.UpdateUserInfo)     // 更新用户信息
 		user.PUT("/update/password", controller.ChangePassword) // 更新用户密码
 	}
 
-	r.GET("/search", controller.Search) // 搜索用户和群组
+	r.GET("/search", middleware.AuthMiddleware(), controller.Search) // 搜索用户和群组
 
 	// 好友相关路由
 	friend := r.Group("/friend")

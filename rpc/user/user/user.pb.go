@@ -566,6 +566,7 @@ func (x *UpdateUserInfoResponse) GetMessage() string {
 type SearchUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	CurrentUserId int64                  `protobuf:"varint,2,opt,name=currentUserId,proto3" json:"currentUserId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -605,6 +606,13 @@ func (x *SearchUserRequest) GetKeyword() string {
 		return x.Keyword
 	}
 	return ""
+}
+
+func (x *SearchUserRequest) GetCurrentUserId() int64 {
+	if x != nil {
+		return x.CurrentUserId
+	}
+	return 0
 }
 
 // 搜索用户响应
@@ -905,9 +913,10 @@ const file_user_proto_rawDesc = "" +
 	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x14\n" +
 	"\x05email\x18\x05 \x01(\tR\x05email\"2\n" +
 	"\x16UpdateUserInfoResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"-\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"S\n" +
 	"\x11SearchUserRequest\x12\x18\n" +
-	"\akeyword\x18\x01 \x01(\tR\akeyword\"L\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\x12$\n" +
+	"\rcurrentUserId\x18\x02 \x01(\x03R\rcurrentUserId\"L\n" +
 	"\x12SearchUserResponse\x12 \n" +
 	"\x05users\x18\x01 \x03(\v2\n" +
 	".user.UserR\x05users\x12\x14\n" +

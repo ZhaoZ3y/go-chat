@@ -69,6 +69,35 @@ func Login(c *gin.Context) {
 	})
 }
 
+// GetUserProfile 获取用户个人资料
+func GetUserProfile(c *gin.Context) {
+	// 从中间件中取出 user_id
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "未登录")
+		return
+	}
+	uid, ok := userID.(int64)
+	if !ok {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "用户ID类型错误")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	resp, err := rpc.UserClient.GetUserInfo(ctx, &user.GetUserInfoRequest{
+		UserId: uid,
+	})
+	if err != nil {
+		logx.Errorf("获取当前用户信息失败: %v", err)
+		response.ServerErrorResponse(c, "获取用户信息失败: "+err.Error())
+		return
+	}
+
+	response.SuccessResponse(c, resp.UserInfo)
+}
+
 // GetUserInfo 获取用户信息
 func GetUserInfo(c *gin.Context) {
 	userId := c.Query("user_id")

@@ -9,12 +9,15 @@ message Friend {
   int64 id = 1;
   int64 user_id = 2;
   int64 friend_id = 3;
-  string remark = 4; // 备注名
-  int32 status = 5; // 1:正常 2:拉黑
+  string remark = 4;       // 备注名
+  int32 status = 5;        // 1:正常 2:拉黑
   int64 create_at = 6;
   int64 update_at = 7;
   int64 online_status = 8; // 在线状态 0:离线 1:在线
+  string nickname = 9;     // 好友昵称
+  string avatar = 10;      // 好友头像
 }
+
 
 // 好友申请
 message FriendRequest {
