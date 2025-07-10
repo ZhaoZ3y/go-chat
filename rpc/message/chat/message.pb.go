@@ -250,6 +250,8 @@ type Conversation struct {
 	IsPinned        bool                   `protobuf:"varint,9,opt,name=is_pinned,json=isPinned,proto3" json:"is_pinned,omitempty"`
 	CreateAt        int64                  `protobuf:"varint,10,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
 	UpdateAt        int64                  `protobuf:"varint,11,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
+	TargetName      string                 `protobuf:"bytes,12,opt,name=target_name,json=targetName,proto3" json:"target_name,omitempty"`       // 对方用户或群组名称
+	TargetAvatar    string                 `protobuf:"bytes,13,opt,name=target_avatar,json=targetAvatar,proto3" json:"target_avatar,omitempty"` // 对方用户或群组头像
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -359,6 +361,20 @@ func (x *Conversation) GetUpdateAt() int64 {
 		return x.UpdateAt
 	}
 	return 0
+}
+
+func (x *Conversation) GetTargetName() string {
+	if x != nil {
+		return x.TargetName
+	}
+	return ""
+}
+
+func (x *Conversation) GetTargetAvatar() string {
+	if x != nil {
+		return x.TargetAvatar
+	}
+	return ""
 }
 
 // 发送消息请求
@@ -1329,7 +1345,7 @@ const file_message_proto_rawDesc = "" +
 	"\acontent\x18\x06 \x01(\tR\acontent\x12\x14\n" +
 	"\x05extra\x18\a \x01(\tR\x05extra\x12\x1b\n" +
 	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12+\n" +
-	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xe9\x02\n" +
+	"\tchat_type\x18\t \x01(\x0e2\x0e.chat.ChatTypeR\bchatType\"\xaf\x03\n" +
 	"\fConversation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
@@ -1342,7 +1358,10 @@ const file_message_proto_rawDesc = "" +
 	"\tis_pinned\x18\t \x01(\bR\bisPinned\x12\x1b\n" +
 	"\tcreate_at\x18\n" +
 	" \x01(\x03R\bcreateAt\x12\x1b\n" +
-	"\tupdate_at\x18\v \x01(\x03R\bupdateAt\"\xf3\x01\n" +
+	"\tupdate_at\x18\v \x01(\x03R\bupdateAt\x12\x1f\n" +
+	"\vtarget_name\x18\f \x01(\tR\n" +
+	"targetName\x12#\n" +
+	"\rtarget_avatar\x18\r \x01(\tR\ftargetAvatar\"\xf3\x01\n" +
 	"\x12SendMessageRequest\x12 \n" +
 	"\ffrom_user_id\x18\x01 \x01(\x03R\n" +
 	"fromUserId\x12\x1c\n" +

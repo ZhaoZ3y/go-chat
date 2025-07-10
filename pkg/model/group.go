@@ -39,6 +39,7 @@ type JoinGroupApplications struct {
 	Reason     string         `gorm:"type:varchar(200);default:''" json:"reason"`               // 申请理由
 	InviterId  int64          `gorm:"not null;index:idx_inviter" json:"inviter_id"`             // 邀请人ID(默认为0，表示自己申请)
 	Status     int8           `gorm:"type:tinyint(4);default:0;index:idx_status" json:"status"` // 0: 待处理 1: 同意 2: 拒绝
+	OperatorId int64          `gorm:"default:0;index:idx_operator" json:"operator_id"`          // 操作人ID（处理该申请的用户）
 	CreateAt   int64          `gorm:"autoCreateTime" json:"create_time"`                        // 申请时间
 	UpdateAt   int64          `gorm:"autoUpdateTime" json:"update_time"`                        // 更新时间
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`

@@ -866,16 +866,25 @@ func (x *JoinGroupResponse) GetMessage() string {
 
 // 群组成员加入申请
 type JoinGroupApplication struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	GroupId       int64                  `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	UserId        int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Reason        string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
-	ApplyTime     int64                  `protobuf:"varint,5,opt,name=apply_time,json=applyTime,proto3" json:"apply_time,omitempty"`
-	InviterId     int64                  `protobuf:"varint,6,opt,name=inviter_id,json=inviterId,proto3" json:"inviter_id,omitempty"` // 邀请人ID (0 表示主动申请)
-	Status        ApplicationStatus      `protobuf:"varint,7,opt,name=status,proto3,enum=group.ApplicationStatus" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	GroupId          int64                  `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	UserId           int64                  `protobuf:"varint,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Reason           string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
+	ApplyTime        int64                  `protobuf:"varint,5,opt,name=apply_time,json=applyTime,proto3" json:"apply_time,omitempty"`
+	InviterId        int64                  `protobuf:"varint,6,opt,name=inviter_id,json=inviterId,proto3" json:"inviter_id,omitempty"` // 邀请人ID (0 表示主动申请)
+	Status           ApplicationStatus      `protobuf:"varint,7,opt,name=status,proto3,enum=group.ApplicationStatus" json:"status,omitempty"`
+	UserNickname     string                 `protobuf:"bytes,8,opt,name=user_nickname,json=userNickname,proto3" json:"user_nickname,omitempty"`              // 申请人昵称
+	UserAvatar       string                 `protobuf:"bytes,9,opt,name=user_avatar,json=userAvatar,proto3" json:"user_avatar,omitempty"`                    // 申请人头像
+	GroupName        string                 `protobuf:"bytes,10,opt,name=group_name,json=groupName,proto3" json:"group_name,omitempty"`                      // 群组名称
+	GroupAvatar      string                 `protobuf:"bytes,11,opt,name=group_avatar,json=groupAvatar,proto3" json:"group_avatar,omitempty"`                // 群组头像
+	OperatorNickname string                 `protobuf:"bytes,12,opt,name=operator_nickname,json=operatorNickname,proto3" json:"operator_nickname,omitempty"` // 操作人昵称 (处理申请时的操作人)
+	OperatorAvatar   string                 `protobuf:"bytes,13,opt,name=operator_avatar,json=operatorAvatar,proto3" json:"operator_avatar,omitempty"`       // 操作人头像 (处理申请时的操作人)
+	OperatorId       int64                  `protobuf:"varint,14,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`                  // 操作人ID (处理申请时的操作人)
+	InviteNickname   string                 `protobuf:"bytes,15,opt,name=invite_nickname,json=inviteNickname,proto3" json:"invite_nickname,omitempty"`       // 邀请人昵称 (如果是邀请加入)
+	InviteAvatar     string                 `protobuf:"bytes,16,opt,name=invite_avatar,json=inviteAvatar,proto3" json:"invite_avatar,omitempty"`             // 邀请人头像 (如果是邀请加入)
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *JoinGroupApplication) Reset() {
@@ -957,11 +966,72 @@ func (x *JoinGroupApplication) GetStatus() ApplicationStatus {
 	return ApplicationStatus_PENDING
 }
 
+func (x *JoinGroupApplication) GetUserNickname() string {
+	if x != nil {
+		return x.UserNickname
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetUserAvatar() string {
+	if x != nil {
+		return x.UserAvatar
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetGroupName() string {
+	if x != nil {
+		return x.GroupName
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetGroupAvatar() string {
+	if x != nil {
+		return x.GroupAvatar
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetOperatorNickname() string {
+	if x != nil {
+		return x.OperatorNickname
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetOperatorAvatar() string {
+	if x != nil {
+		return x.OperatorAvatar
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetOperatorId() int64 {
+	if x != nil {
+		return x.OperatorId
+	}
+	return 0
+}
+
+func (x *JoinGroupApplication) GetInviteNickname() string {
+	if x != nil {
+		return x.InviteNickname
+	}
+	return ""
+}
+
+func (x *JoinGroupApplication) GetInviteAvatar() string {
+	if x != nil {
+		return x.InviteAvatar
+	}
+	return ""
+}
+
 // 获取加入群组申请列表请求
 type GetJoinGroupApplicationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	GroupId       int64                  `protobuf:"varint,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	OperatorId    int64                  `protobuf:"varint,2,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -994,20 +1064,6 @@ func (x *GetJoinGroupApplicationsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetJoinGroupApplicationsRequest.ProtoReflect.Descriptor instead.
 func (*GetJoinGroupApplicationsRequest) Descriptor() ([]byte, []int) {
 	return file_group_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *GetJoinGroupApplicationsRequest) GetGroupId() int64 {
-	if x != nil {
-		return x.GroupId
-	}
-	return 0
-}
-
-func (x *GetJoinGroupApplicationsRequest) GetOperatorId() int64 {
-	if x != nil {
-		return x.OperatorId
-	}
-	return 0
 }
 
 // 获取加入群组申请列表响应
@@ -2515,17 +2571,23 @@ func (x *TransferGroupResponse) GetMessage() string {
 
 // 群组通知
 type GroupNotification struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Type          NotificationType       `protobuf:"varint,2,opt,name=type,proto3,enum=group.NotificationType" json:"type,omitempty"`
-	GroupId       int64                  `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	OperatorId    int64                  `protobuf:"varint,4,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
-	TargetUserId  int64                  `protobuf:"varint,5,opt,name=target_user_id,json=targetUserId,proto3" json:"target_user_id,omitempty"`
-	Message       string                 `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
-	Timestamp     int64                  `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	IsRead        bool                   `protobuf:"varint,8,opt,name=is_read,json=isRead,proto3" json:"is_read,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Id                 int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type               NotificationType       `protobuf:"varint,2,opt,name=type,proto3,enum=group.NotificationType" json:"type,omitempty"`
+	GroupId            int64                  `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	OperatorId         int64                  `protobuf:"varint,4,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	TargetUserId       int64                  `protobuf:"varint,5,opt,name=target_user_id,json=targetUserId,proto3" json:"target_user_id,omitempty"`
+	Message            string                 `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
+	Timestamp          int64                  `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	IsRead             bool                   `protobuf:"varint,8,opt,name=is_read,json=isRead,proto3" json:"is_read,omitempty"`
+	OperatorNickname   string                 `protobuf:"bytes,9,opt,name=operator_nickname,json=operatorNickname,proto3" json:"operator_nickname,omitempty"`          // 操作人昵称
+	OperatorAvatar     string                 `protobuf:"bytes,10,opt,name=operator_avatar,json=operatorAvatar,proto3" json:"operator_avatar,omitempty"`               // 操作人头像
+	TargetUserNickname string                 `protobuf:"bytes,11,opt,name=target_user_nickname,json=targetUserNickname,proto3" json:"target_user_nickname,omitempty"` // 目标用户昵称
+	TargetUserAvatar   string                 `protobuf:"bytes,12,opt,name=target_user_avatar,json=targetUserAvatar,proto3" json:"target_user_avatar,omitempty"`       // 目标用户头像
+	GroupName          string                 `protobuf:"bytes,13,opt,name=group_name,json=groupName,proto3" json:"group_name,omitempty"`                              // 群组名称
+	GroupAvatar        string                 `protobuf:"bytes,14,opt,name=group_avatar,json=groupAvatar,proto3" json:"group_avatar,omitempty"`                        // 群组头像
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *GroupNotification) Reset() {
@@ -2612,6 +2674,48 @@ func (x *GroupNotification) GetIsRead() bool {
 		return x.IsRead
 	}
 	return false
+}
+
+func (x *GroupNotification) GetOperatorNickname() string {
+	if x != nil {
+		return x.OperatorNickname
+	}
+	return ""
+}
+
+func (x *GroupNotification) GetOperatorAvatar() string {
+	if x != nil {
+		return x.OperatorAvatar
+	}
+	return ""
+}
+
+func (x *GroupNotification) GetTargetUserNickname() string {
+	if x != nil {
+		return x.TargetUserNickname
+	}
+	return ""
+}
+
+func (x *GroupNotification) GetTargetUserAvatar() string {
+	if x != nil {
+		return x.TargetUserAvatar
+	}
+	return ""
+}
+
+func (x *GroupNotification) GetGroupName() string {
+	if x != nil {
+		return x.GroupName
+	}
+	return ""
+}
+
+func (x *GroupNotification) GetGroupAvatar() string {
+	if x != nil {
+		return x.GroupAvatar
+	}
+	return ""
 }
 
 // 获取群组通知列表请求
@@ -3111,7 +3215,7 @@ const file_group_proto_rawDesc = "" +
 	"\x06reason\x18\x03 \x01(\tR\x06reason\"G\n" +
 	"\x11JoinGroupResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\xe2\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xaf\x04\n" +
 	"\x14JoinGroupApplication\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\x03R\agroupId\x12\x17\n" +
@@ -3121,11 +3225,21 @@ const file_group_proto_rawDesc = "" +
 	"apply_time\x18\x05 \x01(\x03R\tapplyTime\x12\x1d\n" +
 	"\n" +
 	"inviter_id\x18\x06 \x01(\x03R\tinviterId\x120\n" +
-	"\x06status\x18\a \x01(\x0e2\x18.group.ApplicationStatusR\x06status\"]\n" +
-	"\x1fGetJoinGroupApplicationsRequest\x12\x19\n" +
-	"\bgroup_id\x18\x01 \x01(\x03R\agroupId\x12\x1f\n" +
-	"\voperator_id\x18\x02 \x01(\x03R\n" +
-	"operatorId\"c\n" +
+	"\x06status\x18\a \x01(\x0e2\x18.group.ApplicationStatusR\x06status\x12#\n" +
+	"\ruser_nickname\x18\b \x01(\tR\fuserNickname\x12\x1f\n" +
+	"\vuser_avatar\x18\t \x01(\tR\n" +
+	"userAvatar\x12\x1d\n" +
+	"\n" +
+	"group_name\x18\n" +
+	" \x01(\tR\tgroupName\x12!\n" +
+	"\fgroup_avatar\x18\v \x01(\tR\vgroupAvatar\x12+\n" +
+	"\x11operator_nickname\x18\f \x01(\tR\x10operatorNickname\x12'\n" +
+	"\x0foperator_avatar\x18\r \x01(\tR\x0eoperatorAvatar\x12\x1f\n" +
+	"\voperator_id\x18\x0e \x01(\x03R\n" +
+	"operatorId\x12'\n" +
+	"\x0finvite_nickname\x18\x0f \x01(\tR\x0einviteNickname\x12#\n" +
+	"\rinvite_avatar\x18\x10 \x01(\tR\finviteAvatar\"!\n" +
+	"\x1fGetJoinGroupApplicationsRequest\"c\n" +
 	" GetJoinGroupApplicationsResponse\x12?\n" +
 	"\fapplications\x18\x01 \x03(\v2\x1b.group.JoinGroupApplicationR\fapplications\"\x85\x01\n" +
 	"!HandleJoinGroupApplicationRequest\x12%\n" +
@@ -3223,7 +3337,7 @@ const file_group_proto_rawDesc = "" +
 	"newOwnerId\"K\n" +
 	"\x15TransferGroupResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x83\x02\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xfb\x03\n" +
 	"\x11GroupNotification\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12+\n" +
 	"\x04type\x18\x02 \x01(\x0e2\x17.group.NotificationTypeR\x04type\x12\x19\n" +
@@ -3233,7 +3347,15 @@ const file_group_proto_rawDesc = "" +
 	"\x0etarget_user_id\x18\x05 \x01(\x03R\ftargetUserId\x12\x18\n" +
 	"\amessage\x18\x06 \x01(\tR\amessage\x12\x1c\n" +
 	"\ttimestamp\x18\a \x01(\x03R\ttimestamp\x12\x17\n" +
-	"\ais_read\x18\b \x01(\bR\x06isRead\"7\n" +
+	"\ais_read\x18\b \x01(\bR\x06isRead\x12+\n" +
+	"\x11operator_nickname\x18\t \x01(\tR\x10operatorNickname\x12'\n" +
+	"\x0foperator_avatar\x18\n" +
+	" \x01(\tR\x0eoperatorAvatar\x120\n" +
+	"\x14target_user_nickname\x18\v \x01(\tR\x12targetUserNickname\x12,\n" +
+	"\x12target_user_avatar\x18\f \x01(\tR\x10targetUserAvatar\x12\x1d\n" +
+	"\n" +
+	"group_name\x18\r \x01(\tR\tgroupName\x12!\n" +
+	"\fgroup_avatar\x18\x0e \x01(\tR\vgroupAvatar\"7\n" +
 	"\x1cGetGroupNotificationsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"_\n" +
 	"\x1dGetGroupNotificationsResponse\x12>\n" +

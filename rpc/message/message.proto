@@ -46,6 +46,8 @@ message Conversation {
   bool is_pinned = 9;
   int64 create_at = 10;
   int64 update_at = 11;
+  string target_name = 12; // 对方用户或群组名称
+  string target_avatar = 13; // 对方用户或群组头像
 }
 
 // 发送消息请求

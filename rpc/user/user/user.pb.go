@@ -137,6 +137,7 @@ type RegisterRequest struct {
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	Nickname      string                 `protobuf:"bytes,4,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	Avatar        string                 `protobuf:"bytes,5,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -195,6 +196,13 @@ func (x *RegisterRequest) GetEmail() string {
 func (x *RegisterRequest) GetNickname() string {
 	if x != nil {
 		return x.Nickname
+	}
+	return ""
+}
+
+func (x *RegisterRequest) GetAvatar() string {
+	if x != nil {
+		return x.Avatar
 	}
 	return ""
 }
@@ -887,12 +895,13 @@ const file_user_proto_rawDesc = "" +
 	"\x05phone\x18\x06 \x01(\tR\x05phone\x12\x16\n" +
 	"\x06status\x18\a \x01(\x05R\x06status\x12\x1b\n" +
 	"\tcreate_at\x18\b \x01(\x03R\bcreateAt\x12\x1b\n" +
-	"\tupdate_at\x18\t \x01(\x03R\bupdateAt\"{\n" +
+	"\tupdate_at\x18\t \x01(\x03R\bupdateAt\"\x93\x01\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x1a\n" +
-	"\bnickname\x18\x04 \x01(\tR\bnickname\",\n" +
+	"\bnickname\x18\x04 \x01(\tR\bnickname\x12\x16\n" +
+	"\x06avatar\x18\x05 \x01(\tR\x06avatar\",\n" +
 	"\x10RegisterResponse\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"F\n" +
 	"\fLoginRequest\x12\x1a\n" +

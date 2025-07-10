@@ -4,10 +4,12 @@ import (
 	"IM/api/rpc"
 	"IM/pkg/model/request"
 	"IM/pkg/utils/response"
+	"IM/rpc/file/file"
 	"IM/rpc/user/user"
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/zeromicro/go-zero/core/logx"
+	"io"
 	"strconv"
 	"time"
 )
@@ -232,4 +234,45 @@ func RefreshToken(c *gin.Context) {
 		"access_token":  resp.AccessToken,
 		"refresh_token": resp.RefreshToken,
 	})
+}
+
+// UploadAvatar 上传用户头像
+func UploadAvatar(c *gin.Context) {
+	userId, _ := getAndParseUserID(c)
+	if userId <= 0 {
+		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录或ID错误")
+		return
+	}
+
+	formFile, header, err := c.Request.FormFile("file")
+	if err != nil {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "获取上传文件失败: "+err.Error())
+		return
+	}
+	defer formFile.Close()
+
+	fileData, err := io.ReadAll(formFile)
+	if err != nil {
+		logx.Errorf("读取上传的文件数据失败: %v", err)
+		response.ServerErrorResponse(c, "读取文件内容失败")
+		return
+	}
+
+	rpcCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	rpcResp, err := rpc.FileClient.UploadAvatar(rpcCtx, &file.UploadFileRequest{
+		UserId:      userId,
+		FileName:    header.Filename,
+		FileSize:    header.Size,
+		ContentType: header.Header.Get("Content-Type"),
+		FileData:    fileData,
+	})
+	if err != nil {
+		logx.Errorf("RPC UploadFile 调用失败: %v", err)
+		response.ServerErrorResponse(c, "上传文件失败")
+		return
+	}
+
+	response.SuccessResponse(c, rpcResp)
 }

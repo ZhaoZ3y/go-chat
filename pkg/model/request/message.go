@@ -21,9 +21,9 @@ type GetMessageHistoryRequest struct {
 
 // MarkMessageReadRequest 定义了标记消息已读接口的请求体结构
 type MarkMessageReadRequest struct {
-	TargetId          int64 `json:"target_id"`                               // 目标ID（私聊是对方用户ID，群聊是群ID）
-	ChatType          int64 `json:"chat_type"`                               // 聊天类型, 0:私聊, 1:群聊
-	LastReadMessageId int64 `json:"last_read_message_id" binding:"required"` // 用户已读的最后一条消息的ID
+	TargetId          int64 `json:"target_id"`            // 目标ID（私聊是对方用户ID，群聊是群ID）
+	ChatType          int64 `json:"chat_type"`            // 聊天类型, 0:私聊, 1:群聊
+	LastReadMessageId int64 `json:"last_read_message_id"` // 用户已读的最后一条消息的ID
 }
 
 // RecallMessageRequest 定义了撤回消息接口的请求体结构

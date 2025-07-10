@@ -122,12 +122,19 @@ message JoinGroupApplication {
   int64 apply_time = 5;
   int64 inviter_id = 6;       // 邀请人ID (0 表示主动申请)
   ApplicationStatus status = 7;
+  string user_nickname = 8;   // 申请人昵称
+  string user_avatar = 9;     // 申请人头像
+  string group_name = 10;     // 群组名称
+  string group_avatar = 11;   // 群组头像
+  string operator_nickname = 12; // 操作人昵称 (处理申请时的操作人)
+  string operator_avatar = 13;   // 操作人头像 (处理申请时的操作人)
+  int64 operator_id = 14;       // 操作人ID (处理申请时的操作人)
+  string invite_nickname = 15; // 邀请人昵称 (如果是邀请加入)
+  string invite_avatar = 16;   // 邀请人头像 (如果是邀请加入)
 }
 
 // 获取加入群组申请列表请求
 message GetJoinGroupApplicationsRequest {
-  int64 group_id = 1;
-  int64 operator_id = 2;
 }
 
 // 获取加入群组申请列表响应
@@ -312,6 +319,12 @@ message GroupNotification {
   string message = 6;
   int64 timestamp = 7;
   bool is_read = 8;
+  string operator_nickname = 9; // 操作人昵称
+  string operator_avatar = 10; // 操作人头像
+  string target_user_nickname = 11; // 目标用户昵称
+  string target_user_avatar = 12; // 目标用户头像
+  string group_name = 13; // 群组名称
+  string group_avatar = 14; // 群组头像
 }
 
 // 获取群组通知列表请求

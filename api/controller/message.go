@@ -8,6 +8,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/zeromicro/go-zero/core/logx"
+	"strconv"
 	"time"
 )
 
@@ -78,13 +79,30 @@ func GetConversationList(c *gin.Context) {
 }
 
 // GetMessageHistory 查看历史记录
+// GetMessageHistory 查看历史记录
 func GetMessageHistory(c *gin.Context) {
-	var req request.GetMessageHistoryRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "参数错误: "+err.Error())
+	// 必传参数
+	targetIdStr := c.Query("target_id")
+	chatTypeStr := c.Query("chat_type")
+
+	if targetIdStr == "" || chatTypeStr == "" {
+		response.ClientErrorResponse(c, response.ParamErrorCode, "缺少必要参数 target_id 或 chat_type")
 		return
 	}
 
+	targetIdInt, _ := strconv.ParseInt(targetIdStr, 10, 64)
+	chatTypeInt, _ := strconv.ParseInt(chatTypeStr, 10, 64)
+
+	// 可选参数
+	lastMsgIDStr := c.DefaultQuery("last_message_id", "0")
+	limitStr := c.DefaultQuery("limit", "20") // 默认20条
+	dateStr := c.DefaultQuery("date", "0")    // 默认0，表示不按日期筛选
+
+	lastMsgID, _ := strconv.ParseInt(lastMsgIDStr, 10, 64)
+	limit, _ := strconv.ParseInt(limitStr, 10, 64)
+	date, _ := strconv.ParseInt(dateStr, 10, 64)
+
+	// 用户鉴权
 	userID, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "用户未登录")
@@ -96,11 +114,11 @@ func GetMessageHistory(c *gin.Context) {
 
 	resp, err := rpc.MessageClient.GetMessageHistory(ctx, &chat.GetMessageHistoryRequest{
 		UserId:        userID.(int64),
-		TargetId:      req.TargetId,
-		ChatType:      chat.ChatType(req.ChatType),
-		LastMessageId: req.LastMessageId,
-		Limit:         req.Limit,
-		Date:          req.Date,
+		TargetId:      targetIdInt,
+		ChatType:      chat.ChatType(chatTypeInt),
+		LastMessageId: lastMsgID,
+		Limit:         limit,
+		Date:          date,
 	})
 
 	if err != nil {

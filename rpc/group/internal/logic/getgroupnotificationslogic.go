@@ -23,58 +23,100 @@ func NewGetGroupNotificationsLogic(ctx context.Context, svcCtx *svc.ServiceConte
 	}
 }
 
-// 获取群组通知列表 (调用后，返回的通知在后端被标记为已读)
 func (l *GetGroupNotificationsLogic) GetGroupNotifications(in *group.GetGroupNotificationsRequest) (*group.GetGroupNotificationsResponse, error) {
 	var notifications []model.GroupNotification
-	err := l.svcCtx.DB.WithContext(l.ctx).
+	err := l.svcCtx.DB.
 		Where("target_user_id = ?", in.UserId).
-		Order("timestamp DESC").
+		Order("create_at DESC").
 		Find(&notifications).Error
-
 	if err != nil {
-		l.Logger.Errorf("failed to get group notifications for user %d: %v", in.UserId, err)
+		l.Logger.Errorf("查询群组通知失败: %v", err)
 		return nil, err
 	}
 
-	var pbNotifications []*group.GroupNotification
-	var unreadIds []int64
+	// 收集相关 userId、groupId
+	userIDSet := make(map[int64]struct{})
+	groupIDSet := make(map[int64]struct{})
 
-	for _, notification := range notifications {
-		pbNotification := &group.GroupNotification{
-			Id:           notification.Id,
-			Type:         group.NotificationType(notification.Type),
-			GroupId:      notification.GroupId,
-			OperatorId:   notification.OperatorId,
-			TargetUserId: notification.TargetUserId,
-			Message:      notification.Message,
-			Timestamp:    notification.CreateAt,
-			IsRead:       notification.IsRead,
-		}
-		pbNotifications = append(pbNotifications, pbNotification)
-
-		// 收集未读通知的ID
-		if !notification.IsRead {
-			unreadIds = append(unreadIds, notification.Id)
-		}
+	for _, n := range notifications {
+		userIDSet[n.OperatorId] = struct{}{}
+		userIDSet[n.TargetUserId] = struct{}{}
+		groupIDSet[n.GroupId] = struct{}{}
 	}
 
-	// 将未读通知标记为已读
-	if len(unreadIds) > 0 {
-		err = l.svcCtx.DB.WithContext(l.ctx).
-			Model(&model.GroupNotification{}).
-			Where("id IN ?", unreadIds).
-			Update("is_read", true).Error
+	var userIds, groupIds []int64
+	for id := range userIDSet {
+		userIds = append(userIds, id)
+	}
+	for id := range groupIDSet {
+		groupIds = append(groupIds, id)
+	}
 
-		if err != nil {
-			l.Logger.Errorf("failed to mark notifications as read: %v", err)
-		} else {
-			for _, pbNotification := range pbNotifications {
-				pbNotification.IsRead = true
-			}
+	// 批量查询用户信息
+	var users []model.User
+	if err := l.svcCtx.DB.Where("id IN ?", userIds).Find(&users).Error; err != nil {
+		l.Logger.Errorf("查询用户信息失败: %v", err)
+		return nil, err
+	}
+	userMap := make(map[int64]*model.User)
+	for _, u := range users {
+		uCopy := u
+		userMap[u.Id] = &uCopy
+	}
+
+	// 批量查询群组信息
+	var groups []model.Groups
+	if err := l.svcCtx.DB.Where("id IN ?", groupIds).Find(&groups).Error; err != nil {
+		l.Logger.Errorf("查询群组信息失败: %v", err)
+		return nil, err
+	}
+	groupMap := make(map[int64]*model.Groups)
+	for _, g := range groups {
+		gCopy := g
+		groupMap[g.Id] = &gCopy
+	}
+
+	// 构造响应
+	var result []*group.GroupNotification
+	for _, n := range notifications {
+		operator := userMap[n.OperatorId]
+		target := userMap[n.TargetUserId]
+		groupInfo := groupMap[n.GroupId]
+
+		pb := &group.GroupNotification{
+			Id:                 n.Id,
+			Type:               group.NotificationType(n.Type),
+			GroupId:            n.GroupId,
+			OperatorId:         n.OperatorId,
+			TargetUserId:       n.TargetUserId,
+			Message:            n.Message,
+			Timestamp:          n.CreateAt,
+			IsRead:             n.IsRead,
+			OperatorNickname:   "",
+			OperatorAvatar:     "",
+			TargetUserNickname: "",
+			TargetUserAvatar:   "",
+			GroupName:          "",
+			GroupAvatar:        "",
 		}
+
+		if operator != nil {
+			pb.OperatorNickname = operator.Nickname
+			pb.OperatorAvatar = operator.Avatar
+		}
+		if target != nil {
+			pb.TargetUserNickname = target.Nickname
+			pb.TargetUserAvatar = target.Avatar
+		}
+		if groupInfo != nil {
+			pb.GroupName = groupInfo.Name
+			pb.GroupAvatar = groupInfo.Avatar
+		}
+
+		result = append(result, pb)
 	}
 
 	return &group.GetGroupNotificationsResponse{
-		Notifications: pbNotifications,
+		Notifications: result,
 	}, nil
 }

@@ -148,6 +148,10 @@ type FriendRequest struct {
 	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`  // 1:待处理 2:已同意 3:已拒绝
 	CreateAt      int64                  `protobuf:"varint,6,opt,name=create_at,json=createAt,proto3" json:"create_at,omitempty"`
 	UpdateAt      int64                  `protobuf:"varint,7,opt,name=update_at,json=updateAt,proto3" json:"update_at,omitempty"`
+	FromNickname  string                 `protobuf:"bytes,8,opt,name=from_nickname,json=fromNickname,proto3" json:"from_nickname,omitempty"` // 申请人昵称
+	FromAvatar    string                 `protobuf:"bytes,9,opt,name=from_avatar,json=fromAvatar,proto3" json:"from_avatar,omitempty"`       // 申请人头像
+	ToNickname    string                 `protobuf:"bytes,10,opt,name=to_nickname,json=toNickname,proto3" json:"to_nickname,omitempty"`      // 接收人昵称
+	ToAvatar      string                 `protobuf:"bytes,11,opt,name=to_avatar,json=toAvatar,proto3" json:"to_avatar,omitempty"`            // 接收人头像
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -229,6 +233,34 @@ func (x *FriendRequest) GetUpdateAt() int64 {
 		return x.UpdateAt
 	}
 	return 0
+}
+
+func (x *FriendRequest) GetFromNickname() string {
+	if x != nil {
+		return x.FromNickname
+	}
+	return ""
+}
+
+func (x *FriendRequest) GetFromAvatar() string {
+	if x != nil {
+		return x.FromAvatar
+	}
+	return ""
+}
+
+func (x *FriendRequest) GetToNickname() string {
+	if x != nil {
+		return x.ToNickname
+	}
+	return ""
+}
+
+func (x *FriendRequest) GetToAvatar() string {
+	if x != nil {
+		return x.ToAvatar
+	}
+	return ""
 }
 
 // 发送好友申请请求
@@ -1223,7 +1255,7 @@ const file_friend_proto_rawDesc = "" +
 	"\ronline_status\x18\b \x01(\x03R\fonlineStatus\x12\x1a\n" +
 	"\bnickname\x18\t \x01(\tR\bnickname\x12\x16\n" +
 	"\x06avatar\x18\n" +
-	" \x01(\tR\x06avatar\"\xcb\x01\n" +
+	" \x01(\tR\x06avatar\"\xcf\x02\n" +
 	"\rFriendRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12 \n" +
 	"\ffrom_user_id\x18\x02 \x01(\x03R\n" +
@@ -1233,7 +1265,14 @@ const file_friend_proto_rawDesc = "" +
 	"\amessage\x18\x04 \x01(\tR\amessage\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1b\n" +
 	"\tcreate_at\x18\x06 \x01(\x03R\bcreateAt\x12\x1b\n" +
-	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\"t\n" +
+	"\tupdate_at\x18\a \x01(\x03R\bupdateAt\x12#\n" +
+	"\rfrom_nickname\x18\b \x01(\tR\ffromNickname\x12\x1f\n" +
+	"\vfrom_avatar\x18\t \x01(\tR\n" +
+	"fromAvatar\x12\x1f\n" +
+	"\vto_nickname\x18\n" +
+	" \x01(\tR\n" +
+	"toNickname\x12\x1b\n" +
+	"\tto_avatar\x18\v \x01(\tR\btoAvatar\"t\n" +
 	"\x18SendFriendRequestRequest\x12 \n" +
 	"\ffrom_user_id\x18\x01 \x01(\x03R\n" +
 	"fromUserId\x12\x1c\n" +

@@ -24,6 +24,7 @@ const (
 	FileService_DeleteFile_FullMethodName    = "/file.FileService/DeleteFile"
 	FileService_GetFileInfo_FullMethodName   = "/file.FileService/GetFileInfo"
 	FileService_GetFileRecord_FullMethodName = "/file.FileService/GetFileRecord"
+	FileService_UploadAvatar_FullMethodName  = "/file.FileService/UploadAvatar"
 )
 
 // FileServiceClient is the client API for FileService service.
@@ -40,6 +41,8 @@ type FileServiceClient interface {
 	GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 	// 获取用户文件记录
 	GetFileRecord(ctx context.Context, in *GetFileRecordReq, opts ...grpc.CallOption) (*GetFileRecordResp, error)
+	// 上传头像
+	UploadAvatar(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
 }
 
 type fileServiceClient struct {
@@ -100,6 +103,16 @@ func (c *fileServiceClient) GetFileRecord(ctx context.Context, in *GetFileRecord
 	return out, nil
 }
 
+func (c *fileServiceClient) UploadAvatar(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UploadFileResponse)
+	err := c.cc.Invoke(ctx, FileService_UploadAvatar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility.
@@ -114,6 +127,8 @@ type FileServiceServer interface {
 	GetFileInfo(context.Context, *GetFileInfoRequest) (*GetFileInfoResponse, error)
 	// 获取用户文件记录
 	GetFileRecord(context.Context, *GetFileRecordReq) (*GetFileRecordResp, error)
+	// 上传头像
+	UploadAvatar(context.Context, *UploadFileRequest) (*UploadFileResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -138,6 +153,9 @@ func (UnimplementedFileServiceServer) GetFileInfo(context.Context, *GetFileInfoR
 }
 func (UnimplementedFileServiceServer) GetFileRecord(context.Context, *GetFileRecordReq) (*GetFileRecordResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFileRecord not implemented")
+}
+func (UnimplementedFileServiceServer) UploadAvatar(context.Context, *UploadFileRequest) (*UploadFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadAvatar not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 func (UnimplementedFileServiceServer) testEmbeddedByValue()                     {}
@@ -250,6 +268,24 @@ func _FileService_GetFileRecord_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_UploadAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).UploadAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_UploadAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).UploadAvatar(ctx, req.(*UploadFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -276,6 +312,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFileRecord",
 			Handler:    _FileService_GetFileRecord_Handler,
+		},
+		{
+			MethodName: "UploadAvatar",
+			Handler:    _FileService_UploadAvatar_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

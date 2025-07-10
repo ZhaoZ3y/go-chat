@@ -15,9 +15,7 @@ type HandleFriendRequestReq struct {
 
 // GetFriendRequestListReq - 获取好友申请列表的请求 (支持分页和状态过滤)
 type GetFriendRequestListReq struct {
-	Page     int   `form:"page"`      // 页码
-	PageSize int   `form:"page_size"` // 每页数量
-	Status   int32 `form:"status"`    // 申请状态 (0=全部, 1=待处理, 2=已同意, 3=已拒绝)
+	Status int32 `form:"status"` // 申请状态 (0=全部, 1=待处理, 2=已同意, 3=已拒绝)
 }
 
 // FriendDeleteActionReq - 用于删除好友的通用请求
@@ -27,8 +25,8 @@ type FriendDeleteActionReq struct {
 
 // BlockFriendReq - 用于拉黑好友的请求
 type BlockFriendReq struct {
-	FriendID int64 `json:"friend_id" binding:"required"`
-	Status   int32 `json:"status" binding:"required,oneof=0 1"` // 0=取消拉黑, 1=拉黑
+	FriendID int64 `json:"friend_id"`
+	Status   int32 `json:"status"`
 }
 
 // UpdateFriendRemarkReq - 更新好友备注的请求

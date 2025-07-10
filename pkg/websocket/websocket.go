@@ -3,12 +3,12 @@ package websocket
 import (
 	"IM/pkg/model"
 	"IM/pkg/mq"
+	"IM/pkg/utils/jwt"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -27,13 +27,21 @@ type PingMessage struct {
 }
 
 func (h *Hub) HandleWebSocket(c *gin.Context) {
-	userIDStr := c.GetString("userID")
-
-	userID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的 user_id"})
+	// 从 query 参数取 token
+	tokenStr := c.Query("token")
+	if tokenStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 token"})
 		return
 	}
+
+	// 解析 token
+	claims, err := jwt.ParseAccessToken(tokenStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的 token"})
+		return
+	}
+
+	userID := claims.UserID
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -50,7 +58,6 @@ func (h *Hub) HandleWebSocket(c *gin.Context) {
 
 	h.register <- client
 
-	// 为此客户端启动读写 goroutine
 	go h.writePump(client)
 	go h.readPump(client)
 }

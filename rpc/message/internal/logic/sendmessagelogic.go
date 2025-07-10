@@ -31,7 +31,6 @@ func NewSendMessageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SendM
 
 // 发送消息
 func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendMessageResponse, error) {
-	// --- 参数校验 (保持不变) ---
 	if in.Content == "" {
 		return &chat.SendMessageResponse{Success: false, Message: "消息内容不能为空"}, nil
 	}
@@ -42,15 +41,15 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 		return &chat.SendMessageResponse{Success: false, Message: "群聊必须指定群组ID"}, nil
 	}
 
-	// --- 群聊权限检查 (保持不变) ---
+	// 检查是否为群成员
 	if in.ChatType == 1 {
 		var member model.GroupMembers
-		if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ? AND status = 1", in.GroupId, in.FromUserId).First(&member).Error; err != nil {
-			return &chat.SendMessageResponse{Success: false, Message: "您不是该群组成员或已被禁言"}, nil
+		if err := l.svcCtx.DB.Where("group_id = ? AND user_id = ?", in.GroupId, in.FromUserId).First(&member).Error; err != nil {
+			return &chat.SendMessageResponse{Success: false, Message: "您不是该群组成员"}, nil
 		}
 	}
 
-	// 准备消息实体
+	// 创建消息
 	message := &model.Messages{
 		FromUserId: in.FromUserId,
 		ToUserId:   in.ToUserId,
@@ -62,62 +61,61 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 		Status:     _const.MsgNormal,
 	}
 
-	// 事务前打印发送内容
+	// 打日志
 	l.Logger.Infof("发送消息请求: from=%d to=%d group=%d chatType=%d content=%s",
 		in.FromUserId, in.ToUserId, in.GroupId, in.ChatType, in.Content)
 
 	err := l.svcCtx.DB.Transaction(func(tx *gorm.DB) error {
-		// 1. 创建消息记录
-		// 这会通过 GORM 的钩子自动填充 CreateAt
+		// 保存消息（自动生成 ID）
 		if err := tx.Create(message).Error; err != nil {
-			return fmt.Errorf("保存消息到数据库失败: %w", err)
+			return fmt.Errorf("保存消息失败: %w", err)
 		}
 
-		// 2. 更新或创建相关会话（私聊/群聊）
-		// 调用重构后的内部方法
+		// 更新会话
 		if err := l.updateOrCreateConversation(tx, message); err != nil {
 			return fmt.Errorf("更新会话失败: %w", err)
 		}
 
+		// 插入 message_user_states，防止重复插入
 		if message.ChatType == 0 {
-			// 私聊：写入接收方（ToUserId）
-			if err := tx.Create(&model.MessageUserStates{
-				MessageId: message.Id,
-				UserId:    message.ToUserId,
-				IsDeleted: false,
-			}).Error; err != nil {
-				return fmt.Errorf("写入 message_user_states (to_user) 失败: %w", err)
+			// 私聊：from 和 to 各插一条
+			users := []int64{message.FromUserId, message.ToUserId}
+			for _, uid := range users {
+				state := model.MessageUserStates{
+					MessageId: message.Id,
+					UserId:    uid,
+					IsDeleted: false,
+				}
+				if err := tx.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "message_id"}, {Name: "user_id"}},
+					DoNothing: true,
+				}).Create(&state).Error; err != nil {
+					return fmt.Errorf("写入 message_user_states 失败: %w", err)
+				}
 			}
-
-			// 可选：如果你希望发送方也能有记录，可加上
-			if err := tx.Create(&model.MessageUserStates{
-				MessageId: message.Id,
-				UserId:    message.FromUserId,
-				IsDeleted: false,
-			}).Error; err != nil {
-				return fmt.Errorf("写入 message_user_states (from_user) 失败: %w", err)
-			}
-
 		} else {
-			// 群聊：写入所有群成员
+			// 群聊：群成员都插
 			var memberIDs []int64
 			if err := tx.Model(&model.GroupMembers{}).
 				Where("group_id = ? AND status = 1", message.GroupId).
 				Pluck("user_id", &memberIDs).Error; err != nil {
-				return fmt.Errorf("写入群聊 message_user_states 前拉取成员失败: %w", err)
+				return fmt.Errorf("拉取群成员失败: %w", err)
 			}
 
-			var stateRecords []model.MessageUserStates
+			var states []model.MessageUserStates
 			for _, uid := range memberIDs {
-				stateRecords = append(stateRecords, model.MessageUserStates{
+				states = append(states, model.MessageUserStates{
 					MessageId: message.Id,
 					UserId:    uid,
 					IsDeleted: false,
 				})
 			}
 
-			if len(stateRecords) > 0 {
-				if err := tx.Create(&stateRecords).Error; err != nil {
+			if len(states) > 0 {
+				if err := tx.Clauses(clause.OnConflict{
+					Columns:   []clause.Column{{Name: "message_id"}, {Name: "user_id"}},
+					DoNothing: true,
+				}).Create(&states).Error; err != nil {
 					return fmt.Errorf("批量写入 message_user_states 失败: %w", err)
 				}
 			}
@@ -128,12 +126,10 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 
 	if err != nil {
 		l.Logger.Errorf("发送消息事务失败: %v", err)
-		return &chat.SendMessageResponse{
-			Success: false,
-			Message: "发送消息失败",
-		}, nil
+		return &chat.SendMessageResponse{Success: false, Message: "发送失败"}, nil
 	}
 
+	// 推送 Kafka 消息
 	event := &mq.MessageEvent{
 		Type:        mq.EventNewMessage,
 		MessageID:   message.Id,
@@ -146,14 +142,11 @@ func (l *SendMessageLogic) SendMessage(in *chat.SendMessageRequest) (*chat.SendM
 		Extra:       message.Extra,
 		CreateAt:    message.CreateAt,
 	}
-
 	if err := l.svcCtx.Kafka.SendMessage(mq.TopicMessage, event); err != nil {
-		l.Logger.Errorf("发送消息事件到 Kafka 失败 (但消息已存库): %v", err)
+		l.Logger.Errorf("Kafka 推送失败（但消息已存库）: %v", err)
 	}
 
-	// Kafka 事件发出后打印
-	l.Logger.Infof("Kafka事件已发送: messageID=%d", message.Id)
-
+	l.Logger.Infof("消息发送成功，Kafka事件已发出: messageID=%d", message.Id)
 	return &chat.SendMessageResponse{
 		MessageId: message.Id,
 		Success:   true,
@@ -215,12 +208,23 @@ func (l *SendMessageLogic) updateOrCreateConversation(tx *gorm.DB, message *mode
 		}
 
 	} else { // 群聊
+		// 添加调试日志
+		l.Logger.Infof("开始处理群聊会话: groupId=%d, messageId=%d", message.GroupId, message.Id)
+
 		var memberIDs []int64
 		err := tx.Model(&model.GroupMembers{}).
-			Where("group_id = ? AND status = 1", message.GroupId).
+			Where("group_id = ?", message.GroupId).
 			Pluck("user_id", &memberIDs).Error
 		if err != nil {
+			l.Logger.Errorf("获取群成员失败: groupId=%d, err=%v", message.GroupId, err)
 			return fmt.Errorf("获取群成员失败: %w", err)
+		}
+
+		l.Logger.Infof("找到群成员: groupId=%d, members=%v", message.GroupId, memberIDs)
+
+		if len(memberIDs) == 0 {
+			l.Logger.Errorf("群组 %d 没有找到活跃成员", message.GroupId)
+			return nil
 		}
 
 		for _, memberID := range memberIDs {
@@ -232,6 +236,9 @@ func (l *SendMessageLogic) updateOrCreateConversation(tx *gorm.DB, message *mode
 				unreadIncrement = gorm.Expr("unread_count")
 				initialUnread = 0
 			}
+
+			l.Logger.Infof("处理群成员会话: userId=%d, groupId=%d, isFromUser=%v",
+				memberID, message.GroupId, memberID == message.FromUserId)
 
 			err = tx.Clauses(clause.OnConflict{
 				Columns: []clause.Column{{Name: "user_id"}, {Name: "target_id"}, {Name: "type"}},
@@ -253,8 +260,13 @@ func (l *SendMessageLogic) updateOrCreateConversation(tx *gorm.DB, message *mode
 
 			if err != nil {
 				l.Logger.Errorf("更新群成员 %d 的会话失败: %v", memberID, err)
+				return fmt.Errorf("更新群成员 %d 的会话失败: %w", memberID, err)
+			} else {
+				l.Logger.Infof("成功更新群成员会话: userId=%d, groupId=%d", memberID, message.GroupId)
 			}
 		}
+
+		l.Logger.Infof("群聊会话处理完成: groupId=%d, 处理成员数=%d", message.GroupId, len(memberIDs))
 	}
 	return nil
 }

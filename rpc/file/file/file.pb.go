@@ -103,6 +103,7 @@ type UploadFileResponse struct {
 	FileName      string                 `protobuf:"bytes,2,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	FileSize      int64                  `protobuf:"varint,3,opt,name=file_size,json=fileSize,proto3" json:"file_size,omitempty"`
 	ExpireAt      int64                  `protobuf:"varint,4,opt,name=expire_at,json=expireAt,proto3" json:"expire_at,omitempty"`
+	FileUrl       string                 `protobuf:"bytes,5,opt,name=file_url,json=fileUrl,proto3" json:"file_url,omitempty"` // 新增
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -163,6 +164,13 @@ func (x *UploadFileResponse) GetExpireAt() int64 {
 		return x.ExpireAt
 	}
 	return 0
+}
+
+func (x *UploadFileResponse) GetFileUrl() string {
+	if x != nil {
+		return x.FileUrl
+	}
+	return ""
 }
 
 type DownloadFileRequest struct {
@@ -632,12 +640,13 @@ const file_file_proto_rawDesc = "" +
 	"\tfile_size\x18\x02 \x01(\x03R\bfileSize\x12!\n" +
 	"\fcontent_type\x18\x03 \x01(\tR\vcontentType\x12\x17\n" +
 	"\auser_id\x18\x04 \x01(\x03R\x06userId\x12\x1b\n" +
-	"\tfile_data\x18\x05 \x01(\fR\bfileData\"\x84\x01\n" +
+	"\tfile_data\x18\x05 \x01(\fR\bfileData\"\x9f\x01\n" +
 	"\x12UploadFileResponse\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\x12\x1b\n" +
 	"\tfile_name\x18\x02 \x01(\tR\bfileName\x12\x1b\n" +
 	"\tfile_size\x18\x03 \x01(\x03R\bfileSize\x12\x1b\n" +
-	"\texpire_at\x18\x04 \x01(\x03R\bexpireAt\".\n" +
+	"\texpire_at\x18\x04 \x01(\x03R\bexpireAt\x12\x19\n" +
+	"\bfile_url\x18\x05 \x01(\tR\afileUrl\".\n" +
 	"\x13DownloadFileRequest\x12\x17\n" +
 	"\afile_id\x18\x01 \x01(\tR\x06fileId\"\x90\x01\n" +
 	"\x14DownloadFileResponse\x12\x1b\n" +
@@ -669,7 +678,7 @@ const file_file_proto_rawDesc = "" +
 	"\x10GetFileRecordReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"Q\n" +
 	"\x11GetFileRecordResp\x12<\n" +
-	"\ffile_records\x18\x01 \x03(\v2\x19.file.GetFileInfoResponseR\vfileRecords2\xdc\x02\n" +
+	"\ffile_records\x18\x01 \x03(\v2\x19.file.GetFileInfoResponseR\vfileRecords2\x9f\x03\n" +
 	"\vFileService\x12?\n" +
 	"\n" +
 	"UploadFile\x12\x17.file.UploadFileRequest\x1a\x18.file.UploadFileResponse\x12E\n" +
@@ -677,7 +686,8 @@ const file_file_proto_rawDesc = "" +
 	"\n" +
 	"DeleteFile\x12\x17.file.DeleteFileRequest\x1a\x18.file.DeleteFileResponse\x12B\n" +
 	"\vGetFileInfo\x12\x18.file.GetFileInfoRequest\x1a\x19.file.GetFileInfoResponse\x12@\n" +
-	"\rGetFileRecord\x12\x16.file.GetFileRecordReq\x1a\x17.file.GetFileRecordRespB\bZ\x06./fileb\x06proto3"
+	"\rGetFileRecord\x12\x16.file.GetFileRecordReq\x1a\x17.file.GetFileRecordResp\x12A\n" +
+	"\fUploadAvatar\x12\x17.file.UploadFileRequest\x1a\x18.file.UploadFileResponseB\bZ\x06./fileb\x06proto3"
 
 var (
 	file_file_proto_rawDescOnce sync.Once
@@ -711,13 +721,15 @@ var file_file_proto_depIdxs = []int32{
 	4, // 3: file.FileService.DeleteFile:input_type -> file.DeleteFileRequest
 	6, // 4: file.FileService.GetFileInfo:input_type -> file.GetFileInfoRequest
 	8, // 5: file.FileService.GetFileRecord:input_type -> file.GetFileRecordReq
-	1, // 6: file.FileService.UploadFile:output_type -> file.UploadFileResponse
-	3, // 7: file.FileService.DownloadFile:output_type -> file.DownloadFileResponse
-	5, // 8: file.FileService.DeleteFile:output_type -> file.DeleteFileResponse
-	7, // 9: file.FileService.GetFileInfo:output_type -> file.GetFileInfoResponse
-	9, // 10: file.FileService.GetFileRecord:output_type -> file.GetFileRecordResp
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
+	0, // 6: file.FileService.UploadAvatar:input_type -> file.UploadFileRequest
+	1, // 7: file.FileService.UploadFile:output_type -> file.UploadFileResponse
+	3, // 8: file.FileService.DownloadFile:output_type -> file.DownloadFileResponse
+	5, // 9: file.FileService.DeleteFile:output_type -> file.DeleteFileResponse
+	7, // 10: file.FileService.GetFileInfo:output_type -> file.GetFileInfoResponse
+	9, // 11: file.FileService.GetFileRecord:output_type -> file.GetFileRecordResp
+	1, // 12: file.FileService.UploadAvatar:output_type -> file.UploadFileResponse
+	7, // [7:13] is the sub-list for method output_type
+	1, // [1:7] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name

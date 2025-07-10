@@ -23,6 +23,7 @@ message RegisterRequest {
   string password = 2;
   string email = 3;
   string nickname = 4;
+  string avatar = 5;
 }
 
 // 用户注册响应

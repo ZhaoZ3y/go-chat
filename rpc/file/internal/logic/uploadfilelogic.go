@@ -78,5 +78,6 @@ func (l *UploadFileLogic) UploadFile(in *file.UploadFileRequest) (*file.UploadFi
 		FileName: fileRecord.FileName,
 		FileSize: fileRecord.FileSize,
 		ExpireAt: fileRecord.ExpireAt,
+		FileUrl:  l.svcCtx.MinioClient.GetPublicURL(objectName),
 	}, nil
 }

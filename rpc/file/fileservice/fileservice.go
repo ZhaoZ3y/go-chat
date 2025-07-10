@@ -36,6 +36,8 @@ type (
 		GetFileInfo(ctx context.Context, in *GetFileInfoRequest, opts ...grpc.CallOption) (*GetFileInfoResponse, error)
 		// 获取用户文件记录
 		GetFileRecord(ctx context.Context, in *GetFileRecordReq, opts ...grpc.CallOption) (*GetFileRecordResp, error)
+		// 上传头像
+		UploadAvatar(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error)
 	}
 
 	defaultFileService struct {
@@ -77,4 +79,10 @@ func (m *defaultFileService) GetFileInfo(ctx context.Context, in *GetFileInfoReq
 func (m *defaultFileService) GetFileRecord(ctx context.Context, in *GetFileRecordReq, opts ...grpc.CallOption) (*GetFileRecordResp, error) {
 	client := file.NewFileServiceClient(m.cli.Conn())
 	return client.GetFileRecord(ctx, in, opts...)
+}
+
+// 上传头像
+func (m *defaultFileService) UploadAvatar(ctx context.Context, in *UploadFileRequest, opts ...grpc.CallOption) (*UploadFileResponse, error) {
+	client := file.NewFileServiceClient(m.cli.Conn())
+	return client.UploadAvatar(ctx, in, opts...)
 }

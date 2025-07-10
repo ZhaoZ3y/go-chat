@@ -17,6 +17,7 @@ message UploadFileResponse {
   string file_name = 2;
   int64 file_size = 3;
   int64 expire_at = 4;
+  string file_url = 5; // 新增
 }
 
 message DownloadFileRequest {
@@ -75,4 +76,6 @@ service FileService {
   rpc GetFileInfo(GetFileInfoRequest) returns (GetFileInfoResponse);
   // 获取用户文件记录
   rpc GetFileRecord(GetFileRecordReq) returns (GetFileRecordResp);
+  // 上传头像
+  rpc UploadAvatar(UploadFileRequest) returns (UploadFileResponse);
 }

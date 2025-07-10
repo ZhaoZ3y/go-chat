@@ -9,7 +9,6 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/zeromicro/go-zero/core/logx"
-	"strconv"
 	"time"
 )
 
@@ -68,7 +67,7 @@ func GetUnreadFriendRequestCount(c *gin.Context) {
 
 // GetGroupNotifications 获取用户的群组相关通知
 func GetGroupNotifications(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
@@ -90,23 +89,14 @@ func GetGroupNotifications(c *gin.Context) {
 
 // GetJoinGroupApplications 获取入群申请列表 (管理员或群主)
 func GetJoinGroupApplications(c *gin.Context) {
-	_, exists := c.Get("user_id")
+	_, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return
 	}
 
-	groupIdStr := c.Param("group_id")
-	groupId, err := strconv.ParseInt(groupIdStr, 10, 64)
-	if err != nil {
-		response.ClientErrorResponse(c, response.ParamErrorCode, "群组ID格式错误")
-		return
-	}
-
 	// 权限验证在RPC层处理
-	resp, err := rpc.GroupClient.GetJoinGroupApplications(c.Request.Context(), &group.GetJoinGroupApplicationsRequest{
-		GroupId: groupId,
-	})
+	resp, err := rpc.GroupClient.GetJoinGroupApplications(c.Request.Context(), &group.GetJoinGroupApplicationsRequest{})
 
 	if err != nil {
 		response.ServerErrorResponse(c, "服务器内部错误: "+err.Error())
@@ -120,7 +110,7 @@ func GetJoinGroupApplications(c *gin.Context) {
 
 // GetGroupUnreadCount 获取未读群组通知总数
 func GetGroupUnreadCount(c *gin.Context) {
-	userId, exists := c.Get("user_id")
+	userId, exists := c.Get("userID")
 	if !exists {
 		response.ClientErrorResponse(c, response.UnauthorizedCode, "未授权访问")
 		return

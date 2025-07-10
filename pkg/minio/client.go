@@ -88,20 +88,35 @@ func (c *Client) GeneratePresignedURL(ctx context.Context, objectName string, ex
 	return c.client.PresignedGetObject(ctx, c.bucketName, objectName, expires, nil)
 }
 
-// SetBucketLifecycle 设置存储桶的生命周期策略
+// SetBucketLifecycle 设置生命周期，仅对 temp/ 前缀生效
 func (c *Client) SetBucketLifecycle(ctx context.Context, days int) error {
 	cfg := lifecycle.NewConfiguration()
 	cfg.Rules = []lifecycle.Rule{
 		{
-			ID:     fmt.Sprintf("expire-after-%d-days", days),
+			ID:     fmt.Sprintf("expire-temp-after-%d-days", days),
 			Status: "Enabled",
 			Expiration: lifecycle.Expiration{
 				Days: lifecycle.ExpirationDays(days),
 			},
 			RuleFilter: lifecycle.Filter{
-				Prefix: "", // 应用于桶内所有对象
+				Prefix: "temp/",
 			},
 		},
 	}
 	return c.client.SetBucketLifecycle(ctx, c.bucketName, cfg)
+}
+
+// GenerateFileURL 返回文件的可访问 URL（预签名，适用于私有桶）
+func (c *Client) GenerateFileURL(ctx context.Context, objectName string, expires time.Duration) (string, error) {
+	u, err := c.GeneratePresignedURL(ctx, objectName, expires)
+	if err != nil {
+		return "", fmt.Errorf("生成预签名URL失败: %w", err)
+	}
+	return u.String(), nil
+}
+
+// GetPublicURL 返回文件的公开访问 URL（适用于公开桶）
+func (c *Client) GetPublicURL(objectName string) string {
+	// ⚠️ 替换成你部署时对外暴露的真实地址
+	return fmt.Sprintf("http://localhost:9000/%s/%s", c.bucketName, objectName)
 }

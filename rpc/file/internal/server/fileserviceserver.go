@@ -52,3 +52,9 @@ func (s *FileServiceServer) GetFileRecord(ctx context.Context, in *file.GetFileR
 	l := logic.NewGetFileRecordLogic(ctx, s.svcCtx)
 	return l.GetFileRecord(in)
 }
+
+// 上传头像
+func (s *FileServiceServer) UploadAvatar(ctx context.Context, in *file.UploadFileRequest) (*file.UploadFileResponse, error) {
+	l := logic.NewUploadAvatarLogic(ctx, s.svcCtx)
+	return l.UploadAvatar(in)
+}
